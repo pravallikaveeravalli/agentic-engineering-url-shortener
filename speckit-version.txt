@@ -1,0 +1,2 @@
+│     CLI Version    1.0.9.dev0                                                │
+specify-cli 1.0.9.dev0 from git+https://github.com/github/spec-kit.git@5e952140659287106580d32f242ba71365a3862b
