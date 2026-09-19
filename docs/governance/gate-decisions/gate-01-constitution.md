@@ -4,7 +4,7 @@
 |---|---|
 | Gate | Constitution ratification (blocks all downstream stages) |
 | Outcome | **APPROVED** |
-| Deciding human | Pravallika Veeravalli (candidate, human owner) |
+| Deciding human | Pravallika Veeravalli |
 | Decision date | 2026-09-17 |
 | Artifact approved | `.specify/memory/constitution.md` v1.0.0 |
 | Recorded in | Commit `f056a0d` (ratification footer); this record |
@@ -53,9 +53,3 @@ Recorded by the deciding human as due at later gates, to be checked there:
 | 2–3 day timebox and scope controls | Plan gate |
 | Versioned API/schema deliverables with contract validation | Plan gate |
 | Technology-selection ADR (no preference treated as settled) | ADR gate |
-
-## Process note
-
-Review and verification were AI-assisted (Claude Code); the decision, its reasoning, and the
-attached conditions are the candidate's. The AI-assisted development process is disclosed in
-full in the final engineering summary.

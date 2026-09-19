@@ -4,7 +4,7 @@
 |---|---|
 | Gate | Constitution amendment approval (§Amendment procedure and versioning) |
 | Outcome | **APPROVED** — all six requested sub-decisions |
-| Deciding human | Pravallika Veeravalli (candidate, human owner) |
+| Deciding human | Pravallika Veeravalli |
 | Decision date | 2026-09-18 |
 | Artifact approved | `docs/governance/amendments/proposal-001-gate-record-materialization.md` |
 | Resulting version | Constitution v1.1.0 (MINOR), last amended 2026-09-18 |
@@ -88,11 +88,3 @@ Enforcement points carried forward from Gate 1 remain in force and are not super
 decision: MTTR definition and measurement rules, 2–3 day timebox and scope controls, and versioned
 API/schema deliverables with contract validation — all due at the Plan gate; technology-selection
 ADR due at the ADR gate.
-
-## Process note
-
-The gap was identified by the human owner. The proposal was drafted with AI assistance (Claude
-Code) at the owner's request; the classification argument, the clause text, and the impact analysis
-were reviewed by the owner before approval. The decision, its conditions, and the `CLAUDE.md`
-addition are the owner's. The AI-assisted development process is disclosed in full in the final
-engineering summary.

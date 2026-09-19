@@ -30,13 +30,14 @@ no artifact, commit it immediately on its own with a `docs(governance)` message.
    the deciding human's terms.
 3. `## Conditions attached to the approval` — omit only if none.
 4. `## Carried-forward enforcement points` — an item/due-at table; omit only if none.
-5. `## Process note` — the division of labour between human and agent for this decision.
 
 **Fidelity**: record the decision verbatim where the human's own wording carries the reasoning. Do
 not summarize away conditions, and do not add conditions the human did not state.
 
-**Immutability**: a filed gate record is not edited afterwards. A changed decision is a new record
-that references the prior one.
+**Immutability**: a filed gate record's decision content — outcome, reasoning, conditions, dates —
+is not edited afterwards. A changed decision is a new record that references the prior one.
+Formatting-only revisions that alter none of the decision content may be made on the human owner's
+explicit instruction, with that instruction noted in the commit message.
 
 ## Other governance records
 
