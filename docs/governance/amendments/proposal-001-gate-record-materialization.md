@@ -7,7 +7,7 @@
 | Drafted | 2026-09-18 |
 | Affects | Constitution v1.0.0 (ratified 2026-09-17) |
 | Proposed version | **1.1.0 (MINOR)** |
-| Applied | **No.** The constitution file is unmodified. No version bump has been made. |
+| Applied | Yes — v1.1.0, 2026-09-18 |
 
 This proposal is itself materialized as a repository artifact rather than delivered only in
 conversation, because delivering it conversationally would reproduce the defect it describes.
