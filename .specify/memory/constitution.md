@@ -225,7 +225,10 @@ downward under time pressure.
   targets MUST be labelled as targets.
 - **Repository as source of truth**: Approvals, decisions, and evidence count only when recorded
   in the repository. Statements made only in conversation are not artifacts and MUST NOT be cited
-  as approval.
+  as approval. A decision stated in conversation becomes citable only once materialized under
+  §Development Workflow and Quality Gates → Gate semantics. Process rules, conventions, and
+  standing instructions issued only in conversation carry no authority; to bind future work they
+  MUST be recorded in this constitution or in the operational guidance under §Runtime guidance.
 - **Disclosure of AI assistance**: The AI-assisted development process MUST be described
   truthfully, including the division of labour between human and agent, and including where the
   process deviated from plan.
@@ -269,7 +272,14 @@ before the next stage begins:
 **Gate semantics**. Gate outcomes are those defined in Principle III. A gate record MUST capture
 the outcome, the deciding human, the timestamp, and the reason. `CHANGES-REQUESTED` returns work
 to the owning stage with the requested changes enumerated. `ESCALATED` records what decision
-exceeds the current owner's authority.
+exceeds the current owner's authority. A gate record MUST be materialized as a repository artifact;
+a conversational statement of the decision does not satisfy this requirement. The agent acting on
+the decision is responsible for materializing the record, and MUST NOT begin the substantive work
+the decision authorizes before that record exists in the working tree. The record MUST be committed
+no later than the commit that acts on the decision; where the decision approves no artifact, it
+MUST be committed immediately in its own governance commit. The location and structure of gate
+records are defined in the operational guidance referenced under §Runtime guidance, which MUST
+define them; silence or contradiction there is itself a compliance failure.
 
 **Safe-stop**. On `TIMED-OUT`, on an unrecoverable failure, or on a blocking policy `FAIL`, the
 run MUST persist its state, emit its terminal outcome and reason, and stop. It MUST NOT continue
@@ -358,7 +368,8 @@ following holds:
 
 1. A mandatory principle check is `FAIL` with no approved exception.
 2. A mandatory policy check is `FAIL`, or an exception is unapproved or expired.
-3. A mandatory human gate lacks a recorded outcome.
+3. A mandatory human gate lacks a recorded outcome, or its outcome is not materialized as a
+   repository artifact.
 4. Required tests have not been executed, or executed tests are failing without recorded
    acceptance.
 5. Dependency vulnerability scanning or secret scanning has not been run, or has unaddressed
@@ -373,6 +384,29 @@ Release readiness is a human decision (Principle III) and MUST NOT be self-certi
 
 **Runtime guidance**. This constitution states obligations. Operational, repository-specific
 development guidance is maintained separately in `CLAUDE.md` and MUST NOT contradict this
-document; where it does, this document prevails.
+document; where it does, this document prevails. `CLAUDE.md` MUST define the gate record location
+convention and record structure required by §Gate semantics. Operational guidance MAY be revised
+without a constitutional amendment, but MUST NOT be used to weaken, delay, or condition an
+obligation stated here.
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-17 | **Last Amended**: 2026-09-17
+## Amendment History
+
+Every amendment records a change entry here, per §Amendment procedure and versioning. Entries are
+append-only: an entry is never edited or removed once recorded.
+
+- **1.0.0 | 2026-09-17 | Initial ratification** | Eleven principles, assessment scope and evidence
+  standards, development workflow and quality gates, and governance established. Ratified by
+  Pravallika Veeravalli. Decision record:
+  `docs/governance/gate-decisions/gate-01-constitution.md`.
+- **1.1.0 | 2026-09-18 | MINOR** | Gate decision records MUST be materialized as repository
+  artifacts by the agent acting on the decision, no later than the commit acting on it;
+  conversation-only process rules carry no authority; `CLAUDE.md` MUST define gate record location
+  and structure; release readiness blocks on unmaterialized gate outcomes. Raised by Pravallika
+  Veeravalli after Gate 1 review found v1.0.0 specified gate-record contents and barred
+  conversation-only approvals without naming a location, actor, or deadline. Gate 1 (2026-09-17)
+  was decided under v1.0.0, remains valid and unmodified, and its late record materialization was
+  not a violation of the version then in force. Proposal:
+  `docs/governance/amendments/proposal-001-gate-record-materialization.md`. Decision record:
+  `docs/governance/gate-decisions/amendment-001-decision.md`.
+
+**Version**: 1.1.0 | **Ratified**: 2026-09-17 | **Last Amended**: 2026-09-18
