@@ -59,6 +59,11 @@ change approval. Change requests and their impact analyses are materialized here
 **Amendment proposals** — `docs/governance/amendments/`. Change entries themselves live in the
 constitution's `## Amendment History` section, not here.
 
+**Architecture Decision Records** — `docs/governance/adr/`, one file per decision named
+`ADR-NNN-<slug>.md`, with an index at `README.md`. An ADR's `Status` is set to `Accepted` only by a
+recorded human decision at the ADR gate, never by the acting agent. A superseded ADR is marked
+superseded with a reference to the record replacing it, rather than edited in place.
+
 ## Lifecycle
 
 SpecKit is the sole lifecycle framework. The authoritative stage order and the mandatory human gate

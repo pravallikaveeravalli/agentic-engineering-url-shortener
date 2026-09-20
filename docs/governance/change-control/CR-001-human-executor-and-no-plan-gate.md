@@ -1,5 +1,20 @@
 # Change Request CR-001 — Human Executor Kind and the No-Change-Plan Gate
 
+> ## ⚠ CORRECTION NOTICE — added 2026-09-20, additive only
+>
+> **This record's "applied exactly as proposed" claim was inaccurate when made.** The two contract enum
+> extensions it specified (`HUMAN` added to the executor-kind enums) were **not** applied at the time; only the
+> rename half was. The omission was caught while applying CR-005 and fixed there.
+>
+> **See [`CR-005`](./CR-005-gate-4-closing-approvals.md) §"Defect found while applying"** for the full account,
+> including the related judgment that `executorClass` deliberately does **not** gain `HUMAN` — confirmed by the
+> owner on 2026-09-20, because `HUMAN` is a runtime outcome of the no-plan gate, never a design-time declaration.
+>
+> Nothing below this notice has been altered. No original word is changed, added, or removed. This notice exists
+> because leaving a known-false status claim as the first thing a reader sees is worse than a disciplined
+> annotation: immutability protects the decision content, not the discoverability of a correction to it. Added on
+> the human owner's explicit instruction, noted in the commit message per `CLAUDE.md` §Immutability.
+
 | Field | Value |
 |---|---|
 | Status | **APPROVED and APPLIED** — 2026-09-20 |

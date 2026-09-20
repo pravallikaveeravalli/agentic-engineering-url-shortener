@@ -194,10 +194,17 @@ rather than as a conversation.
 
 ### Insert throughput is not the first thing to break
 
-A single PostgreSQL instance sustains **thousands to tens of thousands of small inserts per second**. For
-perspective: ten thousand clicks per second is roughly **860 million clicks per day** — large-business
-territory, well beyond anything this prototype targets. The synchronous append chosen in this ADR therefore does
-not put write rate on the critical path in any plausible near-term scenario.
+> **Figures in this section are industry reasoning aids, not measurements of this system.** They are
+> order-of-magnitude values drawn from general knowledge of PostgreSQL behaviour, used to establish *which*
+> component constrains first. Nothing here has been measured on this codebase, and none of it may be cited as a
+> measurement of it. The measurement NFR-SCA-003 additionally requires remains owed (Slice 7). Labelled per
+> Constitution IX at the owner's instruction, 2026-09-20.
+
+A single PostgreSQL instance sustains **thousands to tens of thousands of small inserts per second** *(industry
+reasoning aid)*. For perspective: ten thousand clicks per second is roughly **860 million clicks per day**
+*(arithmetic on that aid)* — large-business territory, well beyond anything this prototype targets. The
+synchronous append chosen in this ADR therefore does not put write rate on the critical path in any plausible
+near-term scenario.
 
 ### The first bottleneck is table growth, not write rate
 

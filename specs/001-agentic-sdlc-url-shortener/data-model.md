@@ -2,6 +2,11 @@
 
 **Date**: 2026-09-19 | **Plan**: [plan.md](./plan.md) | **Spec entities**: KE-01..KE-29
 
+**Status**: **Derived design artifact.** Approved indirectly via `plan.md`'s approval at the Gate 4 closing
+package (2026-09-20) — it was **not** independently gated. Changes to it pass through change control, as they do
+for the plan. The authoritative entity definitions are the spec's `KE-*` entries; this document elaborates them
+and must not contradict them.
+
 Technology-neutral. Types are logical; the physical mapping follows ADR-002. Field-level validation
 traces to the FR that requires it.
 

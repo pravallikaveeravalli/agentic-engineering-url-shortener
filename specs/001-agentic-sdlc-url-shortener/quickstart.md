@@ -2,6 +2,10 @@
 
 **Feature**: 001-agentic-sdlc-url-shortener | **Date**: 2026-09-19 | **Plan**: [plan.md](./plan.md)
 
+**Status**: **Derived design artifact.** Approved indirectly via `plan.md`'s approval at the Gate 4 closing
+package (2026-09-20) — it was **not** independently gated. Changes pass through change control. Nothing in this
+guide has been executed: it is the validation design, not a record of results.
+
 How a reviewer proves the system works, without reading the source. Commands are shown in the shape
 they will take; exact invocations depend on ADR-001, which is not yet decided (CN-002). Nothing here
 has been executed — this is the validation design, not a record of results.

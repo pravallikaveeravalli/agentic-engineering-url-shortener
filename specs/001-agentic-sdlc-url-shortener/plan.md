@@ -707,7 +707,9 @@ Chain: **Requirement → Scenario → Design → ADR → Task → Code → Test 
 Evidence.**
 
 Implementation: the spec's traceability matrix already binds Requirement → Journey → Scenario → Edge
-cases, with Task/Test/Evidence columns reserved. This plan adds the Design and ADR columns. `tasks.md`
+cases, with Task/Test/Evidence columns reserved. The **Design and ADR columns are populated** in that matrix —
+added by CR-006 after checklist finding CHK037 caught that this sentence previously claimed they existed when
+they did not. `tasks.md`
 fills Task. Implementation fills Code, Test, Validation, Documentation, Evidence. A generated
 traceability report asserts **zero orphans in both directions** and is enforced by `POL-TRC-001` as a
 mandatory release-blocking policy — so an incomplete chain cannot reach release readiness.

@@ -1,5 +1,9 @@
 # Contracts
 
+**Status**: **Derived design artifacts.** Approved indirectly via `plan.md`'s approval at the Gate 4 closing
+package (2026-09-20) and through ADR-005 — they were **not** independently gated. Every change to a file in this
+directory requires a change-control record (`POL-CHG-001`), regardless of release state.
+
 Versioned interface deliverables for feature 001. Each is a **source of truth**, not documentation
 generated from code — drift must be detectable, which is why validation runs against these files
 rather than deriving them (ADR-005).

@@ -32,6 +32,20 @@ ambiguity management and requirement discipline (Constitution I).
 | **Assumption-dependent** | Valid only while the referenced assumption (AS-nnn) holds. |
 | **PVT-nnn** | Proposed validation target. A number **this specification proposes**, not a client requirement. Requires human approval before it constrains anything. |
 | **AQ-nnn** | Ambiguity. AQ-001..003 were blocking and are resolved at Gate 2 (see Clarification Log). AQ-004..006 remain open, deferred to `/speckit-clarify`. |
+| **Material** | A defined term — see §Defined terms below. It gates whether a human is consulted, so it is not left to the reader. |
+
+### Defined terms
+
+**Material** (of a change, ambiguity, or risk): one whose resolution could alter an approved obligation (any
+FR/NFR or gate condition), a scope boundary (§Exclusions), the security posture, or a binding validation target
+(SC-\*/PVT-\*), or that determines which of two behaviours the system must exhibit. **Non-materiality must be
+affirmatively shown, never assumed: when classification is uncertain, the item MUST be treated as material and
+routed to the human.** Purely editorial changes altering no obligation are non-material. ("Key material" in the
+credential sense is unrelated.)
+
+*Added by CR-007 (approved 2026-09-20) after checklist finding CHK011 found the term used ten times and never
+defined. The closing default is the operative part: the enumeration is a floor, not an exhaustive list, and the
+burden of proof runs toward materiality so that doubt routes to the human rather than to agent inference.*
 
 Two subsystems are specified and must not be conflated:
 
@@ -1725,56 +1739,63 @@ Bidirectional traceability is a requirement (FR-ORC-027), so the matrix is seede
 completed by downstream stages. Left-to-right answers "is this requirement delivered and proven";
 right-to-left answers "why does this artifact exist".
 
-| Requirement | Journey | Scenario | Edge cases | Task | Test | Evidence |
-|-------------|---------|----------|------------|------|------|----------|
-| FR-URL-001 | US-1 | DS-A | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-002 | US-1 | DS-A | EC-006, EC-007 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-003 | US-1 | DS-A | EC-008 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-004 | US-1 | DS-A | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-005 | US-1 | DS-B | EC-004, EC-005 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-006 | US-1 | DS-A | EC-001, EC-008 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-007 | US-1 | DS-A | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-008 | US-1 | DS-A | EC-009 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-009 | US-1 | DS-A | EC-014 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-010 | US-1 | DS-B | EC-012, EC-013 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-011 | US-1 | DS-B | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-012 | US-1 | DS-A | EC-002, EC-003, EC-039 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-013 | US-1 | DS-B | EC-001, EC-013 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-014 | US-1 | DS-B | EC-010, EC-011 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-015 | US-1 | DS-B | EC-011 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-016 | US-1 | DS-B | EC-013 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-017 | US-1, US-5 | DS-A | EC-007 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-018 | US-1 | DS-A | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-019 | US-1, US-5 | DS-A | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-001 | US-3 | DS-A | EC-029 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-002 | US-3 | DS-A | EC-030 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-003 | US-3 | DS-A | EC-017, EC-018 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-004 | US-3 | DS-A | EC-015, EC-016, EC-038 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-005 | US-5 | DS-A | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-006 | US-3 | DS-A | EC-029 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-007 | US-3 | DS-A | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-008 | US-3 | DS-A | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-009 | US-3 | DS-A | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-010 | US-3 | DS-A, DS-C | EC-021 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-011 | US-2 | DS-C | EC-021 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-012 | US-3 | DS-A | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-013 | US-2 | DS-A, DS-C | EC-024 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-014 | US-3 | DS-B | EC-022, EC-031, EC-032, EC-033 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-015 | US-3 | DS-B | EC-023 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-016 | US-3 | DS-B | EC-022, EC-034, EC-035 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-017 | US-2 | DS-C | EC-023, EC-025 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-018 | US-3 | DS-C | EC-015, EC-026 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-019 | US-3 | DS-C | EC-019, EC-020, EC-030 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-020 | US-3 | DS-B | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-021 | US-2 | DS-A | EC-024 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-022 | US-4 | DS-B | EC-025, EC-027 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-023 | US-5 | DS-A, DS-B, DS-C | EC-028 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-024 | US-5 | DS-B | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-025 | US-4 | DS-A | EC-027, EC-028 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-026 | US-5 | DS-A | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-027 | US-5 | DS-A, DS-B, DS-C | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-028 | US-3, US-5 | DS-A, DS-B, DS-C | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-029 | US-5 | DS-A, DS-B, DS-C | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-030 | US-3 | DS-B, DS-C | EC-015, EC-018, EC-022, EC-023 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-031 | US-3 | DS-B | EC-023, EC-040 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-032 | US-2, US-3 | DS-C | EC-036, EC-037 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+**Design** and **ADR** were added by **CR-006** (approved 2026-09-20), closing a contradiction in which the
+approved plan claimed to add them while the matrix carried only eight of the ten chain links. Both columns are
+**derived** from the ADRs' own Traceability sections and the plan's designing sections, so any cell is verifiable
+by opening the artifact it names. **Task**, **Test**, and **Evidence** remain reserved for the Tasks and Implement
+stages. A requirement with no Design or ADR reference is an orphan in the same sense as one with no test
+(`POL-TRC-001`).
+
+| Requirement | Journey | Scenario | Edge cases | Design | ADR | Task | Test | Evidence |
+|---|---|---|---|---|---|---|---|---|
+| FR-URL-001 | US-1 | DS-A | — | Plan §2 | ADR-007 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-002 | US-1 | DS-A | EC-006, EC-007 | Plan §2 | ADR-007 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-003 | US-1 | DS-A | EC-008 | Plan §2, §8 | ADR-007 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-004 | US-1 | DS-A | — | Plan §2, §8 | ADR-013 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-005 | US-1 | DS-B | EC-004, EC-005 | Plan §2, §8 | ADR-013 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-006 | US-1 | DS-A | EC-001, EC-008 | Plan §2 | ADR-002, ADR-007 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-007 | US-1 | DS-A | — | Plan §2 | ADR-014 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-008 | US-1 | DS-A | EC-009 | Plan §2 | ADR-014 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-009 | US-1 | DS-A | EC-014 | Plan §2 | ADR-002 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-010 | US-1 | DS-B | EC-012, EC-013 | Plan §2, §7 | ADR-014, ADR-010 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-011 | US-1 | DS-B | — | Plan §2 | ADR-013, ADR-014 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-012 | US-1 | DS-A | EC-002, EC-003, EC-039 | Plan §2 | ADR-007 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-013 | US-1 | DS-B | EC-001, EC-013 | Plan §2 | ADR-002, ADR-007, ADR-014 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-014 | US-1 | DS-B | EC-010, EC-011 | Plan §2 | ADR-002, ADR-014 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-015 | US-1 | DS-B | EC-011 | Plan §2 | ADR-012 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-016 | US-1 | DS-B | EC-013 | Plan §2, §8 | ADR-013 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-017 | US-1, US-5 | DS-A | EC-007 | Plan §7, §8 | ADR-010, ADR-013 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-018 | US-1 | DS-A | — | Plan §2, §8 | ADR-013 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-019 | US-1, US-5 | DS-A | — | Plan §8, §Project Structure | ADR-013, ADR-012 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-001 | US-3 | DS-A | EC-029 | Plan §3 | ADR-003 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-002 | US-3 | DS-A | EC-030 | Plan §3 | ADR-003, ADR-008 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-003 | US-3 | DS-A | EC-017, EC-018 | Plan §3 | ADR-003 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-004 | US-3 | DS-A | EC-015, EC-016, EC-038 | Plan §3 | ADR-002, ADR-008 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-005 | US-5 | DS-A | — | Plan §3 | ADR-008, ADR-010 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-006 | US-3 | DS-A | EC-029 | Plan §3 | ADR-003 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-007 | US-3 | DS-A | — | Plan §3 | ADR-003 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-008 | US-3 | DS-A | — | Plan §3 | ADR-008 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-009 | US-3 | DS-A | — | Plan §3 | ADR-003 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-010 | US-3 | DS-A, DS-C | EC-021 | Plan §3 | ADR-003 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-011 | US-2 | DS-C | EC-021 | Plan §3 | ADR-003 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-012 | US-3 | DS-A | — | Plan §3 | ADR-003 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-013 | US-2 | DS-A, DS-C | EC-024 | Plan §3, §5 | ADR-005 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-014 | US-3 | DS-B | EC-022, EC-031, EC-032, EC-033 | Plan §3, §6 | ADR-003 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-015 | US-3 | DS-B | EC-023 | Plan §3, §6 | ADR-003 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-016 | US-3 | DS-B | EC-022, EC-034, EC-035 | Plan §3, §6 | ADR-003 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-017 | US-2 | DS-C | EC-023, EC-025 | Plan §3, §6 | ADR-003, ADR-008 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-018 | US-3 | DS-C | EC-015, EC-026 | Plan §3, §6 | ADR-002, ADR-008 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-019 | US-3 | DS-C | EC-019, EC-020, EC-030 | Plan §3, §9 | ADR-009 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-020 | US-3 | DS-B | — | Plan §3 | ADR-006 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-021 | US-2 | DS-A | EC-024 | Plan §3, §5 | ADR-004 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-022 | US-4 | DS-B | EC-025, EC-027 | Plan §9 | ADR-005 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-023 | US-5 | DS-A, DS-B, DS-C | EC-028 | Plan §7 | ADR-010, ADR-005 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-024 | US-5 | DS-B | — | Plan §7 | ADR-010 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-025 | US-4 | DS-A | EC-027, EC-028 | Plan §9 | ADR-011 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-026 | US-5 | DS-A | — | Plan §7 | ADR-010 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-027 | US-5 | DS-A, DS-B, DS-C | — | Plan §13 | ADR-006 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-028 | US-3, US-5 | DS-A, DS-B, DS-C | — | Spec §Stage Executor Model | ADR-004, ADR-006 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-029 | US-5 | DS-A, DS-B, DS-C | — | Spec §Stage Executor Model | ADR-004 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-030 | US-3 | DS-B, DS-C | EC-015, EC-018, EC-022, EC-023 | Plan §10 | ADR-011, ADR-004 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-031 | US-3 | DS-B | EC-023, EC-040 | Spec §Stage Executor Model | ADR-004 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-032 | US-2, US-3 | DS-C | EC-036, EC-037 | Plan §3, §5 | ADR-008 | *Tasks stage* | *Tasks stage* | *Implement stage* |
