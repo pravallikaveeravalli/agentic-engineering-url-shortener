@@ -284,6 +284,10 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   returns, with no state lost.
 - **EC-039**: A creation request carries a known idempotency marker but different content. Must
   conflict, minting nothing and changing nothing.
+- **EC-040**: Deterministic stage 7 is reached with **no change plan** for the requirement — the case a
+  reviewer creates by submitting their own requirement with AI off. Must suspend at the no-plan gate
+  offering governance-only / human-implemented / abandon; must **not** no-op forward, and must not allow
+  downstream stages to execute on the basis of an unimplemented change (FR-ORC-031, CR-001).
 
 ---
 
@@ -836,17 +840,26 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   **Evidence**: a run over a requirement outside DS-A/B/C, completing without executor changes;
   code inspection for input-specific branching.
 
-- **FR-ORC-029** — *Per-stage executor mode, selectable and labelled.* **[Confirmed — AQ-003]** Each
-  stage MUST declare its executor class per the approved executor map (see §Stage Executor Model). A
-  configuration flag MUST select AI mode or deterministic mode per run, and every run's evidence
-  MUST label each stage's executor mode.
-  **Accept**: the reviewer default is deterministic and the full system runs with **no AI key
-  present**; recorded demonstration runs in AI mode carry per-stage mode labels.
-  **Reject (negative)**: a deterministic execution MUST NOT be presented as AI work; an unlabelled
-  stage execution MUST NOT appear in evidence; the system MUST NOT require an AI key to run its
-  reviewer-default path.
-  **Evidence**: a complete run with no AI key configured; per-stage mode labels in run evidence for
-  both modes.
+- **FR-ORC-029** — *Executor kind recorded per execution; AI participation flagged per run.*
+  **[Confirmed — AQ-003; amended by CR-001, approved 2026-09-20]** Each stage MUST declare its executor
+  class per the approved executor map (see §Stage Executor Model). A run-level flag **`ai`**, taking
+  **`on` or `off` and defaulting to `off`**, MUST control whether AI executors participate, and every
+  run's evidence MUST record the **executor kind** for each stage execution, drawn from
+  **`DETERMINISTIC` / `AI` / `HUMAN`**.
+  **Accept**: with AI off — the keyless default — the full system runs with **no AI key present**;
+  recorded demonstration runs with `ai: on` carry per-stage executor-kind labels; a stage executed by a
+  human under the no-plan gate (FR-ORC-031) is recorded as `HUMAN`.
+  **Reject (negative)**: a deterministic execution MUST NOT be presented as AI work; an unlabelled stage
+  execution MUST NOT appear in evidence; the system MUST NOT require an AI key to run its keyless
+  default path; the run-level flag MUST NOT be named or described in a way that claims a property of the
+  run it does not control — `HUMAN` is never flag-selectable.
+  **Rationale recorded at CR-001**: a run-level name must not claim a property the run cannot guarantee.
+  A run started keyless can contain a `HUMAN` execution at the stage-7 no-plan gate, so a
+  "deterministic mode" label would over-promise at the run level. The flag controls exactly one thing —
+  whether AI executors participate — and is named for exactly that. Per-execution kind labels remain
+  literally true of the single execution each one stamps.
+  **Evidence**: a complete run with no AI key configured; per-stage executor-kind labels in run evidence
+  with the flag in both positions.
 
 - **FR-ORC-030** — *Injectable executors for deterministic reliability proofs.* **[Confirmed —
   AQ-003]** Automated tests MUST be able to inject scriptable fake executors — for example "fail
@@ -862,17 +875,36 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   AQ-003]** The implementation stage MUST be AI-capable: the AI authors the change from the design
   stage's output, the engine applies it on a branch, the **real** build and test suite verify it,
   and failure routes back with the report under bounded attempts before escalating to the human
-  gate. A deterministic plan-applying mode MUST exist as fallback.
+  gate. A deterministic **plan-applying** fallback MUST exist.
+
+  **No-change-plan gate** *(added by CR-001, approved 2026-09-20)*. The deterministic fallback applies a
+  change plan. Where **no change plan exists** for the requirement, the stage MUST NOT proceed. It MUST
+  suspend at a human gate, stating its expiry consequences in the ask per CL-005 (FR-ORC-013), and
+  present exactly three options:
+  1. **Proceed as a governance-only run** — recorded decision; downstream stages continue; run evidence
+     labels implementation as **intentionally skipped by human decision**.
+  2. **Human-implemented** — the human makes the change themselves, externally in the working tree or by
+     supplying change content with the decision, and the run proceeds into real testing that judges it.
+     That execution is recorded with executor kind **`HUMAN`** (FR-ORC-029).
+  3. **Abandon the run** — terminal `ABANDONED` with the reason recorded.
+
   **Accept**: an AI-authored change is applied on a branch, verified by the real suite, and either
-  passes or routes back with its failure report; the bound is respected before escalation.
+  passes or routes back with its failure report; the bound is respected before escalation; a
+  deterministic execution with no change plan suspends at the no-plan gate and each of the three options
+  produces its defined effect.
   **Reject (negative)**: creative authoring MUST NOT happen outside a stage; a failing AI-authored
   change MUST NOT be reported as success or merged; the verification suite MUST NOT be stubbed or
-  simulated for this stage.
+  simulated for this stage; **a stage with nothing implemented MUST NOT record success, and MUST NOT
+  allow downstream stages to execute, on the basis of a labelled no-op** — proceeding with nothing
+  implemented requires a recorded human decision.
   **Rationale recorded at Gate 2**: the governed pipeline is the safety net for AI-authored code,
   which is the thesis of this assessment implemented literally. An AI patch failing tests and being
   caught is not a failed demonstration — it is the governance visibly working.
-  **Evidence**: a run where an AI-authored change fails verification and routes back; a run where
-  one passes; both with executor mode labels.
+  **Rationale recorded at CR-001**: a labelled no-op that flows onward is quiet pretending. Proceeding
+  with nothing implemented is a material fact a human must consciously accept, not discover in a label
+  afterwards — nothing material advances on inference or silence.
+  **Evidence**: a run where an AI-authored change fails verification and routes back; a run where one
+  passes; a run exercising each of the three no-plan-gate options; all with executor-kind labels.
 
 ### Key Entities
 
@@ -925,8 +957,10 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
 - **KE-24 CreatorCredential**: the stored **hash** of a creator's API key, never the key itself.
   Belongs to one Creator.
 - **KE-25 StageExecutor**: the bound implementation for a StageNode, carrying its executor class
-  (deterministic engine, AI-capable, or human gate) and the mode actually used in a given run
-  (FR-ORC-029).
+  (deterministic engine, AI-capable, or human gate) and the **executor kind actually used** in a given
+  run — `DETERMINISTIC`, `AI`, or `HUMAN` (FR-ORC-029). *(Amended by CR-001: `HUMAN` is an executor kind
+  distinct from `HUMAN_GATE` — a human **implementing** a change is not the same as a human **deciding**
+  a gate.)*
 - **KE-26 FailureEnvelope**: a failure crossing the orchestration boundary — standard category,
   executor-proposed classification, and detail (FR-ORC-014).
 - **KE-27 RetryRuling**: the orchestrator's two-signature retry decision — what the executor proposed
@@ -1025,7 +1059,7 @@ repeatability are deterministic engines. Nothing is hardcoded to demonstration i
 | 4 Human clarification | Human gate — no executor |
 | 5 Task decomposition | AI-capable |
 | 6 Architecture & design | AI-capable |
-| 7 Implementation | AI-capable — AI authors the change, engine applies on a branch, real build and tests verify; deterministic plan-applying mode as fallback (FR-ORC-031) |
+| 7 Implementation | AI-capable — AI authors the change, engine applies on a branch, real build and tests verify. Deterministic fallback **applies a change plan**; where **no plan exists** the stage suspends at the no-plan gate (governance-only / human-implemented / abandon) and never no-ops forward. A human-implemented execution records executor kind `HUMAN` (FR-ORC-031, CR-001) |
 | 8 Testing | Deterministic, **real** — executes the actual test suite |
 | 9 Documentation | AI-capable |
 | 10 Security & policy checks | Deterministic, **real** — policy verdicts must be repeatable |
@@ -1037,10 +1071,16 @@ repeatability are deterministic engines. Nothing is hardcoded to demonstration i
 - One executor interface for every stage; no executor branches on recognizing specific inputs.
 - Tests inject scriptable fake executors, so every reliability proof is deterministic and
   independent of AI availability.
-- A configuration flag selects mode per run. **Reviewer default is deterministic**, runnable with no
-  AI key present. Recorded demonstration runs use AI mode.
-- Every run's evidence labels each stage's executor mode. Deterministic executions are labelled
-  demonstration executions and are never presented as AI work.
+- The run-level flag **`ai`** takes `on` or `off` and **defaults to `off`** — "with AI off (the keyless
+  default)". The keyless default is runnable with no AI key present. Recorded demonstration runs use
+  `ai: on`. *(Renamed by CR-001: the flag controls only whether AI executors participate, so it does not
+  claim the run is deterministic — a keyless run may still contain a `HUMAN` execution at the stage-7
+  no-plan gate.)*
+- `HUMAN` is **never flag-selectable**; it is recorded as the outcome of a no-plan-gate decision
+  (FR-ORC-031), so the keyless default is unchanged by its existence.
+- Every run's evidence records each stage execution's **executor kind** — `DETERMINISTIC`, `AI`, or
+  `HUMAN`. Deterministic executions are labelled demonstration executions and are never presented as AI
+  work.
 
 ## Non-Functional Requirements *(mandatory)*
 
@@ -1402,6 +1442,18 @@ working.
 *(new)*, NFR-AUT-004 *(new)*, CN-010 *(new)*, CN-011 *(new)*, KE-25 *(new)*, SC-014..016 *(new)*,
 FR-ORC-013 and FR-ORC-023 (executor mode in gate and audit evidence).
 
+### Change-control amendments to this specification
+
+Approved changes to this specification after Gate 2 / Gate 3, applied through the change-control workflow
+rather than as clarifications. Append-only.
+
+- **CR-001** | approved and applied 2026-09-20 | Pravallika Veeravalli | *Human executor kind and the
+  no-change-plan gate.* Six edits: FR-ORC-029 (run-level flag renamed `ai: on | off` default `off`;
+  executor-kind vocabulary extended to `DETERMINISTIC` / `AI` / `HUMAN`), FR-ORC-031 (no-plan gate with
+  three options; labelled no-op prohibited), KE-25 (`HUMAN` as an executor kind distinct from
+  `HUMAN_GATE`), §Stage Executor Model stage 7 row and binding conditions, and new EC-040. Record:
+  `docs/governance/change-control/CR-001-human-executor-and-no-plan-gate.md`.
+
 ### CL-004 — Branch strategy | 2026-09-18 | Pravallika Veeravalli
 
 **Decision**: stay on `main`. A single linear history is easiest for reviewers to follow and matches
@@ -1635,5 +1687,5 @@ right-to-left answers "why does this artifact exist".
 | FR-ORC-028 | US-3, US-5 | DS-A, DS-B, DS-C | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-029 | US-5 | DS-A, DS-B, DS-C | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-030 | US-3 | DS-B, DS-C | EC-015, EC-018, EC-022, EC-023 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-031 | US-3 | DS-B | EC-023 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-031 | US-3 | DS-B | EC-023, EC-040 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-032 | US-2, US-3 | DS-C | EC-036, EC-037 | *Tasks stage* | *Tasks stage* | *Implement stage* |
