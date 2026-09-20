@@ -288,6 +288,13 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   reviewer creates by submitting their own requirement with AI off. Must suspend at the no-plan gate
   offering governance-only / human-implemented / abandon; must **not** no-op forward, and must not allow
   downstream stages to execute on the basis of an unimplemented change (FR-ORC-031, CR-001).
+- **EC-041**: Authentication attempted with an **expired** credential. Must be refused, and the refusal must be
+  byte-identical to a revoked credential's, so the distinction is not disclosed (FR-URL-019, CR-002).
+- **EC-042**: A client caches a redirect and follows it after the link has expired. Impossible under the
+  temporary class required by FR-URL-007 — every follow reaches the service, so expiry is evaluated each time
+  (CR-003).
+- **EC-043**: A retention purge runs while a suspended run's audit records are older than the retention window.
+  Must purge nothing — the clock starts at run termination, which has not occurred (NFR-AUD-002, CR-004).
 
 ---
 
@@ -340,19 +347,32 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   ever share a code, and a collision MUST NOT be resolved by overwriting an existing link.
   **Evidence**: concurrency test results (EC-001); uniqueness constraint evidence.
 
-- **FR-URL-007** — *Redirect resolution.* **[Confirmed]** The service MUST resolve a known,
-  unexpired code to its exact stored destination and redirect the client there.
-  **Accept**: the redirect target equals the stored destination byte-for-byte.
-  **Reject (negative)**: the service MUST NOT redirect to a destination derived from request
-  input rather than from storage, and MUST NOT rewrite the destination at resolution time.
-  **Evidence**: resolution test results including round-trip equality.
+- **FR-URL-007** — *Redirect resolution, temporary class.* **[Confirmed; permanence fixed by CR-003]** The
+  service MUST resolve a known, unexpired code to its exact stored destination and redirect the client there,
+  using a **temporary-class redirect**.
+  **Accept**: the redirect target equals the stored destination byte-for-byte; the response is temporary-class,
+  so every follow reaches the service.
+  **Reject (negative)**: the service MUST NOT redirect to a destination derived from request input rather than
+  from storage; MUST NOT rewrite the destination at resolution time; and MUST NOT use a **permanent-class**
+  redirect, which would let clients cache the mapping and thereby defeat both analytics counting (FR-URL-010)
+  and expiry enforcement (FR-URL-008).
+  **Rationale recorded at CR-003**: a permanent redirect is cached by browsers, after which clicks never reach
+  the service — analytics cannot count them and expiry cannot be enforced, because a cached redirect outlives
+  the link's death. Temporary is the only class compatible with FR-URL-008 and FR-URL-010. The exact status code
+  remains an implementation detail within the temporary class (CN-006).
+  **Evidence**: resolution test results including round-trip equality; assertion that the response is
+  temporary-class.
 
 - **FR-URL-008** — *Expired-link behavior.* **[Confirmed]** An expired link MUST NOT redirect, and
   its outcome MUST be distinguishable from an unissued code.
   **Accept**: expired yields the expired outcome; unissued yields not-found; the two differ.
   **Reject (negative)**: an expired link MUST NOT redirect under any retry, cache, or race
   condition, including EC-009.
-  **Evidence**: expiry boundary test results.
+  **Dependency recorded at CR-003**: enforceability of this requirement **depends on FR-URL-007's temporary
+  class**. Under a permanent-class redirect a client would hold a cached mapping that outlives the link's
+  expiry and never consults the service again, so expiry would be unenforceable by construction rather than by
+  defect.
+  **Evidence**: expiry boundary test results; cache-behaviour test per EC-042.
 
 - **FR-URL-009** — *Expiration semantics.* **[Derived — from Confirmed "expiration"]** The service
   MUST define whether expiry is caller-supplied, defaulted, or both, MUST reject an expiry
@@ -482,15 +502,25 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   **application** MUST NOT write key material anywhere.
   **Accept**: the operator script provisions a creator and may display the key once to the
   operator's terminal; the stored record contains only a hash; the service authenticates a
-  presented key against that hash.
+  presented key against that hash; the script **requires** an expiry parameter — a duration or the
+  explicit literal `never` — and **refuses to provision without it**; an expired credential is
+  refused with the same response shape as a revoked one.
   **Reject (negative)**: no HTTP key-issuance surface may exist; keys MUST NOT be committed in
   configuration; keys MUST NOT be generated at application startup and emitted to console or log
-  streams; the stored form MUST NOT be reversible to the key.
+  streams; the stored form MUST NOT be reversible to the key; a credential MUST NOT be provisioned
+  without an explicit expiry decision — there is **no default**, and a non-expiring credential is
+  reachable only by passing the literal `never`; an expired credential MUST NOT authenticate, and
+  its refusal MUST NOT be distinguishable from a revoked credential's.
   **Rationale recorded at Gate 2**: the ability to run commands on the machine **is** the trust
   boundary, in the demonstration and in production alike. Operator-invoked terminal output is not
   application logging; the distinction being drawn is that the application never logs keys. An
   HTTP issuance endpoint would create an unprotected surface whose only demonstration defence —
   localhost — is meaningless when everything runs on localhost.
+  **Rationale recorded at CR-002**: no one gets to not think about credential lifetime at
+  provisioning — an unconsidered eternal key must be impossible; explicitly choosing `never` is
+  permitted, silently receiving it is not. This is deliberately **not** an account lifecycle
+  (EX-005 stands): no renewal flow, no notification, and rotation remains
+  provision-new-then-revoke-old.
   **Evidence**: provisioning script run; stored-hash inspection; secret-scan over repository and
   telemetry; absence-of-endpoint test.
 
@@ -954,8 +984,9 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
 - **KE-23 Creator**: a provisioned identity permitted to create links and read its own links'
   analytics. Owns zero or more ShortLinks. Provisioned by operator script, never self-service
   (FR-URL-019).
-- **KE-24 CreatorCredential**: the stored **hash** of a creator's API key, never the key itself.
-  Belongs to one Creator.
+- **KE-24 CreatorCredential**: the stored **hash** of a creator's API key, never the key itself, covering the
+  full presented string. Belongs to one Creator. Carries a **nullable `expires_at`**, where null is reachable
+  only by an explicit `never` at provisioning, and an optional `revoked_at`. *(Amended by CR-002.)*
 - **KE-25 StageExecutor**: the bound implementation for a StageNode, carrying its executor class
   (deterministic engine, AI-capable, or human gate) and the **executor kind actually used** in a given
   run — `DETERMINISTIC`, `AI`, or `HUMAN` (FR-ORC-029). *(Amended by CR-001: `HUMAN` is an executor kind
@@ -1131,8 +1162,10 @@ requirement. None constrains implementation until approved.
 - **NFR-AUD-001** — Every audit record carries all six mandatory fields, and audit records are
   immutable after write. *Verifiable: schema validation over the full audit corpus; mutation
   attempt rejected.*
-- **NFR-AUD-002** — Audit evidence retains policy outcomes and exceptions. *Verifiable: presence
-  check per run. Retention: PVT-010.*
+- **NFR-AUD-002** — Audit evidence retains policy outcomes and exceptions, and its retention clock is anchored
+  to **run termination** rather than record creation, so a purge cannot defeat FR-ORC-023's reconstruction
+  requirement for a run that is still live, suspended, or freshly terminal *(CR-004)*. *Verifiable: presence
+  check per run; purge test per EC-043. Retention: PVT-010.*
 - **NFR-PERF-001** — Redirect resolution completes within PVT-001 at the p95 under stated
   conditions. *Verifiable: measured, with conditions declared.*
 - **NFR-PERF-002** — Link creation completes within PVT-002 at the p95 under stated conditions.
@@ -1210,11 +1243,22 @@ requirement. None constrains implementation until approved.
 
 ---
 
-## Proposed Validation Targets *(require human approval)*
+## Validation Targets *(approved)*
 
-These are this specification's proposals. The assignment supplies no numeric targets, so none of
-these is a client requirement (Constitution X, Assessment Scope §demonstration versus production).
-Approval is requested at the Plan-stage gate.
+**All 15 values below were approved by Pravallika Veeravalli at the Gate 4 closing package, 2026-09-20**
+(`docs/governance/gate-decisions/gate-04-closing-package.md`, CR-005). They now **constrain implementation** and
+are acceptance thresholds, no longer proposals.
+
+They originated as this specification's own proposals — the assignment supplied no numeric targets — and were
+held as non-binding until approval, per Constitution X and §Assessment Scope's demonstration-versus-production
+rule. Four were named explicitly in the approval: **PVT-009** as redefined by ADR-014 (an append-failure-rate
+ceiling, not a loss budget), **PVT-013/014** (the owner's two-tier redirect limits), **PVT-015** (90-day idle
+retention), and **PVT-001**, approved with the knowledge that the analytics append now sits inside its budget and
+is measured separately.
+
+Every figure measured against these thresholds remains a **demonstration measurement** and must be labelled as
+such (Constitution IX, AS-009). Approval binds the target; it does not convert a demonstration figure into a
+production statistic.
 
 | ID | Target | Proposed value | Basis | Conditions |
 |----|--------|----------------|-------|------------|
@@ -1227,7 +1271,7 @@ Approval is requested at the Plan-stage gate.
 | PVT-007 | Retry bound and backoff | 3 attempts, exponential from 1 s | Bounded per Constitution VIII without masking permanent faults | Per transient-classified stage |
 | PVT-008 | Coverage, domain and orchestration transitions | ≥ 85% branch | Meaningful for governed logic without coverage theatre | Excludes generated and infrastructure code |
 | PVT-009 | Analytics recording tolerance under load | ≤ 0.5% loss | Analytics must never take down a redirect (FR-URL-010) | At PVT-003 |
-| PVT-010 | Audit and analytics retention | 90 days audit, 30 days redirect events | Housekeeping cap; no personal data is held (AQ-002), so retention is not a privacy control here | Prototype scope |
+| PVT-010 | Audit and analytics retention | 90 days audit, 30 days redirect events | Housekeeping cap; no personal data is held (AQ-002), so retention is not a privacy control here | **Audit retention measured from run termination, never from record creation** (CR-003/CR-004 — DF-003 resolved): a run's records are not purgeable while it is live or suspended. Prototype scope |
 | PVT-011 | Default link TTL when unspecified | 30 days | Bounded default rather than unbounded growth | Caller may override within limits |
 | PVT-012 | Creation rate limit | 60 requests/minute per creator | Demonstrates throttling without impeding tests | Per authenticated creator (FR-URL-018) |
 | PVT-013 | Redirect rate limit, per short code | 600 requests/minute per code | Hotspot protection: no single link can be hammered | Public, unauthenticated traffic |
@@ -1319,8 +1363,18 @@ Ambiguities raised at Gate 2 as non-blocking, dispositioned at Gate 3:
 
 ## Deferred Findings
 
-Recorded uncertainty that is **not** resolved and must not be treated as decided. Each carries an
-owner and a required decision point, per Constitution I's prohibition on silent interpretation.
+Recorded uncertainty. Each carries an owner and a decision point, per Constitution I's prohibition on silent
+interpretation. **Status as of the Gate 4 closing package, 2026-09-20:**
+
+| Finding | Status |
+|---|---|
+| DF-001 — analytics exactness | **RESOLVED** by ADR-014 (accepted with conditions at Gate 4) |
+| DF-002 — redirect permanence | **RESOLVED** by the closing package; applied as CR-003 |
+| DF-003 — audit vs idle retention boundary | **RESOLVED** by the closing package; applied as CR-004 |
+| DF-004 — deferred production enhancements | **OPEN BY DESIGN** — recorded, not adopted; out of scope |
+| DF-005 — outstanding Gate 1 / Gate 3 items | **CLOSED** by the closing package; applied as CR-005 |
+
+Entries below retain their original text for provenance, annotated with their disposition.
 
 ### DF-001 — Analytics exactness contradiction *(contradiction in the approved spec)*
 
@@ -1334,7 +1388,13 @@ owner and a required decision point, per Constitution I's prohibition on silent 
 - **Owner**: human owner.
 - **Required decision point**: Plan gate, before any acceptance test is written against either reading.
 
-### DF-002 — Redirect permanence *(AQ-004)*
+### DF-002 — Redirect permanence *(AQ-004)* — **RESOLVED 2026-09-20**
+
+**Resolution**: redirects are **temporary, never permanent** (FR-URL-007, CR-003). Owner's reasoning: a permanent
+redirect is cached by browsers, after which clicks never reach the service — analytics cannot count them and
+expiry cannot be enforced, because a cached redirect outlives the link's death. Temporary is the only class
+compatible with FR-URL-008 and FR-URL-010. The exact status code remains an implementation detail within the
+temporary class. Original finding retained below for provenance.
 
 - **Finding**: the spec does not state whether a redirect is permanent or temporary by default.
 - **Impact**: a permanent redirect invites intermediary and browser caching, which silently
@@ -1347,7 +1407,14 @@ owner and a required decision point, per Constitution I's prohibition on silent 
 - **Required decision point**: Plan gate. It interacts with DF-001 — caching changes what analytics
   exactness even means.
 
-### DF-003 — Audit-versus-idle retention boundary
+### DF-003 — Audit-versus-idle retention boundary — **RESOLVED 2026-09-20**
+
+**Resolution**: the audit retention clock **starts at run termination**, not record creation (NFR-AUD-002,
+PVT-010, CR-004). Owner's reasoning: a run's history must never age out while the run is alive or freshly
+terminal; with idle retention and audit retention both at 90 days, a day-90 auto-abandonment must not coincide
+with its own earliest records becoming purgeable. This rule was chosen over the alternative (audit retention
+strictly greater than idle retention) because it holds for any pair of values, including the deliberate 90/90
+alignment. Original finding retained below for provenance.
 
 - **Finding**: PVT-010 proposes 90-day audit retention and PVT-015 proposes 90-day suspended-run idle
   retention. A run suspended on day 0 is auto-abandoned on day 90, at the same time its earliest audit
@@ -1370,12 +1437,19 @@ owner and a required decision point, per Constitution I's prohibition on silent 
 
 - **Owner**: human owner. **Required decision point**: post-assessment; neither is in scope now.
 
-### DF-005 — Gate 1 and Gate 3 items still outstanding at the Plan gate
+### DF-005 — Gate 1 and Gate 3 items still outstanding at the Plan gate — **CLOSED 2026-09-20**
 
-MTTR definition with formula and measurement rules; the 2–3 day timebox and its scope controls;
-versioned API/schema deliverables with contract validation; approval of every PVT value; the
-constitution check enumerated against v1.1.0 with the policy version recorded. **Owner**: human owner.
-**Required decision point**: Plan gate.
+All constituent items are approved or discharged at the Gate 4 closing package (CR-005):
+
+| Item | Disposition |
+|---|---|
+| MTTR definition, formula, measurement rules | **APPROVED** — plan §7, including the declared human-wait exclusion and unrecovered failures counted separately |
+| 2–3 day timebox and scope controls | **APPROVED** — plan §14: milestones, four checkpoints, four stop conditions, cuts hit backlog before evidence |
+| Versioned API/schema deliverables with contract validation | **DISCHARGED** — plan §2 and ADR-005; parser validation executed 2026-09-20, one real defect found and fixed; meta-schema lint remains a Slice 1 task |
+| Approval of every PVT value | **APPROVED** — all 15, see §Validation Targets |
+| Constitution check against v1.1.0 with policy version recorded | **DISCHARGED** — plan §Constitution Check, `policy-set-1.0.0` |
+
+Original finding retained above for provenance.
 
 ---
 
@@ -1453,6 +1527,21 @@ rather than as clarifications. Append-only.
   three options; labelled no-op prohibited), KE-25 (`HUMAN` as an executor kind distinct from
   `HUMAN_GATE`), §Stage Executor Model stage 7 row and binding conditions, and new EC-040. Record:
   `docs/governance/change-control/CR-001-human-executor-and-no-plan-gate.md`.
+- **CR-002** | approved and applied 2026-09-20 | Pravallika Veeravalli | *Credential expiry required at
+  provisioning.* FR-URL-019 accept and reject criteria plus rationale; KE-24 (`expires_at`, `revoked_at`, hash
+  over the full presented string); new EC-041. Record:
+  `docs/governance/change-control/CR-002-credential-expiry-required-at-provisioning.md`.
+- **CR-003** | approved and applied 2026-09-20 | Pravallika Veeravalli | *DF-002 resolved — redirects are
+  temporary, never permanent.* FR-URL-007 (temporary class required, permanent prohibited); FR-URL-008 (expiry
+  enforceability depends on it); DF-002 and AQ-004 marked resolved; new EC-042. Record:
+  `docs/governance/change-control/CR-003-redirect-permanence-resolved.md`.
+- **CR-004** | approved and applied 2026-09-20 | Pravallika Veeravalli | *DF-003 resolved — audit retention
+  clock starts at run termination.* PVT-010 conditions; NFR-AUD-002; DF-003 marked resolved; new EC-043. Record:
+  `docs/governance/change-control/CR-004-audit-retention-clock-resolved.md`.
+- **CR-005** | approved and applied 2026-09-20 | Pravallika Veeravalli | *Gate 4 closing approvals reflected in
+  the specification.* §Proposed Validation Targets retitled §Validation Targets with all 15 approved and binding;
+  DF-005 closed; `executorModeUsed` renamed `executorKindUsed` in the contracts. Record:
+  `docs/governance/change-control/CR-005-gate-4-closing-approvals.md`.
 
 ### CL-004 — Branch strategy | 2026-09-18 | Pravallika Veeravalli
 

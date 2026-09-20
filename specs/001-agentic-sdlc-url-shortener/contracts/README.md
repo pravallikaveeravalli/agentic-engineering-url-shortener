@@ -30,10 +30,20 @@ Every change to any file here records, under `docs/governance/change-control/`: 
 backward-compatibility impact, affected consumers, tests to update, documentation to update,
 rollout/migration steps, and the required change approval (`POL-CHG-001`).
 
-## Open items affecting these contracts
+## Verification status
 
-- **DF-002** — the redirect status code in `openapi.yaml` is `307` as the plan's **provisional**
-  position. Not settled; a Plan-gate decision for permanent redirects changes it to `308`/`301` and
-  forces a re-examination of analytics counting and expiry enforcement.
-- **DF-001** — whether the redirect's event append is synchronous and transactional is not settled;
-  it does not change the wire contract but changes what the analytics tests may assert.
+**Parse-validated 2026-09-20** — all four JSON Schemas via `python3`, `openapi.yaml` via `ruby -ryaml`. One real
+defect was found and fixed: `RunInspection.ai` was written `enum: [on, off]`, which YAML 1.1 coerces to
+`[true, false]`; it is now quoted. See ADR-005 §Validation for the executed output.
+
+**Not yet meta-schema linted** against OpenAPI 3.1 or JSON Schema 2020-12 — validators are not present in this
+environment, so structural conformance remains unverified. Slice 1 task.
+
+## Resolved items formerly affecting these contracts
+
+- **DF-002** — **resolved** at the Gate 4 closing package (CR-003): redirects are temporary, never permanent.
+  The `307` is now the approved class rather than a provisional position.
+- **DF-001** — **resolved** by ADR-014: the append is synchronous in a **separate** transaction with failure
+  isolated. As anticipated, this changed no wire contract, only what the analytics tests may assert.
+- **`executorModeUsed`** — renamed to **`executorKindUsed`** (CR-005), and the kind enum extended with `HUMAN`
+  per CR-001.

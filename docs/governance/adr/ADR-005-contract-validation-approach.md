@@ -149,8 +149,31 @@ the document or the schemas; the document remains the source either way.
 The harness is validated by the deliberate-drift test: a response field is changed without updating the
 document, and the contract test must fail. If it passes, the harness is not actually validating.
 
-**Disclosed gap**: the Phase 1 contract files (`openapi.yaml` and the four JSON Schemas) have **not been
-parse-validated** — attempts to execute a parser in the authoring session were refused by the environment's
-permission layer. They are hand-written and unverified. First task in Slice 1 is to parse and schema-lint
-all five files; any defect found is a defect in the Phase 1 artifacts, not in this decision. This is
-recorded rather than assumed away because Principle X forbids presenting unverified work as verified.
+**Verification executed, 2026-09-20** — replacing the gap this section previously disclosed. The earlier text
+recorded that parser execution had been refused by the environment's permission layer and that the files were
+hand-written and unverified. Permission was granted at the Gate 4 closing package; the parsers were run, and what
+follows is the actual output rather than an assurance.
+
+| File | Parser | Result |
+|---|---|---|
+| `approval.schema.json` | `python3` json | **PASS** — `title=GateDecision`, `version=1.0.0` |
+| `audit-event.schema.json` | `python3` json | **PASS** — `title=AuditEvent`, `version=1.0.0` |
+| `policy-evaluation.schema.json` | `python3` json | **PASS** — `title=PolicyEvaluation`, `version=1.0.0` |
+| `workflow-state.schema.json` | `python3` json | **PASS** — `title=WorkflowStateSnapshot`, `version=1.0.0` |
+| `openapi.yaml` | `ruby -ryaml` (PyYAML unavailable) | **PASS** — `openapi=3.1.0`, `info.version=1.0.0`, 6 paths, 6 schemas, `creatorApiKey: type=http, scheme=bearer` |
+
+**One real defect was found and fixed, which is the point.** In `openapi.yaml`, `RunInspection.ai` was written
+`enum: [on, off]` with `default: off`. Under YAML 1.1 — which most parsers use, including PyYAML and Ruby's —
+unquoted `on` and `off` are **booleans**, so the parser returned `enum=[true, false]`, `default=false`. The
+run-level flag's two string values had silently become booleans, and the JSON Schema counterpart in
+`workflow-state.schema.json` (correctly quoted, being JSON) would have disagreed with the OpenAPI document.
+Fixed by quoting, with an inline comment recording why; re-parsed and confirmed `["on", "off"]` as `String`.
+
+This is a small vindication of the decision this ADR records. The defect was invisible to review — the YAML reads
+correctly to a human — and surfaced only by executing a parser. Option C, generating the specification from
+code, would never have surfaced it, because there would have been no independent document left to disagree with
+the code.
+
+**Residual, disclosed**: the files are *parse*-valid. They have **not** been schema-linted against the OpenAPI
+3.1 or JSON Schema 2020-12 meta-schemas, which needs validators not present in this environment. Structural
+conformance therefore remains unverified even though syntax is now confirmed, and that lint stays a Slice 1 task.

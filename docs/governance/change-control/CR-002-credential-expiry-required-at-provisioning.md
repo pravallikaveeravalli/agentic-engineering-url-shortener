@@ -2,7 +2,9 @@
 
 | Field | Value |
 |---|---|
-| Status | **PROPOSED — awaiting human change approval.** No approved artifact has been edited. |
+| Status | **APPROVED and APPLIED** — 2026-09-20 |
+| Approving authority | Pravallika Veeravalli (human owner), Gate 4 closing package |
+| Owner's words | "Apply the five specification edits for required credential expiry; it formalizes the decision I already made at ADR-013." |
 | Raised by | Pravallika Veeravalli (owner refinement 3 to ADR-013, 2026-09-20) |
 | Raised during | Gate 4, ADR-013 review |
 | Affected approved artifact | `specs/001-agentic-sdlc-url-shortener/spec.md` (approved Gate 2, clarified Gate 3, amended by CR-001) |

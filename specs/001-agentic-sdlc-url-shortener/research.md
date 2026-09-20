@@ -125,27 +125,49 @@ integrity, and the governance record itself.
 
 Labelled provisional. Not decisions, and not to be cited as such.
 
-### DF-001 — analytics exactness
+### DF-001 — analytics exactness — **SUPERSEDED 2026-09-20; the position below was wrong**
 
-**Provisional**: synchronous and transactional with the redirect. This makes FR-URL-010's "appends an
-event" and SC-001's 100% literally true, and reduces PVT-009's 0.5% loss tolerance to redundancy
-(retire it). **Cost**: the event write sits inside the redirect's latency budget, pressuring PVT-001.
-**The alternative**: async best-effort protects latency but requires the spec to admit lossy analytics,
-which changes what the acceptance tests may assert. Genuinely a trade, not an oversight — which is why
-it is the owner's call.
+**Superseded by ADR-014**, accepted at Gate 4. The provisional position recorded here — synchronous and
+transactional *with* the redirect — **violates FR-URL-010's negative criterion**: if the append shares the
+redirect's transaction, a failed append rolls the transaction back and fails the redirect, which EC-012
+explicitly prohibits. The position was reached by optimising for the positive criterion in isolation and never
+testing it against the negative one.
 
-### DF-002 — redirect permanence
+**Resolved as**: synchronous append in a **separate** transaction, failure isolated and counted, redirect
+succeeds regardless; PVT-009 retained but redefined as an append-failure-rate ceiling rather than a loss budget;
+SC-001 scoped explicitly to redirect correctness. See
+`docs/governance/adr/ADR-014-analytics-consistency.md`.
 
-**Provisional**: temporary redirect. A cached permanent redirect bypasses the service, silently
-undercounting analytics **and** defeating expiry, because an expired link would still be followed from
-cache. Permanence would buy client-side speed at the cost of two requirements.
+Retained verbatim below for provenance, because a superseded position that was *wrong* is more instructive than
+one that was merely provisional:
 
-### DF-003 — retention boundary
+> **Provisional**: synchronous and transactional with the redirect. This makes FR-URL-010's "appends an
+> event" and SC-001's 100% literally true, and reduces PVT-009's 0.5% loss tolerance to redundancy
+> (retire it). **Cost**: the event write sits inside the redirect's latency budget, pressuring PVT-001.
+> **The alternative**: async best-effort protects latency but requires the spec to admit lossy analytics,
+> which changes what the acceptance tests may assert. Genuinely a trade, not an oversight — which is why
+> it is the owner's call.
 
-**Provisional**: measure audit retention from **run termination**, not record creation, so a run's
-earliest records cannot age out while the run is still live or being abandoned.
+### DF-002 — redirect permanence — **RESOLVED 2026-09-20, position confirmed**
 
-### DF-005 — remaining Plan-gate items
+Resolved as **temporary, never permanent** (CR-003). The provisional position below was correct and is now the
+approved requirement in FR-URL-007.
 
-PVT values, timebox, MTTR method with its declared human-wait exclusion, and the contract deliverables
-are all tabled in `plan.md` for approval. None is assumed to be granted.
+> **Provisional**: temporary redirect. A cached permanent redirect bypasses the service, silently
+> undercounting analytics **and** defeating expiry, because an expired link would still be followed from
+> cache. Permanence would buy client-side speed at the cost of two requirements.
+
+### DF-003 — retention boundary — **RESOLVED 2026-09-20, position confirmed**
+
+Resolved as the audit retention clock starting at **run termination** (CR-004), chosen over the alternative
+(audit retention strictly greater than idle retention) because it holds for any pair of values.
+
+> **Provisional**: measure audit retention from **run termination**, not record creation, so a run's
+> earliest records cannot age out while the run is still live or being abandoned.
+
+### DF-005 — remaining Plan-gate items — **CLOSED 2026-09-20**
+
+All approved or discharged at the Gate 4 closing package (CR-005): PVT values approved as binding thresholds,
+timebox and scope controls approved, MTTR method approved including the declared human-wait exclusion, and the
+contract deliverables discharged — with parser validation executed the same day, finding and fixing one real
+defect.

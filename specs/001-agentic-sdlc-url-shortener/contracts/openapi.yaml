@@ -11,9 +11,10 @@ info:
     Redirect resolution is public and MUST NOT require authentication (FR-URL-018).
     Link creation and analytics require a creator API key.
 
-    NOTE: the redirect status code is governed by deferred finding DF-002 and is NOT settled.
-    The 307 below reflects the plan's provisional position (temporary redirect) and changes if the
-    owner decides otherwise at the Plan gate.
+    Redirects are TEMPORARY, never permanent — resolved at the Gate 4 closing package (DF-002, CR-003).
+    A permanent redirect would be cached by clients, after which follows never reach the service, defeating
+    both analytics counting (FR-URL-010) and expiry enforcement (FR-URL-008). The exact code within the
+    temporary class is an implementation detail (CN-006).
 servers:
   - url: http://localhost:8080
     description: Local demonstration instance
@@ -160,7 +161,9 @@ paths:
       responses:
         '307':
           description: >
-            Redirect to the stored destination. Provisional status code pending DF-002.
+            Temporary redirect to the stored destination. Temporary class is required (FR-URL-007, CR-003) so
+            that every follow reaches the service — analytics can count it and expiry is evaluated each time.
+            A permanent-class redirect is prohibited.
           headers:
             Location:
               required: true
@@ -406,8 +409,10 @@ components:
         policySetVersion: { type: string }
         ai:
           type: string
-          enum: [on, off]
-          default: off
+          # Quoted deliberately: unquoted on/off are booleans under YAML 1.1, which silently
+          # coerced this enum to [true, false]. Caught by parser validation, 2026-09-20.
+          enum: ["on", "off"]
+          default: "off"
           description: >
             Run-level flag: whether AI executors participate. Named for the one thing it controls, and
             deliberately not a "mode" — a run with ai=off can still contain a HUMAN execution at the stage-7
@@ -431,10 +436,13 @@ components:
                 enum: [BLOCKED, READY, RUNNING, AWAITING_APPROVAL, RETRY_WAIT, FALLBACK,
                        ROLLING_BACK, COMPENSATING, SUCCEEDED, FAILED, INVALIDATED, SKIPPED]
               executorClass: { type: string, enum: [DETERMINISTIC, AI_CAPABLE, HUMAN_GATE] }
-              executorModeUsed:
+              executorKindUsed:
                 type: [string, 'null']
-                enum: [DETERMINISTIC, AI, null]
-                description: Required on every executed stage (FR-ORC-029).
+                enum: [DETERMINISTIC, AI, HUMAN, null]
+                description: >
+                  Executor kind actually used. Required on every executed stage (FR-ORC-029). HUMAN is recorded
+                  for a stage the human implemented under the no-plan gate (FR-ORC-031); it is never
+                  flag-selectable.
               attemptsUsed: { type: integer, minimum: 0 }
               dependsOn: { type: array, items: { type: integer } }
         pendingGate:

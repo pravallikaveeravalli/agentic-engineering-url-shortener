@@ -42,7 +42,11 @@
                      "ROLLING_BACK", "COMPENSATING", "SUCCEEDED", "FAILED", "INVALIDATED", "SKIPPED"]
           },
           "executorClass": { "type": "string", "enum": ["DETERMINISTIC", "AI_CAPABLE", "HUMAN_GATE"] },
-          "executorModeUsed": { "type": ["string", "null"], "enum": ["DETERMINISTIC", "AI", null] },
+          "executorKindUsed": {
+            "type": ["string", "null"],
+            "enum": ["DETERMINISTIC", "AI", "HUMAN", null],
+            "description": "Executor kind actually used. HUMAN is recorded for a stage the human implemented under the no-plan gate (FR-ORC-031); it is never flag-selectable. Required on every executed stage (FR-ORC-029)."
+          },
           "attemptsUsed": { "type": "integer", "minimum": 0 },
           "blockingReason": { "type": ["string", "null"] },
           "enteredAt": { "type": ["string", "null"], "format": "date-time" },

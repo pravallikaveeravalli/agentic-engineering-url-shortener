@@ -49,10 +49,10 @@
       "description": "Mandatory field 5."
     },
     "reason": { "type": "string", "minLength": 1, "description": "Mandatory field 6. Never empty — an unexplained audit record is not auditable." },
-    "executorModeUsed": {
+    "executorKindUsed": {
       "type": ["string", "null"],
-      "enum": ["DETERMINISTIC", "AI", null],
-      "description": "Required on any event describing a stage execution. A deterministic execution is never presented as AI work (NFR-AUT-003)."
+      "enum": ["DETERMINISTIC", "AI", "HUMAN", null],
+      "description": "Required on any event describing a stage execution. A deterministic execution is never presented as AI work (NFR-AUT-003). HUMAN is recorded for a stage the human implemented under the no-plan gate (FR-ORC-031)."
     },
     "correctsEventId": {
       "type": ["string", "null"],

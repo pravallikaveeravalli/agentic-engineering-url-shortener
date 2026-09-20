@@ -8,8 +8,10 @@
 
 **Policy version evaluated**: `policy-set-1.0.0` (defined in §9 of this plan)
 
-**Status**: **PROPOSED — awaiting Plan gate decision.** No technology is selected by this document;
-§12 evaluates options and recommends, and selection requires an approved ADR (CN-002).
+**Status**: **APPROVED — 2026-09-20 by Pravallika Veeravalli**, at the Gate 4 closing package
+(`docs/governance/gate-decisions/gate-04-closing-package.md`): *"This is the Human Architecture Approval of the
+lifecycle."* Technology selections in §12 are **accepted** as ADR-001..005 (`docs/governance/adr/`), approved at
+`gate-04-adr.md`. Further changes to this plan pass through change control.
 
 ---
 
@@ -33,27 +35,28 @@ prohibition on unjustifiable complexity.
 
 ## Technical Context
 
-Every row is **PROPOSED**. Nothing here is settled until the ADR gate (CN-002, Gate 1 carry-forward).
-Rationale, alternatives, and reversibility for each are in §12.
+Every row is **ACCEPTED** at Gate 4 (2026-09-20), each by the ADR named in its Status column. Rationale,
+alternatives, consequences, and reversibility for each are in the ADR itself; §12 carries the evaluation these
+decisions came from.
 
-| Field | Proposed | Status |
+| Field | Selected | Status |
 |---|---|---|
-| Language/Version | Java 21 (LTS) | PROPOSED — ADR-001 |
-| Primary Dependencies | Spring Boot 3.x (web, validation, data-jpa, actuator), Flyway, JUnit 5, Testcontainers, AssertJ, Awaitility | PROPOSED — ADR-001, ADR-005 |
-| Storage | PostgreSQL 16 via Docker Compose; disk-backed as **required** by CL-009 | PROPOSED — ADR-002 |
-| Testing | JUnit 5 + Testcontainers (real Postgres), OpenAPI response validation, deterministic fake executors | PROPOSED — ADR-005 |
-| Target Platform | Single JVM process, Linux/macOS developer machine; Docker for the store | PROPOSED |
-| Project Type | Web service plus embedded orchestration engine; one deployable, two internal planes | PROPOSED |
-| AI provider (AI-capable stages) | Anthropic Claude API behind an interface; **never required** — the run-level flag is `ai: on \| off`, default `off`, so the keyless path is the reviewer default (CN-011) | PROPOSED — ADR-004 |
-| Performance Goals | PVT-001 redirect p95 ≤ 50 ms; PVT-002 create p95 ≤ 200 ms; PVT-003 100 concurrent | **All PVTs unapproved** — see §Decisions Required |
-| Constraints | 2–3 day timebox (§14); no push; no distributed components; no production deployment (EX-007) | Timebox awaiting approval |
+| Language/Version | Java 21 (LTS) | ACCEPTED — ADR-001 |
+| Primary Dependencies | Spring Boot 3.x (web, validation, data-jpa, actuator), Flyway, JUnit 5, Testcontainers, AssertJ, Awaitility | ACCEPTED — ADR-001, ADR-005 |
+| Storage | PostgreSQL 16 via Docker Compose; disk-backed as **required** by CL-009 | ACCEPTED — ADR-002 |
+| Testing | JUnit 5 + Testcontainers (real Postgres), OpenAPI response validation, deterministic fake executors | ACCEPTED — ADR-005 |
+| Target Platform | Single JVM process, Linux/macOS developer machine; Docker for the store | ACCEPTED |
+| Project Type | Web service plus embedded orchestration engine; one deployable, two internal planes | ACCEPTED |
+| AI provider (AI-capable stages) | Anthropic Claude API behind an interface; **never required** — the run-level flag is `ai: on \| off`, default `off`, so the keyless path is the reviewer default (CN-011) | ACCEPTED — ADR-004 |
+| Performance Goals | PVT-001 redirect p95 ≤ 50 ms; PVT-002 create p95 ≤ 200 ms; PVT-003 100 concurrent | **All 15 PVTs APPROVED** 2026-09-20 (CR-005) — now binding acceptance thresholds |
+| Constraints | 2–3 day timebox (§14); no push; no distributed components; no production deployment (EX-007) | **APPROVED** 2026-09-20 |
 | Scale/Scope | Demonstration scale only. Every measurement is a demonstration measurement (AS-009, Constitution IX) | Confirmed |
 
-**Unresolved inputs that materially affect this plan** — carried from the spec's Deferred Findings and
-surfaced for disposition at the Plan gate, not silently assumed: **DF-001** (analytics exactness),
-**DF-002** (redirect permanence), **DF-003** (retention boundary), **DF-005** (PVT approvals, timebox,
-MTTR rules, contract deliverables). See §Decisions Required at the end of this document. Where the plan
-must proceed, it states a **provisional position** and marks it as such.
+**Inputs that were unresolved when this plan was written — all now resolved** at the Gate 4 closing package:
+**DF-001** (analytics exactness, resolved by ADR-014 and correcting this plan's provisional position),
+**DF-002** (redirect permanence, CR-003), **DF-003** (retention boundary, CR-004), **DF-005** (PVT approvals,
+timebox, MTTR rules, contract deliverables, CR-005). §Decisions Required at the end of this document retains
+each provisional position alongside its disposition, including the one that was wrong.
 
 ---
 
@@ -77,11 +80,11 @@ carry-forward.
 | IX. Observability and Auditability | **PASS** | §7 defines run correlation IDs, the six mandatory audit fields, and the MTTR method with declared population and exclusions. Demonstration measurements labelled as such. |
 | X. Traceability and Repository Integrity | **PASS** | §13 defines the full ten-link chain. No fabricated evidence; provisional positions are labelled provisional. |
 | XI. Evidence-Based Completion | **PASS** | §10 release-readiness checks and §14's minimum defensible outcome bind completion to executed evidence. |
-| **Technology neutrality (CN-002)** | **PASS, conditionally** | No selection made. §12 proposes; the ADR gate decides. Design is structured behind interfaces so the ADR outcome does not invalidate §1–11. |
+| **Technology neutrality (CN-002)** | **PASS** | Satisfied as intended: no selection was made by this plan; §12 evaluated, and the ADR gate decided. ADR-001..014 were accepted 2026-09-20 (`gate-04-adr.md`), so implementation now proceeds on an **approved** stack as CN-002 requires. |
 
-**No principle is `FAIL`.** Four items are `EXCEPTION-REQUESTED`-adjacent only in the sense that they
-are *unapproved inputs*, not violations: they appear under §Decisions Required and block nothing until
-Implement.
+**No principle is `FAIL`.** The four items that were unapproved inputs when this check was first written — DF-001,
+DF-002, DF-003, DF-005 — were dispositions rather than violations, and all are now resolved at the Gate 4 closing
+package. This check is re-verified at `/speckit-analyze` per the constitution.
 
 ---
 
@@ -713,7 +716,7 @@ mandatory release-blocking policy — so an incomplete chain cannot reach releas
 
 ## 14. Delivery Sequence
 
-**Timebox: 2–3 days — awaiting approval (DF-005).** Sequenced as vertical slices; each ends with
+**Timebox: 2–3 days — APPROVED 2026-09-20** at the Gate 4 closing package, with the milestones, checkpoints and stop conditions below. Sequenced as vertical slices; each ends with
 executed tests and committed evidence, never with unverified code.
 
 | Slice | Content | Milestone | Must-have? |
@@ -840,17 +843,18 @@ deliverable and adding unjustifiable infrastructure.
 
 ---
 
-## Decisions Required at the Plan Gate
+## Decisions Required at the Plan Gate — **ALL RESOLVED 2026-09-20**
 
-Nothing below is assumed. The plan proceeds where it can and names its provisional positions.
+Every item below was decided at the Gate 4 closing package. Retained with its disposition rather than deleted,
+so the provisional positions this plan held — and where one of them was **wrong** — stay visible.
 
-| # | Decision | Plan's provisional position | Blocks |
-|---|---|---|---|
-| 1 | **DF-001** analytics exactness: sync-transactional or async-best-effort? | Provisional: **synchronous and transactional with the redirect**, which makes FR-URL-010 and SC-001 literally true and reduces PVT-009 to redundancy. Costs redirect latency against PVT-001. | Slice 3 and DS-B's subject matter. Must be settled **before any acceptance test is written** against either reading |
-| 2 | **DF-002** redirect permanence | Provisional: **temporary redirect**, because a cached permanent redirect bypasses the service and thereby defeats both analytics and expiry | Slice 3; interacts with #1 |
-| 3 | **DF-003** audit vs idle retention boundary | Provisional: audit retention measured **from run termination**, not record creation | Slice 7 |
-| 4 | **ADR-001..005** technology selections | Recommendations above; **ADR-001 must be decided before Slice 1** | All implementation |
-| 5 | **All 15 PVT values** | As tabled in the spec | Acceptance thresholds |
-| 6 | **2–3 day timebox and §14 scope controls** | As tabled | Scope-control checkpoints |
-| 7 | MTTR method, population, and the **declared human-wait exclusion** | §7 | Slice 7 measurement |
-| 8 | Versioned API/schema deliverables and executable contract validation | §2, ADR-005 | Slice 1 |
+| # | Decision | Disposition |
+|---|---|---|
+| 1 | **DF-001** analytics exactness | **RESOLVED by ADR-014, correcting this plan.** The provisional position recorded here — synchronous and transactional *with* the redirect — was **wrong**: a same-transaction append means a failed append fails the redirect, which EC-012 explicitly prohibits. Resolved as a **separate transaction** with failure isolated and counted, and PVT-009 redefined as an append-failure-rate ceiling rather than a loss budget |
+| 2 | **DF-002** redirect permanence | **RESOLVED — temporary, never permanent** (CR-003). The provisional position was correct and is now the approved requirement in FR-URL-007 |
+| 3 | **DF-003** audit vs idle retention boundary | **RESOLVED — clock starts at run termination** (CR-004). Provisional position confirmed; chosen over the alternative because it holds for any pair of retention values |
+| 4 | **ADR-001..005** technology selections | **ACCEPTED** at `gate-04-adr.md`, together with ADR-006..014 |
+| 5 | **All 15 PVT values** | **APPROVED** (CR-005). They now constrain implementation as acceptance thresholds |
+| 6 | **2–3 day timebox and §14 scope controls** | **APPROVED** — milestones, four checkpoints, four stop conditions, cuts hit backlog before evidence |
+| 7 | MTTR method, population, **declared human-wait exclusion** | **APPROVED** as specified in §7 |
+| 8 | Versioned API/schema deliverables and executable contract validation | **APPROVED** (§2, ADR-005). Parser validation executed 2026-09-20 — one real defect found and fixed; meta-schema lint remains a Slice 1 task |
