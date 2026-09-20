@@ -1,0 +1,461 @@
+openapi: 3.1.0
+info:
+  title: Agentic SDLC URL Shortener API
+  version: 1.0.0
+  description: >
+    Application-plane API for the URL shortener, plus read-only control-plane inspection.
+    Versioning: additive changes are MINOR; removing or narrowing a field, renaming, or changing a
+    status code is MAJOR and requires a new path prefix. See plan.md section 2 for the full
+    compatibility and change-approval rules.
+
+    Redirect resolution is public and MUST NOT require authentication (FR-URL-018).
+    Link creation and analytics require a creator API key.
+
+    NOTE: the redirect status code is governed by deferred finding DF-002 and is NOT settled.
+    The 307 below reflects the plan's provisional position (temporary redirect) and changes if the
+    owner decides otherwise at the Plan gate.
+servers:
+  - url: http://localhost:8080
+    description: Local demonstration instance
+
+tags:
+  - name: links
+    description: Link creation and analytics (creator-authenticated)
+  - name: redirect
+    description: Public redirect resolution (never authenticated)
+  - name: operations
+    description: Health and readiness
+  - name: orchestration
+    description: Control-plane run inspection
+
+paths:
+  /v1/links:
+    post:
+      tags: [links]
+      summary: Create a short link
+      operationId: createLink
+      security:
+        - creatorApiKey: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          description: >
+            Optional marker. Absent means always mint a new code — there is no destination-based
+            deduplication at any scope (FR-URL-012, CL-008).
+          schema: { type: string, maxLength: 200 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateLinkRequest' }
+            examples:
+              minimal:
+                summary: Destination only, default TTL applies
+                value: { destination: "https://example.com/a/very/long/path?x=1" }
+              withExpiry:
+                summary: Caller-supplied expiry
+                value:
+                  destination: "https://example.com/promo"
+                  expiresAt: "2026-10-19T12:00:00Z"
+      responses:
+        '201':
+          description: Link created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Link' }
+              examples:
+                created:
+                  value:
+                    shortCode: "aB3xK9p"
+                    destination: "https://example.com/promo"
+                    createdAt: "2026-09-19T10:00:00Z"
+                    expiresAt: "2026-10-19T12:00:00Z"
+                    state: "ACTIVE"
+                    replay: false
+        '200':
+          description: >
+            Idempotent replay. Same marker and identical request content: the ORIGINAL link is
+            returned as success, labelled as a replay, with zero new side effects (CL-008 case 2).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Link' }
+              examples:
+                replayed:
+                  value:
+                    shortCode: "aB3xK9p"
+                    destination: "https://example.com/promo"
+                    createdAt: "2026-09-19T10:00:00Z"
+                    expiresAt: "2026-10-19T12:00:00Z"
+                    state: "ACTIVE"
+                    replay: true
+        '400':
+          description: >
+            Validation failure — malformed, empty, over-length, or disallowed scheme; or an expiry
+            already in the past. Nothing is persisted and no code is consumed (FR-URL-002).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                disallowedScheme:
+                  value:
+                    code: "SCHEME_NOT_ALLOWED"
+                    message: "Destination scheme is not permitted."
+                    detail: "Permitted schemes: http, https."
+                expiryInPast:
+                  value:
+                    code: "EXPIRY_IN_PAST"
+                    message: "expiresAt must be in the future."
+        '401':
+          description: >
+            Missing, invalid, expired, or revoked creator credentials. Creation is never anonymous.
+            Expired and revoked produce an identical response shape.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: >
+            Idempotency conflict. Same marker with different request content: nothing is minted and
+            nothing is changed (CL-008 case 3).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                conflict:
+                  value:
+                    code: "IDEMPOTENCY_CONFLICT"
+                    message: "Marker already used with different request content."
+                    detail: "An idempotency key identifies one exact logical request."
+        '429':
+          description: Per-creator creation rate limit exceeded (PVT-012).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                throttled:
+                  value:
+                    code: "RATE_LIMITED"
+                    message: "Creation rate limit exceeded."
+                    detail: "Tier: per-creator-creation."
+        '503':
+          description: Persistence unavailable. Nothing was persisted (FR-URL-014, EC-010).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /{shortCode}:
+    get:
+      tags: [redirect]
+      summary: Resolve a short link and redirect
+      operationId: resolveLink
+      description: >
+        Public and unauthenticated by design. Redirects to the exact stored destination; the target
+        is never derived from request input (FR-URL-007).
+      security: []
+      parameters:
+        - name: shortCode
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '307':
+          description: >
+            Redirect to the stored destination. Provisional status code pending DF-002.
+          headers:
+            Location:
+              required: true
+              schema: { type: string, format: uri }
+        '404':
+          description: Code was never issued. Distinguishable from expired (FR-URL-008).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                notFound:
+                  value: { code: "CODE_NOT_FOUND", message: "No such short code." }
+        '410':
+          description: >
+            Link has expired. Never redirects, and is distinguishable from never-issued.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                expired:
+                  value: { code: "LINK_EXPIRED", message: "This link has expired." }
+        '429':
+          description: >
+            Redirect rate limit exceeded on either tier — per short code (PVT-013) or per creator
+            aggregated across all their links (PVT-014). The response MUST NOT disclose the owning
+            creator's identity to a public follower.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                perCode:
+                  value: { code: "RATE_LIMITED", message: "Too many requests.", detail: "Tier: per-code." }
+                perCreatorAggregate:
+                  value: { code: "RATE_LIMITED", message: "Too many requests.", detail: "Tier: per-creator-aggregate." }
+        '503':
+          description: >
+            Persistence unavailable for a code known to exist. Distinguishable from not-found and
+            from expired (EC-011).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /v1/links/{shortCode}/analytics:
+    get:
+      tags: [links]
+      summary: Retrieve a link's redirect events
+      operationId: getLinkAnalytics
+      description: >
+        Readable only by the creator that owns the link. A non-owner and an anonymous caller both
+        receive a refusal that does not reveal whether the code exists (FR-URL-011, T-06).
+      security:
+        - creatorApiKey: []
+      parameters:
+        - name: shortCode
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Time-ordered redirect events. Timestamp only; no follower-identifying field exists.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Analytics' }
+              examples:
+                series:
+                  value:
+                    shortCode: "aB3xK9p"
+                    totalRedirects: 3
+                    events:
+                      - occurredAt: "2026-09-19T10:05:00Z"
+                      - occurredAt: "2026-09-19T10:06:12Z"
+                      - occurredAt: "2026-09-19T11:00:47Z"
+        '401':
+          description: Missing or invalid creator credentials.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404':
+          description: >
+            Not found OR not owned by this creator — deliberately indistinguishable, so the endpoint
+            cannot be used as an ownership oracle.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /health/live:
+    get:
+      tags: [operations]
+      summary: Liveness
+      description: Process alive. Unaffected by store availability (FR-URL-015).
+      security: []
+      responses:
+        '200':
+          description: Alive
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+
+  /health/ready:
+    get:
+      tags: [operations]
+      summary: Readiness
+      description: >
+        Able to serve requests. MUST fail while a required dependency is unavailable, and MUST NOT
+        expose secrets, connection strings, or internal topology.
+      security: []
+      responses:
+        '200':
+          description: Ready
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+        '503':
+          description: Not ready — a required dependency is unavailable
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+
+  /v1/runs/{runId}:
+    get:
+      tags: [orchestration]
+      summary: Inspect a workflow run
+      operationId: inspectRun
+      description: >
+        Per-stage status, graph position, parallel and join structure, blocking condition, retry
+        history, pending gates, and — when suspended — the computed auto-abandon-at (FR-ORC-008,
+        FR-ORC-032).
+      security:
+        - creatorApiKey: []
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Run state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RunInspection' }
+        '404':
+          description: No such run
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+components:
+  securitySchemes:
+    creatorApiKey:
+      type: http
+      scheme: bearer
+      description: >
+        Creator credential presented as `Authorization: Bearer <key>`.
+
+        Standard bearer transport is chosen deliberately: proxies, frameworks and log scrubbers redact the
+        Authorization header by default, whereas a custom header receives no such default protection. This is
+        free reduction of exactly the leak risk FR-URL-017 treats as non-waivable.
+
+        Key form: `crk_` + base64url of at least 256 CSPRNG bits. The prefix makes a leaked key identifiable on
+        sight and gives the POL-SEC-002 secret scan a deterministic pattern to match; it carries no information
+        and does not reduce entropy. The stored form is SHA-256 of the full presented string, prefix included.
+
+        Provisioned by the local operator script only; there is no HTTP issuance endpoint (FR-URL-019). The
+        script requires an expiry parameter — a duration, or the explicit literal `never`; there is no default.
+        Never logged by the application at any level.
+
+        Expired and revoked credentials are refused with an identical response shape, so a caller learns
+        nothing from the distinction.
+
+  schemas:
+    CreateLinkRequest:
+      type: object
+      required: [destination]
+      additionalProperties: false
+      properties:
+        destination:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: Allow-listed scheme only. Normalized before validation and storage.
+        expiresAt:
+          type: string
+          format: date-time
+          description: Must be in the future. Defaults to PVT-011 when omitted.
+
+    Link:
+      type: object
+      required: [shortCode, destination, createdAt, expiresAt, state, replay]
+      additionalProperties: false
+      properties:
+        shortCode: { type: string }
+        destination: { type: string, format: uri }
+        createdAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+        state: { type: string, enum: [ACTIVE, EXPIRED] }
+        replay:
+          type: boolean
+          description: True when this response is an idempotent replay of an earlier request.
+
+    Analytics:
+      type: object
+      required: [shortCode, totalRedirects, events]
+      additionalProperties: false
+      properties:
+        shortCode: { type: string }
+        totalRedirects: { type: integer, minimum: 0 }
+        events:
+          type: array
+          items:
+            type: object
+            required: [occurredAt]
+            additionalProperties: false
+            properties:
+              occurredAt: { type: string, format: date-time }
+          description: >
+            Timestamp only. No IP, user agent, referrer, device identifier, or geolocation field
+            exists anywhere in the system (NFR-SEC-005, POL-PRIV-001).
+
+    Health:
+      type: object
+      required: [status]
+      additionalProperties: false
+      properties:
+        status: { type: string, enum: [UP, DOWN] }
+        checks:
+          type: object
+          additionalProperties: { type: string, enum: [UP, DOWN] }
+          description: Dependency names and states only. Never connection details.
+
+    RunInspection:
+      type: object
+      required: [runId, state, policySetVersion, ai, stages]
+      additionalProperties: false
+      properties:
+        runId: { type: string }
+        state:
+          type: string
+          enum: [PENDING, RUNNING, SAFE_STOP, COMPLETED, REJECTED, ABANDONED]
+        terminalState:
+          type: [string, 'null']
+          enum: [COMPLETED, REJECTED, ABANDONED, null]
+          description: Null while suspended — a suspended run has no terminal outcome (CL-005).
+        policySetVersion: { type: string }
+        ai:
+          type: string
+          enum: [on, off]
+          default: off
+          description: >
+            Run-level flag: whether AI executors participate. Named for the one thing it controls, and
+            deliberately not a "mode" — a run with ai=off can still contain a HUMAN execution at the stage-7
+            no-plan gate, so a run-level determinism claim would over-promise.
+        suspensionReason: { type: [string, 'null'] }
+        autoAbandonAt:
+          type: [string, 'null']
+          format: date-time
+          description: Non-null iff state is SAFE_STOP.
+        blockingCondition: { type: [string, 'null'] }
+        stages:
+          type: array
+          items:
+            type: object
+            required: [stageNumber, name, state, executorClass]
+            properties:
+              stageNumber: { type: integer, minimum: 1, maximum: 12 }
+              name: { type: string }
+              state:
+                type: string
+                enum: [BLOCKED, READY, RUNNING, AWAITING_APPROVAL, RETRY_WAIT, FALLBACK,
+                       ROLLING_BACK, COMPENSATING, SUCCEEDED, FAILED, INVALIDATED, SKIPPED]
+              executorClass: { type: string, enum: [DETERMINISTIC, AI_CAPABLE, HUMAN_GATE] }
+              executorModeUsed:
+                type: [string, 'null']
+                enum: [DETERMINISTIC, AI, null]
+                description: Required on every executed stage (FR-ORC-029).
+              attemptsUsed: { type: integer, minimum: 0 }
+              dependsOn: { type: array, items: { type: integer } }
+        pendingGate:
+          type: [object, 'null']
+          properties:
+            gateClass: { type: string }
+            waitDeadline: { type: string, format: date-time }
+            disclosedAutoAbandonAt: { type: string, format: date-time }
+          description: >
+            Both deadlines are disclosed at request time, so the person being asked sees the expiry
+            consequence in the ask itself (CL-005 addendum).
+
+    Error:
+      type: object
+      required: [code, message]
+      additionalProperties: false
+      properties:
+        code: { type: string }
+        message: { type: string }
+        detail:
+          type: string
+          description: >
+            Must never echo raw input in a way that enables injection, and must never contain
+            secrets, credentials, or storage internals (FR-URL-002, FR-URL-017).

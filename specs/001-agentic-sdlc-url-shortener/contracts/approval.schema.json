@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-sdlc-url-shortener/contracts/approval.schema.json",
+  "title": "GateDecision",
+  "version": "1.0.0",
+  "description": "A human decision at a mandatory gate. Not effective until materialized as a repository artifact (Constitution v1.1.0, Gate semantics). Silence is never an approval.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decisionId", "runId", "gateClass", "outcome", "actor", "decidedAt", "reason", "repositoryRecordPath"],
+  "properties": {
+    "decisionId": { "type": "string" },
+    "runId": { "type": "string" },
+    "stageNumber": { "type": ["integer", "null"], "minimum": 1, "maximum": 12 },
+    "gateClass": {
+      "type": "string",
+      "enum": [
+        "UNRESOLVED_AMBIGUITY",
+        "ARCHITECTURE_APPROVAL",
+        "SECURITY_SENSITIVE_ACTION",
+        "DESTRUCTIVE_OR_IRREVERSIBLE_ACTION",
+        "CONSTITUTIONAL_EXCEPTION",
+        "MATERIAL_RISK_ACCEPTANCE",
+        "RELEASE_READINESS",
+        "FINAL_SUBMISSION"
+      ]
+    },
+    "outcome": {
+      "type": "string",
+      "enum": ["APPROVED", "REJECTED", "CHANGES_REQUESTED", "ESCALATED", "TIMED_OUT"],
+      "description": "TIMED_OUT suspends the run; it never advances it. There is no outcome value meaning 'no response, proceed'."
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actorType", "identity"],
+      "properties": {
+        "actorType": {
+          "type": "string",
+          "enum": ["human", "system"],
+          "description": "'system' is permitted ONLY for TIMED_OUT and for retention-driven abandonment, neither of which is an approval. An agent may never decide a gate at any autonomy setting (FR-ORC-021)."
+        },
+        "identity": { "type": "string", "minLength": 1 }
+      }
+    },
+    "decidedAt": { "type": "string", "format": "date-time" },
+    "reason": { "type": "string", "minLength": 1 },
+    "requestedChanges": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Required and non-empty when outcome is CHANGES_REQUESTED — changes must be enumerated, not implied."
+    },
+    "escalationTarget": {
+      "type": ["string", "null"],
+      "description": "Required when outcome is ESCALATED: what decision exceeds the current owner's authority."
+    },
+    "repositoryRecordPath": {
+      "type": "string",
+      "pattern": "^docs/governance/gate-decisions/.+\\.md$",
+      "description": "Materialized artifact path. A decision existing only in workflow state or conversation does not satisfy the gate."
+    },
+    "disclosedDeadlines": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["waitDeadline", "autoAbandonAt"],
+      "properties": {
+        "waitDeadline": { "type": "string", "format": "date-time" },
+        "autoAbandonAt": { "type": "string", "format": "date-time" }
+      },
+      "description": "Both were shown in the original ask, so the expiry consequence was disclosed rather than discovered (CL-005 addendum)."
+    },
+    "supersedes": {
+      "type": ["string", "null"],
+      "description": "Set when replanning voids a prior approval. The prior decision is superseded by reference, never deleted or edited (EC-020)."
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "outcome": { "const": "CHANGES_REQUESTED" } } },
+      "then": { "required": ["requestedChanges"], "properties": { "requestedChanges": { "minItems": 1 } } }
+    },
+    {
+      "if": { "properties": { "outcome": { "const": "ESCALATED" } } },
+      "then": { "required": ["escalationTarget"] }
+    },
+    {
+      "if": { "properties": { "outcome": { "const": "APPROVED" } } },
+      "then": { "properties": { "actor": { "properties": { "actorType": { "const": "human" } } } } }
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-sdlc-url-shortener/contracts/workflow-state.schema.json",
+  "title": "WorkflowStateSnapshot",
+  "version": "1.0.0",
+  "description": "Persisted run state. Validated against persisted snapshots in contract tests so the invariants below are machine-enforced rather than documented.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["runId", "state", "policySetVersion", "ai", "lastActivityAt", "stages", "edges"],
+  "properties": {
+    "runId": { "type": "string" },
+    "state": { "type": "string", "enum": ["PENDING", "RUNNING", "SAFE_STOP", "COMPLETED", "REJECTED", "ABANDONED"] },
+    "terminalState": {
+      "type": ["string", "null"],
+      "enum": ["COMPLETED", "REJECTED", "ABANDONED", null],
+      "description": "Terminal set is exactly these three. SAFE_STOP is suspended and NON-terminal (CL-005)."
+    },
+    "policySetVersion": { "type": "string", "description": "The policy version this run evaluated (Constitution VI)." },
+    "ai": {
+      "type": "string",
+      "enum": ["on", "off"],
+      "default": "off",
+      "description": "Run-level flag: whether AI executors participate. Named for the one thing it controls. Deliberately not called a 'mode', because a run with ai=off can still contain a HUMAN execution at the stage-7 no-plan gate, so a run-level determinism claim would over-promise."
+    },
+    "lastActivityAt": { "type": "string", "format": "date-time", "description": "Drives the idle clock. Never creation time — a run that received attention must not be reaped on age." },
+    "autoAbandonAt": { "type": ["string", "null"], "format": "date-time" },
+    "suspensionReason": { "type": ["string", "null"] },
+    "stages": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["stageNumber", "name", "state", "executorClass", "attemptsUsed"],
+        "properties": {
+          "stageNumber": { "type": "integer", "minimum": 1, "maximum": 12 },
+          "name": { "type": "string" },
+          "state": {
+            "type": "string",
+            "enum": ["BLOCKED", "READY", "RUNNING", "AWAITING_APPROVAL", "RETRY_WAIT", "FALLBACK",
+                     "ROLLING_BACK", "COMPENSATING", "SUCCEEDED", "FAILED", "INVALIDATED", "SKIPPED"]
+          },
+          "executorClass": { "type": "string", "enum": ["DETERMINISTIC", "AI_CAPABLE", "HUMAN_GATE"] },
+          "executorModeUsed": { "type": ["string", "null"], "enum": ["DETERMINISTIC", "AI", null] },
+          "attemptsUsed": { "type": "integer", "minimum": 0 },
+          "blockingReason": { "type": ["string", "null"] },
+          "enteredAt": { "type": ["string", "null"], "format": "date-time" },
+          "exitedAt": { "type": ["string", "null"], "format": "date-time" }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "description": "Declared dependencies. Edges are explicit, never inferred from call order (FR-ORC-002). Acyclic — validated before any replanned subgraph is committed (EC-030).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["fromStage", "toStage", "joinSemantics"],
+        "properties": {
+          "fromStage": { "type": "integer", "minimum": 1, "maximum": 12 },
+          "toStage": { "type": "integer", "minimum": 1, "maximum": 12 },
+          "joinSemantics": {
+            "type": "string",
+            "enum": ["ALL", "ANY"],
+            "description": "ALL means the join does not proceed while any required branch is incomplete or failed (EC-018)."
+          }
+        }
+      }
+    },
+    "replanHistory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["occurredAt", "cause", "invalidatedStages"],
+        "properties": {
+          "occurredAt": { "type": "string", "format": "date-time" },
+          "cause": { "type": "string" },
+          "invalidatedStages": { "type": "array", "items": { "type": "integer" } },
+          "voidedApprovals": { "type": "array", "items": { "type": "string" }, "description": "Decision IDs voided by superseding record, never deleted (EC-020)." }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "description": "terminalState is non-null iff state is terminal.",
+      "if": { "properties": { "state": { "enum": ["COMPLETED", "REJECTED", "ABANDONED"] } } },
+      "then": { "properties": { "terminalState": { "type": "string" } } },
+      "else": { "properties": { "terminalState": { "const": null } } }
+    },
+    {
+      "description": "autoAbandonAt and suspensionReason are non-null iff suspended.",
+      "if": { "properties": { "state": { "const": "SAFE_STOP" } } },
+      "then": {
+        "properties": {
+          "autoAbandonAt": { "type": "string" },
+          "suspensionReason": { "type": "string", "minLength": 1 }
+        }
+      },
+      "else": { "properties": { "autoAbandonAt": { "const": null } } }
+    }
+  ]
+}

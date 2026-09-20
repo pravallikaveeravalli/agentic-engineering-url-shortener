@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-sdlc-url-shortener/contracts/audit-event.schema.json",
+  "title": "AuditEvent",
+  "version": "1.0.0",
+  "description": "Append-only, immutable audit record. All six fields mandated by Constitution IX are required; POL-AUD-001 asserts their presence as a mandatory release-blocking policy check.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eventId",
+    "runId",
+    "actorType",
+    "action",
+    "occurredAt",
+    "affectedArtifact",
+    "result",
+    "reason"
+  ],
+  "properties": {
+    "eventId": { "type": "string", "description": "Immutable identity; never reused." },
+    "runId": { "type": "string", "description": "Correlation identifier propagated across logs, metrics, traces and state." },
+    "stageNumber": { "type": ["integer", "null"], "minimum": 1, "maximum": 12 },
+    "actorType": {
+      "type": "string",
+      "enum": ["human", "agent", "system"],
+      "description": "Mandatory field 1. 'system' covers pre-approved policy action such as retention-driven abandonment, which is never an approval."
+    },
+    "action": {
+      "type": "string",
+      "description": "Mandatory field 2.",
+      "enum": [
+        "RUN_CREATED", "RUN_SUSPENDED", "RUN_RESUMED", "RUN_COMPLETED", "RUN_REJECTED", "RUN_ABANDONED",
+        "STAGE_ENTERED", "STAGE_EXITED", "CRITERIA_EVALUATED", "EXECUTOR_DISPATCHED",
+        "FAILURE_CLASSIFIED", "RETRY_RULED", "FALLBACK_ACTIVATED",
+        "ROLLBACK_APPLIED", "COMPENSATION_APPLIED",
+        "GATE_REQUESTED", "GATE_DECIDED", "GATE_TIMED_OUT",
+        "CLARIFICATION_REQUESTED", "CLARIFICATION_RECORDED",
+        "REPLAN_EXECUTED", "APPROVAL_VOIDED",
+        "POLICY_EVALUATED", "EXCEPTION_REQUESTED", "EXCEPTION_APPROVED", "EXCEPTION_EXPIRED",
+        "AUTONOMY_VIOLATION_REFUSED",
+        "RELEASE_READINESS_EVALUATED", "SUMMARY_ASSEMBLED"
+      ]
+    },
+    "occurredAt": { "type": "string", "format": "date-time", "description": "Mandatory field 3." },
+    "affectedArtifact": { "type": "string", "description": "Mandatory field 4: the artifact or state affected." },
+    "result": {
+      "type": "string",
+      "enum": ["SUCCESS", "FAILURE", "REFUSED", "BLOCKED", "SUSPENDED", "NOT_APPLICABLE"],
+      "description": "Mandatory field 5."
+    },
+    "reason": { "type": "string", "minLength": 1, "description": "Mandatory field 6. Never empty — an unexplained audit record is not auditable." },
+    "executorModeUsed": {
+      "type": ["string", "null"],
+      "enum": ["DETERMINISTIC", "AI", null],
+      "description": "Required on any event describing a stage execution. A deterministic execution is never presented as AI work (NFR-AUT-003)."
+    },
+    "correctsEventId": {
+      "type": ["string", "null"],
+      "description": "Corrections are appended, never applied in place. Points at the record being corrected."
+    }
+  }
+}
