@@ -2,10 +2,10 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-09-17
-**Last validated**: 2026-09-18 (post Gate 2 clarifications)
+**Last validated**: 2026-09-19 (post Gate 3 clarification fold)
 **Feature**: [spec.md](../spec.md)
-**Validation iteration**: 2 of max 3
-**Result**: **16 of 16 pass**
+**Validation iteration**: 3
+**Result**: **16 of 16 pass** (unchanged from iteration 2; no regressions)
 
 ## Content Quality
 
@@ -36,76 +36,76 @@
 
 - Items marked incomplete require spec updates before `/speckit-clarify` or `/speckit-plan`
 
-### Change since iteration 1
+### Change since iteration 2
 
-Iteration 1 failed one item: three `[NEEDS CLARIFICATION]` markers remained (AQ-001, AQ-002,
-AQ-003). All three were resolved by the human owner at Gate 2 on 2026-09-18 and folded into the
-specification. Marker count is now **zero**, verified by search. The resolutions are recorded in the
-specification's Clarification Log (CL-001..CL-004) and verbatim in
-`docs/governance/gate-decisions/gate-02-specify.md`.
+No checkbox changed state. Marker count remains zero. Three of the five Gate 3 clarifications repaired
+defects this checklist did **not** previously catch, which is worth recording plainly:
 
-No resolution was made by inference. Each was decided by the owner, two of them as custom designs
-that rejected all offered options.
+- **A contradiction passed iteration 2 unnoticed.** FR-ORC-017 described `SAFE_STOP` as both
+  "resumable" and "terminal" against NFR-REL-001. The checklist item "Requirements are testable and
+  unambiguous" was marked passing while that contradiction stood. It is now resolved (CL-005), but the
+  checklist's own sensitivity is the lesson: item-level review did not catch a cross-requirement
+  conflict.
+- **A non-testable requirement passed iteration 2.** FR-ORC-014 required failures to be "classified as
+  transient or permanent" with no decider, method, or unknown-case disposition — untestable as written.
+  Resolved by CL-006.
+- **A required distinction had no basis for being applied.** FR-ORC-016 required rollback and
+  compensation to be distinguished with no inventory of which effects are reversible. Resolved by
+  CL-007 and the new §Compensation Register.
 
 ### Qualified passes — recorded so the judgment is reviewable, not hidden
 
-Both qualifications from iteration 1 still stand, unchanged in substance.
+All three qualifications from iteration 2 stand unchanged: the single deliberate HTTP reference
+(CN-006), the technical vocabulary in the orchestration requirements, and the AI-capable/deterministic
+executor distinction being an architectural capability rather than a technology selection.
 
-**"No implementation details" and "No implementation details leak"** — pass, with one deliberate
-exception recorded as CN-006. HTTP is named as intrinsic to the demonstration domain, because
-"redirect resolution" has no meaning outside it. Redirect *behavior* is specified; status codes,
-transport, and mechanism are left to the Plan stage. No language, framework, database, cloud, agent
-framework, or deployment platform appears anywhere in the specification (CN-002).
+**One new qualification.** "Requirements are testable and unambiguous" is marked passing while
+**DF-001** records an unresolved conflict: PVT-009 proposes a ≤0.5% analytics-loss tolerance, while
+FR-URL-010 and SC-001 imply exact append. The item is marked passing on the ground that **PVT-009 is a
+proposal, not a requirement** — the spec states that no PVT constrains anything until approved, so no
+requirement in force is ambiguous. The conflict is real and must be resolved before either reading is
+turned into an acceptance test, which is why it is recorded as a Plan-gate blocker under DF-001 rather
+than silently reconciled.
 
-One new item warrants the same transparency: §Stage Executor Model distinguishes "AI-capable" from
-"deterministic engine" executors, and FR-ORC-029 requires a mode-selection flag. This is an
-**architectural capability requirement**, not a technology selection — no agent framework, model,
-vendor, or SDK is named, and which AI provider satisfies "AI-capable" remains a Plan-stage ADR
-decision under CN-002.
-
-**"Written for non-technical stakeholders"** — pass for the demonstration domain (US-1, FR-URL-*),
-which reads in plain language. The orchestration requirements (FR-ORC-*) use domain-of-discourse
-terms such as idempotency, join point, compensation, and p95. This is accepted rather than
-simplified: the stakeholders named by the assignment are an API consumer, a software engineer, a
-human reviewer, a release owner, and an assessment reviewer — four of five are technical, and the
-governance vocabulary is load-bearing for the requirements it expresses. Flattening it would make
-several requirements untestable.
+A reader who disagrees with that reading should treat this item as conditional on DF-001's disposition.
+It is flagged here so the judgment is contestable rather than buried.
 
 ### Counts
 
-| Category | Iteration 1 | Now |
+| Category | Iteration 2 | Now |
 |----------|-------------|-----|
 | User journeys (US) | 5 | 5 |
-| Edge cases (EC) | 30 | 30 |
-| Functional requirements — domain (FR-URL) | 17 | **19** |
-| Functional requirements — orchestration (FR-ORC) | 27 | **31** |
-| Non-functional requirements (NFR) | 27 | **30** |
+| Edge cases (EC) | 30 | **39** |
+| Functional requirements — domain (FR-URL) | 19 | 19 |
+| Functional requirements — orchestration (FR-ORC) | 31 | **32** |
+| Non-functional requirements (NFR) | 30 | 30 |
 | Demonstration scenarios (DS) | 3 | 3 |
-| Stage executor model | — | **1 new section, 12 stages mapped** |
-| Key entities (KE) | 22 | **25** |
-| Success criteria (SC) | 13 | **17** |
-| Proposed validation targets (PVT) | 12 | **14** |
-| Constraints (CN) | 9 | **11** |
-| Assumptions (AS) | 10 | 10 (AS-004 superseded by CL-002, retained as a record) |
-| Ambiguities (AQ) | 6 (3 blocking) | 6 (**0 blocking**, 3 resolved, 3 deferred to `/speckit-clarify`) |
-| Exclusions (EX) | 10 | 10 (EX-005 narrowed by CL-001) |
-| Clarification log entries (CL) | — | **4** |
+| Compensation register | — | **1 new section, 7 effect classes** |
+| Stage executor model | 12 stages mapped | 12 stages mapped |
+| Key entities (KE) | 25 | **29** |
+| Success criteria (SC) | 17 | 17 |
+| Proposed validation targets (PVT) | 14 | **15** |
+| Constraints (CN) | 11 | 11 |
+| Assumptions (AS) | 10 | 10 |
+| Ambiguities (AQ) | 6 (0 blocking, 3 deferred) | 6 (**0 blocking, 1 still open** → DF-002) |
+| Clarification log entries (CL) | 4 | **9** |
+| Deferred findings (DF) | — | **5** |
 
 ### Requirement source split
 
-Of the 50 functional requirements:
+Of the 51 functional requirements:
 
 | Source | Count |
 |--------|-------|
-| Confirmed (stated in assignment input, or decided by the owner at Gate 2) | 41 |
+| Confirmed (assignment input, or decided by the owner at Gate 2 or Gate 3) | 42 |
 | Derived (entailed by assignment or constitution, source named) | 9 |
 
-No requirement remains **Assumption-dependent**. The two that were (FR-URL-011, FR-URL-016) are now
-decided requirements under CL-001.
+No requirement is Assumption-dependent.
 
 ### Traceability integrity
 
-- 50 functional requirements, 50 rows in the traceability matrix — **zero orphans** in either
+- 51 functional requirements, 51 rows in the traceability matrix — **zero orphans** in either
   direction at specification level.
-- Task, test, and evidence columns are intentionally unfilled: they are populated by the Tasks and
-  Implement stages, per FR-ORC-027.
+- All 9 new edge cases (EC-031..EC-039) are referenced from at least one requirement row.
+- Task, test, and evidence columns remain intentionally unfilled; they are populated by the Tasks and
+  Implement stages per FR-ORC-027.

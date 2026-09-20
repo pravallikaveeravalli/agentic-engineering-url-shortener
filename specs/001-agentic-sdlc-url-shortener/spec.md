@@ -6,8 +6,10 @@
 
 **Created**: 2026-09-17
 
-**Status**: **Approved at Gate 2, 2026-09-18** by Pravallika Veeravalli. AQ-001, AQ-002, AQ-003
-resolved — see Clarification Log. AQ-004..006 remain open for `/speckit-clarify`.
+**Status**: **Approved at Gate 2, 2026-09-18**; clarifications resolved at **Gate 3, 2026-09-19** by
+Pravallika Veeravalli. AQ-001..003 resolved at Gate 2; AQ-005, AQ-006 resolved at Gate 3. AQ-004 and
+four further items remain open and are recorded under Deferred Findings for disposition at the Plan
+gate.
 
 **Governing Constitution**: v1.1.0, ratified 2026-09-17, last amended 2026-09-18
 
@@ -95,10 +97,13 @@ and observe the resulting workflow state in each case.
 
 1. **Given** a workflow run halted at a mandatory approval gate, **When** the reviewer inspects
    the gate, **Then** they see the stage, the artifacts awaiting decision, the supporting
-   evidence, the policy check outcomes, and the consequences of each available decision.
+   evidence, the policy check outcomes, the consequences of each available decision, **and the
+   consequence of giving no decision at all** — the gate-wait deadline at which the run suspends and
+   the date on which an untouched run is auto-abandoned.
 2. **Given** a run halted at a mandatory gate, **When** no decision is recorded within the
-   configured wait, **Then** the run enters safe-stop with state preserved and resumable, and no
-   downstream stage has executed.
+   configured wait, **Then** the run enters `SAFE_STOP` — a suspended, non-terminal state — with
+   state preserved and resumable, no downstream stage has executed, and the outcome matches the
+   consequence disclosed in the original ask rather than being discovered afterwards.
 3. **Given** a run halted at a mandatory gate, **When** the reviewer records `REJECTED`, **Then**
    the run terminates deterministically with the rejection reason recorded, and no downstream
    artifact is produced.
@@ -261,6 +266,24 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
 - **EC-028**: Evidence for a completed stage is missing or unreadable at readiness evaluation.
 - **EC-029**: A stage reports success but produced no output artifact.
 - **EC-030**: Cyclic dependencies are introduced into the stage graph by replanning.
+- **EC-031**: An executor returns a malformed failure envelope, or a category outside the closed
+  vocabulary. Must be treated as permanent, never retried (FR-ORC-014 rule 3).
+- **EC-032**: An executor proposes `transient` for a category the stage never declared retryable, and
+  vice versa. Neither side may act alone.
+- **EC-033**: A `TIMEOUT` occurs on a stage whose effect is not declared idempotent. Must not be
+  retried (FR-ORC-014 rule 4).
+- **EC-034**: A stage registers declaring an irreversible effect without naming a compensating
+  action. Must fail to load (FR-ORC-016 rule 3).
+- **EC-035**: A stage declares an effect erasable that the structural rule places in an immutable
+  store. Must be flagged for human review, not trusted.
+- **EC-036**: A suspended run receives activity one day before its `auto-abandon-at`. The idle clock
+  must reset rather than the run being reaped.
+- **EC-037**: A run's idle retention expires while a gate is still pending. Abandonment is terminal
+  and is not an approval; the gate is never satisfied by it.
+- **EC-038**: The persistence layer restarts mid-run. The run must resume correctly once the store
+  returns, with no state lost.
+- **EC-039**: A creation request carries a known idempotency marker but different content. Must
+  conflict, minting nothing and changing nothing.
 
 ---
 
@@ -356,13 +379,33 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   be reachable without creator authentication.
   **Evidence**: retrieval tests for owner, non-owner, and anonymous callers.
 
-- **FR-URL-012** — *Duplicate request and idempotency behavior.* **[Confirmed]** The service MUST
-  define and enforce its behavior when the same creation request is submitted more than once.
-  **Accept**: a repeated creation request carrying the same idempotency marker yields the same
-  link rather than a second link.
-  **Reject (negative)**: a client-side retry MUST NOT create duplicate links or duplicate
-  side effects (EC-003).
-  **Evidence**: idempotency replay tests.
+- **FR-URL-012** — *Duplicate requests: marker-only idempotency.* **[Confirmed; semantics fixed by
+  CL-008]** Deduplication happens **only** through an explicit idempotency marker. Exactly three
+  behaviors are defined:
+
+  1. **No marker** → always mint a new code. There is **no destination-based deduplication at any
+     scope, ever**.
+  2. **Same marker, identical request** → **replay**: return the original link as **success** (not an
+     error), labelled as a replay, with **zero new side effects**. This mechanizes EC-003 — a client
+     that never saw the first response can retry safely.
+  3. **Same marker, different request content** (for example a different expiry) → **explicit
+     conflict error**; nothing is changed and nothing is minted.
+
+  **Accept**: each of the three cases produces its defined outcome; the replay response is
+  distinguishable as a replay; the conflict names the mismatch.
+  **Reject (negative)**: the same destination submitted twice without a marker MUST NOT return an
+  existing link; a replay MUST NOT alter any state, including the existing link's expiry; a conflict
+  MUST NOT silently mint a new code past a detected caller error; deduplication MUST NOT span
+  creators (which would break FR-URL-011 ownership and leak that another creator shortened the same
+  URL).
+  **Rationale recorded at Gate 3**: an idempotency key identifies one exact logical request, not a
+  destination. Updating the existing link on replay is forbidden twice over — replay must not change
+  state, and link editing is excluded scope for the same reason deletion is: the link is already
+  circulating with a promised lifetime. Destination-based deduplication would force a silent lie
+  whenever a second request carried a different expiry — either ignore what the caller asked, or
+  mutate a circulating link. Keyspace cost of always minting is accepted as negligible against
+  PVT-005.
+  **Evidence**: tests for all three cases, plus a cross-creator non-deduplication test.
 
 - **FR-URL-013** — *Concurrent request safety.* **[Confirmed]** The service MUST behave correctly
   under concurrent creation and concurrent resolution of the same link.
@@ -477,13 +520,23 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   failed (EC-018); parallel branches MUST NOT corrupt a shared downstream artifact (EC-017).
   **Evidence**: run history showing overlap and join blocking.
 
-- **FR-ORC-004** — *Workflow state persistence.* **[Confirmed]** The orchestrator MUST persist
-  workflow state durably enough to survive process termination.
-  **Accept**: after termination at an arbitrary point, state is reloaded and the run's position
-  is unambiguous.
-  **Reject (negative)**: state MUST NOT exist only in process memory; recovery MUST NOT report a
-  state it cannot substantiate from persisted records (EC-016).
-  **Evidence**: kill-and-reload test results.
+- **FR-ORC-004** — *Workflow state persistence across both restart classes.* **[Confirmed; scope
+  fixed by CL-009]** The orchestrator MUST persist workflow state durably enough to survive **both**
+  an orchestrator-process restart **and** a restart of the persistence layer itself. A **disk-backed
+  store is therefore required**; an in-memory store does not satisfy this requirement.
+  **Accept**: after termination at an arbitrary point, state is reloaded and the run's position is
+  unambiguous; after a persistence-layer restart, the run resumes correctly once the store returns;
+  during the outage the store surfaces as `UNAVAILABLE` in the FR-ORC-014 envelope, is proposed
+  transient, is intersected with the stage's declared retryable set, retries within its bound, and on
+  exhaustion suspends per FR-ORC-017.
+  **Reject (negative)**: state MUST NOT exist only in process memory, and MUST NOT live only in a
+  store that is itself only in memory; recovery MUST NOT report a state it cannot substantiate from
+  persisted records (EC-016); a store outage MUST NOT lose or corrupt run state.
+  **Rationale recorded at Gate 3**: process-only durability is the loophole — an in-memory store
+  technically satisfies the older wording while leaving the recovery guarantee nominal, protecting
+  nothing.
+  **Evidence**: kill-and-reload test results; persistence-layer restart fault-injection test with
+  correct resumption.
 
 - **FR-ORC-005** — *Context and decision lineage.* **[Confirmed]** The orchestrator MUST preserve
   cross-stage context, artifact provenance, and decision lineage.
@@ -536,7 +589,8 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   orchestrator MUST request human clarification, suspend only the affected path, and record the
   decision received.
   **Accept**: the affected path suspends while unaffected paths continue; the recorded decision
-  identifies the human, the question, the answer, and the time.
+  identifies the human, the question, the answer, and the time; and the clarification request states
+  its expiry consequences up front on the same terms as a gate request (FR-ORC-013).
   **Reject (negative)**: unaffected paths MUST NOT be suspended unnecessarily; the workflow MUST
   NOT proceed on the affected path without a recorded answer (EC-021).
   **Evidence**: DS-C run history showing selective suspension.
@@ -551,8 +605,14 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
 - **FR-ORC-013** — *Approval gates.* **[Confirmed]** The orchestrator MUST enforce human approval
   checkpoints with outcomes `APPROVED`, `REJECTED`, `CHANGES-REQUESTED`, `ESCALATED`, `TIMED-OUT`.
   **Accept**: each outcome produces its defined workflow effect; every gate record carries
-  outcome, actor, timestamp, and reason; and each gate record is materialized as a repository
-  artifact within the commit that acts on the decision, not held only in workflow state.
+  outcome, actor, timestamp, and reason; each gate record is materialized as a repository
+  artifact within the commit that acts on the decision, not held only in workflow state; and **the
+  gate request itself states its expiry consequences up front** — the gate-wait deadline at which
+  the run suspends, and the `auto-abandon-at` date computed from last activity plus the retention
+  period (FR-ORC-032).
+  **Rationale recorded at Gate 3 (CL-005 addendum)**: the person being asked must see the deadline in
+  the ask, rather than having to discover it by inspecting the run. This is additive to the
+  inspectable field, not a substitute for it.
   **Reject (negative)**: silence MUST NOT be recorded as approval; a mandatory gate MUST NOT be
   skipped, auto-satisfied, back-dated, or bypassed by re-entering the workflow downstream; a
   decision from an actor without recorded authority MUST NOT take effect (EC-024); the substantive
@@ -562,14 +622,44 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   *Added by Constitution Amendment 001 (v1.1.0, 2026-09-18) — see
   `docs/governance/gate-decisions/amendment-001-decision.md` sub-decision 6.*
 
-- **FR-ORC-014** — *Bounded retries and timeouts.* **[Confirmed]** The orchestrator MUST classify
-  failures as transient or permanent and MUST retry transient failures within a declared bound,
-  with declared backoff and timeout.
-  **Accept**: retry attempts are bounded, spaced per the declared backoff, and individually
-  recorded with their outcome.
-  **Reject (negative)**: retries MUST NOT be unbounded; a permanent failure MUST NOT be retried
-  as if transient; an exhausted bound MUST NOT be reported as success.
-  **Evidence**: retry histories under injected transient and permanent faults. *Bounds: PVT-007.*
+- **FR-ORC-014** — *Bounded retries and two-vote retry eligibility.* **[Confirmed; classification
+  model fixed by CL-006]** The orchestrator MUST classify failures as transient or permanent and MUST
+  retry transient failures within a declared bound, with declared backoff and timeout. Classification
+  works as follows:
+
+  1. **Standard error envelope.** Every failure crosses the orchestration boundary in a fixed
+     envelope: a category from a small closed vocabulary (`TIMEOUT`, `UNAVAILABLE`, `RATE_LIMITED`,
+     `INVALID_INPUT`, `INTERNAL`, `UNKNOWN`), the executor's **proposed** classification, and
+     free-form detail. Executors translate provider-specific errors into this envelope, so provider
+     knowledge stays in the plugin; a stage's declared retryable set is expressed over the standard
+     categories only.
+  2. **Two yes-votes required.** `retries = declared retryable set ∩ executor proposal`. Either side
+     may veto. The executor holds **veto power, never grant power**.
+  3. **Default-deny.** An `UNKNOWN` category, an undeclared code, or a malformed envelope is treated
+     as **permanent** and takes the safe path (suspension, FR-ORC-017).
+  4. **Timeout gating.** A `TIMEOUT` is retryable only where the stage's declared contract marks its
+     effect idempotent or repeat-safe. That contract is a **design-time stage declaration, never the
+     executor's self-certification**, because a timeout means completion is unknown and replaying a
+     maybe-completed non-idempotent effect violates exactly-once (FR-ORC-018).
+  5. **Information flows down, authority does not.** The executor receives the attempt number and
+     remaining budget and may adapt its strategy; it never gains decision authority.
+
+  **Accept**: retry attempts are bounded, spaced per the declared backoff, and individually recorded;
+  every retry decision produces a **two-signature audit record** — what the executor proposed and
+  what the orchestrator ruled.
+  **Reject (negative)**: retries MUST NOT be unbounded; a permanent failure MUST NOT be retried as
+  if transient; an exhausted bound MUST NOT be reported as success; an unrecognized failure MUST NOT
+  default to retryable; a declared retryable set MUST NOT force a retry the executor reported as
+  hopeless; an executor MUST NOT obtain a retry the declaration never approved.
+  **Rationale recorded at Gate 3**: the orchestrator is final authority not because it diagnoses
+  better — it never overrides the diagnosis — but because it alone holds the decision context the
+  executor cannot see: attempts consumed, whether compensation was already issued for this attempt
+  (EC-022), whether replanning invalidated the stage (EC-019, EC-020), and whether the run is blocked
+  by safe-stop, a pending gate, or a mandatory policy `FAIL`. Executor = diagnosis; orchestrator =
+  policy and memory. A refusal path (FR-ORC-021) can only exist outside the governed party.
+  **Evidence**: retry histories under injected transient, permanent, unknown, and malformed-envelope
+  faults; two-signature audit records; timeout-on-non-idempotent-effect refusal test. *Bounds:
+  PVT-007.*
 
 - **FR-ORC-015** — *Fallback.* **[Confirmed]** Stages that can degrade MUST declare fallback
   behavior, and the orchestrator MUST apply it when the primary path is exhausted.
@@ -578,24 +668,71 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   safe-stop (EC-023).
   **Evidence**: fallback activation records.
 
-- **FR-ORC-016** — *Rollback and compensation.* **[Confirmed]** The orchestrator MUST distinguish
-  rollback of reversible, uncommitted effects from compensation of already-committed effects, and
-  MUST apply the correct one.
-  **Accept**: a reversible failure rolls back; a committed effect is compensated; the run history
-  labels which occurred.
-  **Reject (negative)**: compensation MUST NOT be described as rollback or vice versa; a
-  compensation MUST NOT be applied twice for the same effect, including when a retry later
-  succeeds (EC-022).
-  **Evidence**: rollback and compensation run histories, separately labelled.
+- **FR-ORC-016** — *Rollback and compensation, structural default with declared overrides.*
+  **[Confirmed; model fixed by CL-007]** The orchestrator MUST distinguish rollback of reversible,
+  uncommitted effects from compensation of already-committed effects, and MUST apply the correct one.
+  The choice is determined as follows:
 
-- **FR-ORC-017** — *Safe-stop.* **[Confirmed]** The orchestrator MUST enter safe-stop when
-  continuation is unsafe, leaving state consistent and resumable and emitting a terminal outcome
-  with a reason.
-  **Accept**: safe-stop triggers on gate timeout, unrecoverable failure, and blocking policy
-  failure; state after safe-stop is resumable.
-  **Reject (negative)**: safe-stop MUST NOT continue past the blocked gate on reduced scope
-  without a new human decision; it MUST NOT leave partially applied effects unrecorded.
-  **Evidence**: safe-stop records for each trigger class.
+  1. **Structural default.** Anything committed to version control, or written as an immutable
+     governance or audit record, is **compensate-only**. Anything still in the local working tree and
+     un-pushed is rollback-eligible. This central register is the common case (see §Compensation
+     Register).
+  2. **Declared override.** A stage MAY add entries where its correction requires product knowledge —
+     for example, an unwanted short link is corrected by **setting it to expired, never deleted**.
+  3. **Registration-time enforcement.** A stage declaring an irreversible effect **MUST name its
+     compensating action or it does not load**. A declaration contradicting the structural rule —
+     claiming erasable for an effect landing in an immutable store — is **flagged for human review,
+     never silently trusted**.
+  4. **Unknown effects are never erased.** An unclassified effect is compensate-only; where no
+     compensating action is known, the orchestrator does nothing to the effect and suspends the run
+     (FR-ORC-017) with the reason recorded.
+
+  **Accept**: a reversible failure rolls back; a committed effect is compensated; the run history
+  labels which occurred; a stage with an unnamed compensating action fails to load.
+  **Reject (negative)**: compensation MUST NOT be described as rollback or vice versa; a compensation
+  MUST NOT be applied twice for the same effect, including when a retry later succeeds (EC-022); an
+  unclassified effect MUST NOT be erased; a contradictory reversibility declaration MUST NOT be
+  trusted; an executor acting outside the provided effect channels MUST be refused, recorded as an
+  autonomy violation (FR-ORC-021), and MUST NOT reach cleanup.
+  **Rationale recorded at Gate 3**: one place holds the common answers; stage authors stay responsible
+  only for what they uniquely know.
+  **Evidence**: rollback and compensation run histories, separately labelled; registration-failure
+  test; contradictory-declaration review flag; no-known-compensation suspension record.
+
+- **FR-ORC-017** — *Safe-stop as a suspended, non-terminal state.* **[Confirmed; semantics fixed by
+  CL-005]** The orchestrator MUST enter `SAFE_STOP` when continuation is unsafe, leaving state
+  consistent and resumable and emitting a **suspension** outcome with a reason. `SAFE_STOP` is
+  **not** a terminal state.
+  - **Terminal states are exactly**: `COMPLETED`, `REJECTED`, `ABANDONED`.
+  - A suspended run leaves `SAFE_STOP` only by **(a)** a human decision — resume or abandon — or
+    **(b)** the pre-approved idle retention policy (FR-ORC-032).
+
+  **Accept**: safe-stop triggers on gate timeout, unrecoverable failure, blocking policy failure,
+  an unrecognized failure classification (FR-ORC-014), and an effect with no known compensating
+  action (FR-ORC-016); state after safe-stop is resumable.
+  **Reject (negative)**: safe-stop MUST NOT continue past the blocked gate on reduced scope without
+  a new human decision; it MUST NOT leave partially applied effects unrecorded; it MUST NOT be
+  recorded as a terminal outcome; and a suspended run MUST NOT advance by any means other than the
+  two named above.
+  **Evidence**: safe-stop records for each trigger class; state-machine test asserting `SAFE_STOP`
+  is non-terminal and that the terminal set is exactly the three named states.
+
+- **FR-ORC-032** — *Idle retention and auto-abandonment.* **[Confirmed — CL-005]** A suspended run
+  MUST be automatically abandoned after a configurable idle period measured **from the run's last
+  activity or state change**, never from its creation time.
+  **Accept**: the idle clock resets on any activity; on expiry the run moves to `ABANDONED` — a
+  terminal state — and an audit event is written citing the retention policy version, actor type
+  `system`, and authority "pre-approved retention policy"; every suspended run exposes its computed
+  `auto-abandon-at` timestamp via workflow inspection (FR-ORC-008).
+  **Reject (negative)**: a run that received attention MUST NOT be reaped on age; policy-driven
+  abandonment MUST NOT be recorded as an approval, and MUST NOT advance a run past a gate — silence
+  still advances nothing (Constitution III); the auto-abandon timestamp MUST NOT be absent from a
+  suspended run's inspection output.
+  **Rationale recorded at Gate 3**: a feature is commonly worked for about a quarter, so a run
+  awaiting a human answer can legitimately sit that long without being dead. *Idle period:
+  PVT-015.*
+  **Evidence**: idle-expiry test with clock control; audit event inspection; inspection output
+  showing `auto-abandon-at`.
 
 - **FR-ORC-018** — *Resumption.* **[Confirmed]** The orchestrator MUST resume a run after
   recoverable interruption and reach a deterministic terminal outcome without duplicating
@@ -746,7 +883,9 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
 - **KE-03 IdempotencyRecord**: the marker binding a creation request to the link it produced, so
   a repeat yields the same link (FR-URL-012).
 - **KE-04 WorkflowRun**: one governed execution, with a durable identifier, current state, policy
-  version evaluated, and terminal outcome.
+  version evaluated, last-activity timestamp, computed `auto-abandon-at` when suspended, and its
+  terminal outcome once it reaches one (`COMPLETED`, `REJECTED`, `ABANDONED`) — a suspended run has no
+  terminal outcome yet (FR-ORC-017, FR-ORC-032).
 - **KE-05 StageNode**: one of the twelve lifecycle stages within a run, with inputs, outputs,
   entry and exit criteria, owner, status, and failure behavior.
 - **KE-06 DependencyEdge**: a declared precedence relation between StageNodes, including join
@@ -788,6 +927,14 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
 - **KE-25 StageExecutor**: the bound implementation for a StageNode, carrying its executor class
   (deterministic engine, AI-capable, or human gate) and the mode actually used in a given run
   (FR-ORC-029).
+- **KE-26 FailureEnvelope**: a failure crossing the orchestration boundary — standard category,
+  executor-proposed classification, and detail (FR-ORC-014).
+- **KE-27 RetryRuling**: the orchestrator's two-signature retry decision — what the executor proposed
+  and what the orchestrator ruled, with the reason (FR-ORC-014).
+- **KE-28 EffectRecord**: an applied stage effect with its reversibility class and, where
+  irreversible, its named compensating action (FR-ORC-016, §Compensation Register).
+- **KE-29 StageEffectContract**: a stage's design-time declaration of its retryable categories and
+  whether its effect is idempotent or repeat-safe (FR-ORC-014 rule 4).
 
 ---
 
@@ -846,6 +993,23 @@ the replan.
 
 ---
 
+## Compensation Register *(mandatory)*
+
+Confirmed at Gate 3 under CL-007. This is the central structural table FR-ORC-016 resolves against.
+Stages append declared overrides; they never contradict a row here without human review.
+
+| Effect | Reversible? | Correct action | Basis |
+|--------|-------------|----------------|-------|
+| Working-tree file writes (docs, summary, plan) | **Yes** | Rollback — discard | Discardable before commit |
+| Local branch commits (stage 7) | **Yes** | Rollback — reset or delete branch | Nothing is pushed (CL-004); the only erasable class |
+| Recorded gate decision | **No** | Compensate — write a superseding record referencing the prior one | `CLAUDE.md` immutability. EC-020's voided approval is a superseding record, never a deletion |
+| Audit records | **No** | Compensate — append a corrective entry | NFR-AUD-001 immutability |
+| Created short links | **No** | Compensate — set to expired, never delete | EX-003 excludes deletion. Rationale: dangling history, short-code reuse hijack, repeat-safe cleanup |
+| Recorded redirect events | **No** | Compensate — append correction | Append-only analytics (FR-URL-010) |
+| AI provider invocations | **No** | Nothing to compensate | Cannot be un-called; no external state changed |
+
+Any effect not matching a row here is treated as **compensate-only** (FR-ORC-016 rule 4).
+
 ## Stage Executor Model *(mandatory)*
 
 Approved at Gate 2 under AQ-003. The orchestrator is not itself the AI — it **governs** agents,
@@ -897,8 +1061,11 @@ requirement. None constrains implementation until approved.
   follower-identifying field is captured (AQ-002), and no plaintext credential is stored anywhere
   (FR-URL-019). *Verifiable: stored-schema inspection; zero personal-data fields; secret scan over
   repository and telemetry.*
-- **NFR-REL-001** — Every orchestration run reaches a deterministic terminal outcome. *Verifiable:
-  zero runs in an indeterminate state across the demonstration corpus.*
+- **NFR-REL-001** — Every orchestration run reaches a terminal state (`COMPLETED`, `REJECTED`,
+  `ABANDONED`) **or** a durable suspended state (`SAFE_STOP`) from which only a human decision or
+  resumption proceeds. *(Reworded at Gate 3 per CL-005; the prior wording conflicted with
+  FR-ORC-017's resumability.)* *Verifiable: zero runs in an indeterminate state — that is, in neither
+  the terminal set nor a durable suspended state — across the demonstration corpus.*
 - **NFR-REL-002** — Transient failures are retried within declared bounds; permanent failures are
   not retried as transient. *Verifiable: fault-injection results. Bounds: PVT-007.*
 - **NFR-REL-003** — Committed effects occur exactly once across interruption and resumption.
@@ -930,8 +1097,10 @@ requirement. None constrains implementation until approved.
   conditions. *Verifiable: measured, with conditions declared.*
 - **NFR-PERF-002** — Link creation completes within PVT-002 at the p95 under stated conditions.
   *Verifiable: measured, with conditions declared.*
-- **NFR-REC-001** — A run interrupted at any stage boundary resumes and terminates deterministically.
-  *Verifiable: interruption at every stage boundary in at least one scenario.*
+- **NFR-REC-001** — A run interrupted at any stage boundary resumes and reaches a terminal state, for
+  **both** interruption classes: orchestrator-process restart and persistence-layer restart (CL-009).
+  *Verifiable: interruption at every stage boundary in at least one scenario, plus a persistence-layer
+  restart injected mid-run.*
 - **NFR-REC-002** — Mean time to recovery is defined, instrumented, and reported. **Deferred to
   Plan stage** by the human owner at Gate 1: the MTTR definition and its measurement rules are a
   Plan-stage deliverable, so no target is proposed here. *Verifiable once defined.*
@@ -1023,6 +1192,7 @@ Approval is requested at the Plan-stage gate.
 | PVT-012 | Creation rate limit | 60 requests/minute per creator | Demonstrates throttling without impeding tests | Per authenticated creator (FR-URL-018) |
 | PVT-013 | Redirect rate limit, per short code | 600 requests/minute per code | Hotspot protection: no single link can be hammered | Public, unauthenticated traffic |
 | PVT-014 | Redirect rate limit, per creator aggregated | 3,000 requests/minute across all a creator's links | Noisy-neighbor protection: many links each under PVT-013 cannot collectively soak capacity | Deliberately below the sum of per-code limits, which is what makes the tier bite |
+| PVT-015 | Suspended-run idle retention before auto-abandonment | 90 days from last activity | A feature is commonly worked for about a quarter, so a run awaiting a human answer can legitimately sit that long without being dead; aligns with PVT-010's audit retention | Configurable; demonstration runs use compressed values labelled per AS-007. *Boundary against PVT-010 audit retention is an open finding — see Deferred Findings DF-003* |
 
 ---
 
@@ -1098,14 +1268,74 @@ verbatim, in `docs/governance/gate-decisions/gate-02-specify.md`.
 - **AQ-002** — *Resolved.* Analytics granularity and retention. → Clarification Log CL-002.
 - **AQ-003** — *Resolved.* Stage executor model. → Clarification Log CL-003.
 
-Non-blocking ambiguities, still open and deferred to `/speckit-clarify`:
+Ambiguities raised at Gate 2 as non-blocking, dispositioned at Gate 3:
 
-- **AQ-004**: Whether redirects should be permanent or temporary by default (CN-006 defers the
-  mechanism; the caching and analytics consequences differ).
-- **AQ-005**: Whether the same destination submitted twice without an idempotency marker should
-  return the existing code or mint a new one (EC-002, FR-URL-012).
-- **AQ-006**: Whether orchestration runs must survive a full restart of the persistence layer, or
-  only of the orchestrator process (FR-ORC-004 currently reads as the latter).
+- **AQ-004** — *Still open.* Whether redirects should be permanent or temporary by default (CN-006
+  defers the mechanism; the caching and analytics consequences differ). → Deferred Findings DF-002.
+- **AQ-005** — *Resolved at Gate 3.* → Clarification Log CL-008.
+- **AQ-006** — *Resolved at Gate 3.* → Clarification Log CL-009.
+
+---
+
+## Deferred Findings
+
+Recorded uncertainty that is **not** resolved and must not be treated as decided. Each carries an
+owner and a required decision point, per Constitution I's prohibition on silent interpretation.
+
+### DF-001 — Analytics exactness contradiction *(contradiction in the approved spec)*
+
+- **Finding**: PVT-009 proposes an analytics recording tolerance of "≤ 0.5% loss" under load, while
+  FR-URL-010 states that following a link "appends an event" and SC-001 requires correctness across
+  100% of the acceptance corpus. Exact-append and a 0.5% loss budget cannot both hold.
+- **Impact**: determines whether analytics recording is synchronous and transactional with the
+  redirect, or asynchronous and best-effort. Changes the concurrency design, the redirect latency
+  budget (PVT-001), and what the acceptance tests may assert.
+- **Current assumption**: none adopted. Unresolved.
+- **Owner**: human owner.
+- **Required decision point**: Plan gate, before any acceptance test is written against either reading.
+
+### DF-002 — Redirect permanence *(AQ-004)*
+
+- **Finding**: the spec does not state whether a redirect is permanent or temporary by default.
+- **Impact**: a permanent redirect invites intermediary and browser caching, which silently
+  undercounts analytics (FR-URL-010) and can defeat expiry (FR-URL-008) because a cached redirect
+  bypasses the service entirely. A temporary redirect preserves both at the cost of every follow
+  reaching the service.
+- **Current assumption**: none adopted. CN-006 already defers the mechanism to Plan; the *semantic*
+  choice is what remains open.
+- **Owner**: human owner.
+- **Required decision point**: Plan gate. It interacts with DF-001 — caching changes what analytics
+  exactness even means.
+
+### DF-003 — Audit-versus-idle retention boundary
+
+- **Finding**: PVT-010 proposes 90-day audit retention and PVT-015 proposes 90-day suspended-run idle
+  retention. A run suspended on day 0 is auto-abandoned on day 90, at the same time its earliest audit
+  records become purge-eligible.
+- **Impact**: the abandonment event would be recorded against a run whose beginning is aging out,
+  undercutting FR-ORC-023's reconstruction requirement and potentially tripping release-readiness
+  condition 9 (unverifiable evidence).
+- **Current assumption**: none adopted. The 90/90 alignment is deliberate and sound; only the boundary
+  rule is missing.
+- **Owner**: human owner.
+- **Required decision point**: Plan gate. Two candidate rules: measure audit retention from run
+  termination rather than record creation, or set audit retention strictly greater than idle retention.
+
+### DF-004 — Deferred production enhancements *(out of timebox scope, recorded not adopted)*
+
+| Item | Source | Rationale for deferral |
+|---|---|---|
+| Run-level retry circuit breaker (whole-run retry ceiling) | CL-006 | Per-stage bounds plus run-level blocks are the in-scope controls |
+| Email/webhook expiry notification for suspended runs | CL-005 | The inspectable `auto-abandon-at` plus the deadline in the ask serve as the standing warning instead |
+
+- **Owner**: human owner. **Required decision point**: post-assessment; neither is in scope now.
+
+### DF-005 — Gate 1 and Gate 3 items still outstanding at the Plan gate
+
+MTTR definition with formula and measurement rules; the 2–3 day timebox and its scope controls;
+versioned API/schema deliverables with contract validation; approval of every PVT value; the
+constitution check enumerated against v1.1.0 with the policy version recorded. **Owner**: human owner.
+**Required decision point**: Plan gate.
 
 ---
 
@@ -1134,7 +1364,7 @@ documented in the threat model.
 
 **Applied to**: FR-URL-011, FR-URL-016, FR-URL-017, FR-URL-018 *(new)*, FR-URL-019 *(new)*, KE-01,
 KE-23, KE-24 *(new)*, NFR-SEC-003, NFR-SEC-005 *(new)*, PVT-012, PVT-013 *(new)*, PVT-014 *(new)*,
-EX-005.
+SC-017 *(new)*, EX-005.
 
 ### CL-002 — AQ-002, Analytics granularity and retention | 2026-09-18 | Pravallika Veeravalli
 
@@ -1149,7 +1379,7 @@ Retention stays at the proposed 30-day cap as housekeeping, subject to Plan-gate
 CL-001's ownership model already governs who may **read** analytics, whereas this decision governs
 what is **stored**.
 
-**Applied to**: FR-URL-010, FR-URL-011, KE-02, NFR-SEC-005, PVT-010.
+**Applied to**: FR-URL-010, FR-URL-011, KE-02, NFR-SEC-005, PVT-010, SC-017 *(new)*.
 
 ### CL-003 — AQ-003, Stage executor model | 2026-09-18 | Pravallika Veeravalli
 
@@ -1176,6 +1406,154 @@ FR-ORC-013 and FR-ORC-023 (executor mode in gate and audit evidence).
 
 **Decision**: stay on `main`. A single linear history is easiest for reviewers to follow and matches
 the assessment guide's commit progression. **Applied to**: CN-009.
+
+---
+
+### Session 2026-09-19 — `/speckit-clarify`, Gate 3
+
+Five questions asked and answered. Three addressed defects found in the approved specification — a
+contradiction, a non-testable requirement, and an unenumerated recovery register. Two resolved AQ-005
+and AQ-006. Full reasoning verbatim in `docs/governance/gate-decisions/gate-03-clarify.md`.
+
+- Q: When a run enters safe-stop, is the run finished or suspended awaiting resumption? → A: Suspended
+  and non-terminal; terminal states are exactly `COMPLETED`, `REJECTED`, `ABANDONED`; 90-day idle
+  retention from last activity.
+- Q: How does the orchestrator decide transient vs permanent, and what happens to an unrecognized
+  failure? → A: Executor proposes, orchestrator validates, either may veto; `retries = declared set ∩
+  executor proposal`; unrecognized is permanent.
+- Q: How does the orchestrator know whether an effect can be rolled back or only compensated? → A:
+  Structural default plus declared overrides, with registration-time enforcement; unclassified is
+  compensate-only.
+- Q: If the same destination is submitted twice without an idempotency marker, return the existing
+  link or mint a new code? → A: Always mint; deduplication is marker-only.
+- Q: Must a run survive a persistence-layer restart or only an orchestrator-process restart? → A:
+  Both; a disk-backed store is required.
+
+### CL-005 — Safe-stop semantics and run lifecycle | 2026-09-19 | Pravallika Veeravalli
+
+**Defect resolved**: FR-ORC-017 called `SAFE_STOP` both "resumable" and "terminal", contradicting
+NFR-REL-001.
+
+**Decision**: `SAFE_STOP` is a distinct **non-terminal suspended** state. Terminal states are exactly
+`COMPLETED`, `REJECTED`, `ABANDONED`. A suspended run moves only by a human decision — resume or
+abandon — or by the pre-approved idle retention policy. NFR-REL-001 reworded accordingly.
+
+Retention policy as designed by the owner: the idle clock runs from **last activity**, never from
+creation, because a run that received attention must not be reaped on age; after a generously high
+configurable idle period the run is automatically abandoned; every suspended run exposes its computed
+`auto-abandon-at` via inspection, serving as a standing warning in place of notification
+infrastructure; auto-abandonment writes an audit event citing the retention policy version, actor type
+`system`, and the pre-approved policy as authority. **Policy-driven abandonment is never an approval —
+silence still advances nothing.**
+
+**Retention period corrected to 90 days** (from an initial 30) on the owner's reasoning that a feature
+is commonly worked for about a quarter, and that 90 aligns with PVT-010's audit-retention proposal.
+
+**Addendum — deadline in the ask**: a gate decision request and a clarification request must each
+state their expiry consequences up front: the gate-wait deadline at which the run suspends, and the
+`auto-abandon-at` date computed from last activity plus retention. Additive to the inspectable field —
+the person being asked should not have to discover the deadline by inspecting the run.
+
+**Applied to**: FR-ORC-017, FR-ORC-032 *(new)*, FR-ORC-011, FR-ORC-013, NFR-REL-001, US-2 scenarios 1
+and 2, PVT-015 *(new)*, EC-036, EC-037 *(new)*, KE-04. Deferred production enhancement:
+email/webhook expiry notification.
+
+### CL-006 — Failure classification and retry eligibility | 2026-09-19 | Pravallika Veeravalli
+
+**Defect resolved**: FR-ORC-014 required classification without naming the decider, the method, or the
+unknown-failure disposition, leaving it untestable.
+
+**Decision**: executor proposes, orchestrator validates, either side may veto. A standard error
+envelope over a closed category vocabulary keeps provider knowledge in the plugin. `retries = declared
+retryable set ∩ executor proposal` — the executor holds **veto power, never grant power**. Unrecognized
+categories, undeclared codes, and malformed envelopes are **permanent** and take the suspension path,
+matching the EC-025 default-deny precedent. A `TIMEOUT` is retryable only where the stage's
+**design-time** contract declares its effect idempotent, never on executor self-certification, because
+a timeout leaves completion unknown and replaying a maybe-completed effect violates exactly-once.
+Information flows down — attempt number and remaining budget — but authority does not.
+
+**Why the orchestrator is final authority**: not because it diagnoses better (it never overrides the
+diagnosis) but because it alone holds the decision context — attempts consumed, compensation already
+issued, replanning invalidation, safe-stop or pending-gate or policy-`FAIL` blocks. Executor =
+diagnosis; orchestrator = policy and memory. A refusal path can only exist outside the governed party,
+which matters doubly with six AI-backed executors.
+
+**Alternatives rejected**: no-classification retry-everything violates Principle VIII outright and
+would fail the plan's constitution check; a static list with always-retried timeouts violates
+exactly-once; a repaired static list is legal but couples the core to every plugin's error taxonomy,
+burns bounded attempts on failures known to be deterministic, and forfeits the executor's veto;
+executor self-classification with unknown-defaults-to-retry is fail-open, puts the autonomy limit
+inside the governed component so no refusal path can exist, and reduces the audit answer to "the agent
+said so" — a gate satisfiable by the governed party's testimony is not a gate.
+
+**Doubt resolved**: the orchestrator's check does not duplicate the executor's work — the layers hold
+disjoint information, the check is a set-membership lookup rather than a second diagnosis, and every
+decision yields a two-signature audit record, maker-checker style.
+
+**Applied to**: FR-ORC-014, FR-ORC-004, KE-26, KE-27, KE-29 *(new)*, EC-031, EC-032, EC-033 *(new)*,
+NFR-REL-002. Deferred production enhancement: run-level retry circuit breaker.
+
+### CL-007 — Rollback versus compensation | 2026-09-19 | Pravallika Veeravalli
+
+**Defect resolved**: FR-ORC-016 required the distinction without enumerating which effects are
+reversible, leaving the orchestrator no basis to choose.
+
+**Decision**: structural default plus declared overrides. The orchestrator holds the common effect
+kinds centrally — a small table written once — and each stage adds lines only where its correction
+requires product knowledge, such as an unwanted short link being corrected by setting it to expired
+rather than deleted. Registration-time enforcement: a stage declaring an irreversible effect **must
+name its compensating action or it does not load**, and a declaration contradicting the structural rule
+is **flagged for human review rather than silently trusted**. Unknown or unclassified effects are never
+erased: compensate-only, and where no fix is known, touch nothing and suspend the run with the reason
+recorded. Executors acting outside the provided effect channels are refused, recorded as autonomy
+violations, and never reach cleanup.
+
+**Effect inventory confirmed** as the §Compensation Register: local un-pushed work is the only erasable
+class; gate decisions and audit records are corrected by superseding or appended entries; short links
+are corrected by expiry and never deleted (rationale: dangling history, short-code reuse hijack,
+repeat-safe cleanup); AI invocations have nothing to recover.
+
+**Applied to**: FR-ORC-016, §Compensation Register *(new)*, KE-28 *(new)*, EC-034, EC-035 *(new)*,
+FR-ORC-021.
+
+### CL-008 — Duplicate destination behavior | 2026-09-19 | Pravallika Veeravalli
+
+**Resolves AQ-005.**
+
+**Decision**: marker-only deduplication, with three exact behaviors — no marker always mints a new
+code with no destination-based deduplication at any scope; same marker with identical request replays
+the original link as labelled success with zero new side effects, mechanizing EC-003; same marker with
+different content returns an explicit conflict, minting nothing and changing nothing.
+
+**Reasoning**: an idempotency key identifies one exact logical request, not a destination. Updating the
+existing link on replay is forbidden twice over — replay must not change state, and link editing is
+excluded scope for the same reason deletion is, since the link is already circulating with a promised
+lifetime. Silently minting past a detected caller bug would be guessing past a surfaced mistake.
+Per-creator deduplication was rejected because a second request with a different expiry forces a silent
+lie: ignore what the caller asked, or mutate a circulating link. Global deduplication was rejected
+because it breaks the CL-001 ownership model and leaks that another creator shortened the same URL.
+Keyspace cost of always minting is accepted as negligible against PVT-005.
+
+**Applied to**: FR-URL-012, EC-002, EC-003, EC-039 *(new)*, KE-03, AQ-005.
+
+### CL-009 — State recovery scope | 2026-09-19 | Pravallika Veeravalli
+
+**Resolves AQ-006.**
+
+**Decision**: runs survive both an orchestrator-process restart and a persistence-layer restart; a
+disk-backed store is therefore required.
+
+**Reasoning**: this is the only option both honest and lean. Process-only durability is not merely
+cheap, it is the loophole — an in-memory store technically satisfies the prior wording while making the
+recovery guarantee nominal, protecting nothing. Full-host-restart scope adds test-harness cost for no
+design difference once the store is disk-backed. Differentiated guarantees would mean two recovery
+stories to build, test, and defend. A store outage flows through machinery already decided:
+`UNAVAILABLE` in the CL-006 envelope, proposed transient, intersected with the stage's declared
+retryable set, bounded retries, suspension on exhaustion with the deadline shown in the ask, correct
+resumption when the store returns.
+
+**Applied to**: FR-ORC-004, NFR-REC-001, EC-038 *(new)*, EC-011, EC-016, AQ-006. Constrains the
+technology-selection ADR.
 
 ---
 
@@ -1219,7 +1597,7 @@ right-to-left answers "why does this artifact exist".
 | FR-URL-009 | US-1 | DS-A | EC-014 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-URL-010 | US-1 | DS-B | EC-012, EC-013 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-URL-011 | US-1 | DS-B | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-012 | US-1 | DS-A | EC-002, EC-003 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-012 | US-1 | DS-A | EC-002, EC-003, EC-039 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-URL-013 | US-1 | DS-B | EC-001, EC-013 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-URL-014 | US-1 | DS-B | EC-010, EC-011 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-URL-015 | US-1 | DS-B | EC-011 | *Tasks stage* | *Tasks stage* | *Implement stage* |
@@ -1230,7 +1608,7 @@ right-to-left answers "why does this artifact exist".
 | FR-ORC-001 | US-3 | DS-A | EC-029 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-002 | US-3 | DS-A | EC-030 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-003 | US-3 | DS-A | EC-017, EC-018 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-004 | US-3 | DS-A | EC-015, EC-016 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-004 | US-3 | DS-A | EC-015, EC-016, EC-038 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-005 | US-5 | DS-A | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-006 | US-3 | DS-A | EC-029 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-007 | US-3 | DS-A | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
@@ -1240,9 +1618,9 @@ right-to-left answers "why does this artifact exist".
 | FR-ORC-011 | US-2 | DS-C | EC-021 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-012 | US-3 | DS-A | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-013 | US-2 | DS-A, DS-C | EC-024 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-014 | US-3 | DS-B | EC-022 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-014 | US-3 | DS-B | EC-022, EC-031, EC-032, EC-033 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-015 | US-3 | DS-B | EC-023 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-016 | US-3 | DS-B | EC-022 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-016 | US-3 | DS-B | EC-022, EC-034, EC-035 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-017 | US-2 | DS-C | EC-023, EC-025 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-018 | US-3 | DS-C | EC-015, EC-026 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-019 | US-3 | DS-C | EC-019, EC-020, EC-030 | *Tasks stage* | *Tasks stage* | *Implement stage* |
@@ -1258,3 +1636,4 @@ right-to-left answers "why does this artifact exist".
 | FR-ORC-029 | US-5 | DS-A, DS-B, DS-C | — | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-030 | US-3 | DS-B, DS-C | EC-015, EC-018, EC-022, EC-023 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-031 | US-3 | DS-B | EC-023 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-032 | US-2, US-3 | DS-C | EC-036, EC-037 | *Tasks stage* | *Tasks stage* | *Implement stage* |
