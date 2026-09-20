@@ -47,7 +47,7 @@ decisions came from.
 | Testing | JUnit 5 + Testcontainers (real Postgres), OpenAPI response validation, deterministic fake executors | ACCEPTED — ADR-005 |
 | Target Platform | Single JVM process, Linux/macOS developer machine; Docker for the store | ACCEPTED |
 | Project Type | Web service plus embedded orchestration engine; one deployable, two internal planes | ACCEPTED |
-| AI provider (AI-capable stages) | Anthropic Claude API behind an interface; **never required** — the run-level flag is `ai: on \| off`, default `off`, so the keyless path is the reviewer default (CN-011) | ACCEPTED — ADR-004 |
+| AI provider (AI-capable stages) | Anthropic Claude behind an owned interface; **transport is the local Claude Code CLI in headless mode** (ADR-004-A1), with the SDK adapter recorded as the production alternative behind the same seam. **Never required** — the run-level flag is `ai: on \| off`, default `off`, so the keyless path is the reviewer default (CN-011) | ACCEPTED — ADR-004, amended by ADR-004-A1 (CR-008) |
 | Performance Goals | PVT-001 redirect p95 ≤ 50 ms; PVT-002 create p95 ≤ 200 ms; PVT-003 100 concurrent | **All 15 PVTs APPROVED** 2026-09-20 (CR-005) — now binding acceptance thresholds |
 | Constraints | 2–3 day timebox (§14); no push; no distributed components; no production deployment (EX-007) | **APPROVED** 2026-09-20 |
 | Scale/Scope | Demonstration scale only. Every measurement is a demonstration measurement (AS-009, Constitution IX) | Confirmed |
@@ -675,17 +675,28 @@ a candidate, not settled, per Gate 1's explicit carry-forward.
 ### ADR-004 — AI provider for AI-capable stages
 
 - **Question**: which provider, and how is it bounded?
-- **Options**: (a) Anthropic Claude API; (b) OpenAI; (c) local model; (d) none (deterministic only).
+- **Options**: (a) Anthropic Claude; (b) OpenAI; (c) local model; (d) none (deterministic only).
 - **Criteria**: quality on code-authoring and analysis, availability of a clean interface boundary,
   cost, and the hard constraint CN-011 that the reviewer default must run with no key.
-- **Recommended**: **(a) Anthropic Claude API** behind a provider interface, with the latest available
-  Claude model selected at implementation time; the run-level flag is `ai: on | off` and defaults to `off`.
+- **Recommended**: **(a) Anthropic Claude** behind a provider interface, with the specific model pinned at
+  implementation time; the run-level flag is `ai: on | off` and defaults to `off`.
 - **Rationale**: (d) alone would make the "agentic" claim hollow (CL-003). Keeping the provider behind
   an interface satisfies NFR-MNT-002 and keeps (b)/(c) open.
-- **Consequences**: an API key and cost for demonstration runs only.
+- **Transport — settled separately by [ADR-004-A1](../../docs/governance/adr/ADR-004-amendment-01-transport-claude-code-cli.md) (CR-008)**:
+  ADR-004 fixes the provider and the interface boundary; *how* the boundary is reached is a sub-decision. The
+  implemented adapter is a **subprocess invocation of the locally installed, authenticated Claude Code CLI in
+  headless mode**, with the model pinned in configuration and the **actually-used model id read from the
+  response JSON** and recorded per run (FR-ORC-029). The Anthropic API/SDK adapter is the recorded production
+  alternative behind the same interface, built only if time permits (backlog, T002).
+- **Consequences**: an authenticated Claude Code CLI on the machine for demonstration runs only, drawing on the
+  same subscription quota as the development tooling. The SDK path would instead need an API key and per-call
+  cost. Either way, **nothing graded requires either** (CN-011).
 - **Risks**: non-determinism in graded runs. **Mitigation**: reliability proofs use injected fakes, never
-  the live provider (FR-ORC-030).
-- **Reversibility**: high. **Validation**: SC-014 — full run with no key, no network.
+  the live provider (FR-ORC-030). **Transport-specific risk**: the stage prompt is untrusted content, so the
+  subprocess MUST be invoked with an **argv array, never a shell string** — see ADR-004-A1 §Risks.
+- **Reversibility**: high — demonstrated by ADR-004-A1, which changed transport without touching the interface,
+  the stage definitions, the flag, the labels, or any requirement. **Validation**: SC-014 — full run with no key,
+  no network.
 
 ### ADR-005 — Contract validation approach
 

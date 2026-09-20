@@ -18,7 +18,7 @@ has been executed — this is the validation design, not a record of results.
 |---|---|
 | Docker | The store must be a restartable process (ADR-002, CL-009) |
 | JDK 21 *(pending ADR-001)* | Build and run |
-| **No AI API key** | Deliberate. The reviewer-default path runs fully without one (CN-011, SC-014) |
+| **Nothing AI-related** | Deliberate. The reviewer-default path runs fully without an API key, without an authenticated CLI, and without a network (CN-011, SC-014). AI mode is optional — see below |
 | No network access needed | The reliability suite must pass offline (NFR-AUT-004) |
 
 ---
@@ -77,9 +77,13 @@ Two consequences worth knowing. The **prepared scenarios never hit this gate**, 
 exist. And the executor model has three kinds, not two: **AI, deterministic, and human** — the third completed
 by option 2 above, and every stage execution records which one ran it.
 
-### With `ai: on` — one flag plus your own API key, entirely optional
+### With `ai: on` — one flag plus one AI credential of your own, entirely optional
 
-Setting `ai: on` and supplying a key turns the AI-capable stages on, and the same lifecycle then produces
+**What AI mode needs**: **either** an authenticated **Claude Code CLI** on the machine (the implemented adapter —
+it shells out to the CLI in headless mode), **or** an API key if the SDK adapter has been built. **Entirely
+optional, never required for anything graded.**
+
+Setting `ai: on` turns the AI-capable stages on, and the same lifecycle then produces
 **genuine creative output — including authored code at stage 7**, which the engine applies on a branch and the
 **real** test suite judges. A failing AI-authored change routed back to be reworked is the governance visibly
 working, not a broken demonstration.
@@ -106,7 +110,7 @@ the flag either way.
 | Creative artifacts | Template grade | Genuine |
 | Authored code at stage 7 | No — suspends and asks you instead | Yes |
 | Executor kinds you may see | `DETERMINISTIC`, or `HUMAN` if you implement it yourself | `AI`, `DETERMINISTIC`, `HUMAN` |
-| Requires a key or network | **No** | Yes |
+| Requires an AI credential or network | **No** — neither a key nor an authenticated CLI | Yes — an authenticated Claude Code CLI, or an API key if the SDK adapter is built |
 | Required for anything graded | — | **No** |
 
 ---
