@@ -729,7 +729,15 @@ mandatory release-blocking policy — so an incomplete chain cannot reach releas
 
 ## 14. Delivery Sequence
 
-**Timebox: 2–3 days — APPROVED 2026-09-20** at the Gate 4 closing package, with the milestones, checkpoints and stop conditions below. Sequenced as vertical slices; each ends with
+**Timebox: 2–3 days — APPROVED 2026-09-20** at the Gate 4 closing package, with the milestones, checkpoints and
+stop conditions below.
+
+**It is a control instrument, not a promise, and not a source of pressure.** **Completeness takes priority over
+speed**, and **no external submission deadline exists** (Gate 5 time-attitude amendment, CR-009). The schedule
+exists so that slippage is *observed and escalated* rather than absorbed silently — not so that work is rushed or
+quietly narrowed to fit it.
+
+Sequenced as vertical slices; each ends with
 executed tests and committed evidence, never with unverified code.
 
 | Slice | Content | Milestone | Must-have? |
@@ -748,30 +756,40 @@ executed tests and committed evidence, never with unverified code.
 partially parallelizable with 6 but its `failure_event` capture must exist before Slice 8 runs, or the
 scenarios produce no MTTR population.
 
-**Scope-control checkpoints** — at each, compare progress to the milestone and cut from the backlog
-only, never from mandatory validation or reviewer evidence:
+**Scope-control checkpoints** — at each, compare progress to the milestone. **A checkpoint observes and escalates
+with options; it does not itself cut.** A scope reduction happens **only on the owner's recorded order at that
+checkpoint** (CR-009). Nothing may be cut from mandatory validation or reviewer evidence at any checkpoint, by
+anyone.
 
-| Checkpoint | If behind |
+| Checkpoint | Option escalated if behind |
 |---|---|
 | End Day 1 | Reduce Slice 3 to the FR-URL requirements DS-B needs; defer rate-limit tier sophistication |
-| End Day 2 AM | Reduce AI-capable stages from six to **two** (S2 normalization, S7 implementation); the rest run deterministic. Mode labelling makes this honest and visible, not hidden |
+| End Day 2 AM | **First option offered**: reduce AI-capable stages from six toward two (S2 normalization, S7 implementation), the rest running deterministic. Mode labelling makes any such reduction honest and visible, not hidden. Offered, never applied by default |
 | End Day 2 PM | Cut DS-B's injected compensation case to a unit-level proof; keep the scenario |
 | End Day 3 AM | Reduce MTTR population to the reliability suite only, and say so in the declared population |
 
 **Backlog — explicitly deferred, never allowed to displace mandatory work**: run-level retry circuit
-breaker (DF-004); email/webhook expiry notification (DF-004); AI participation for S3, S5, S6, S9; custom
-aliases, link deletion/editing, multi-region (EX-001..003); analytics beyond time series.
+breaker (DF-004); email/webhook expiry notification (DF-004); the Anthropic SDK transport adapter (ADR-004-A1);
+`redirect_event` time-partitioning (ADR-014); custom aliases, link deletion/editing, multi-region (EX-001..003);
+analytics beyond time series.
 
-**Stop conditions** — hard stops requiring an owner decision rather than silent continuation:
+**AI wiring for all six AI-capable stages is in scope from the outset** (`tasks.md` T073a–T073f). It is *not* a
+backlog item. The owner overruled an earlier pre-emptive reduction on the ground that its estimate priced
+AI-authored work at human authoring speed; reduction re-enters only by a recorded checkpoint order (CR-009).
 
-1. Slice 4 incomplete by end of Day 2 → stop feature work; the orchestration model is the graded
-   artifact and cannot be traded away.
-2. Any mandatory policy `FAIL` unresolved at Slice 9 → release readiness blocks; report blocked
+**Stop conditions** — classified by what the trigger does, per the Gate 5 time-attitude amendment (CR-009). Two
+are correctness controls that **halt**; two are time-based and **escalate for the owner's direction**, because time
+must not freeze work or narrow scope on its own:
+
+1. **ESCALATE** — Slice 4 incomplete by end of Day 2 → report the position and ask the owner for direction. The
+   orchestration model is the graded artifact and cannot be traded away, so the options offered exclude
+   abandoning it.
+2. **HALT** — any mandatory policy `FAIL` unresolved at Slice 9 → release readiness blocks; report blocked
    rather than weaken the check (Constitution XI is non-waivable).
-3. Fabrication pressure — any temptation to present a proposed or simulated result as executed →
-   stop and report. Non-waivable (Principle X).
-4. Timebox exhausted with slices incomplete → report exactly what is done, what is not, and why;
-   scaling scope down is the owner's call, not the agent's.
+3. **HALT, non-waivable** — fabrication pressure, meaning any temptation to present a proposed or simulated
+   result as executed → stop and report. No escalation, no discretion, no exception path (Principle X).
+4. **ESCALATE** — timebox exhausted with slices incomplete → report exactly what is done, what is not, and why.
+   Scaling scope down is the owner's call, not the agent's, and the agent does not pre-empt it.
 
 **Minimum defensible release-readiness outcome**: working URL shortener with executed domain tests;
 the persisted twelve-node graph with prohibited-transition enforcement; at least one real human gate
