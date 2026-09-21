@@ -134,6 +134,19 @@ public final class CreatorCredential {
         return new CreatorCredential(id, creatorId, keyHash, createdAt, expiresAt, when);
     }
 
+    /**
+     * The stored form of a presented key: SHA-256 hex of the <strong>full</strong> string, prefix
+     * included. Exposed for T052's filter, which must compute the same hash to look a credential up.
+     *
+     * <p>One definition, deliberately. A filter computing its own digest is a second implementation of
+     * a security control, and the copy nobody tests is the one that stays wrong — the same argument
+     * that put the scheme allow-list in one place.
+     */
+    public static String hashOf(String presentedKey) {
+        Objects.requireNonNull(presentedKey, "presentedKey");
+        return sha256Hex(presentedKey);
+    }
+
     private static String sha256Hex(String value) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

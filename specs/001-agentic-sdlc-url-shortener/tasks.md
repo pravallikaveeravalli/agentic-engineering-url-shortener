@@ -424,7 +424,7 @@ resolution, and expiry outcomes.
 
 ### Authentication, provisioning, rate limiting, health
 
-- [ ] T052 [US1] Bearer authentication filter — `src/main/java/agentic/shortener/delivery/auth/CreatorAuthFilter.java`
+- [x] T052 [US1] Bearer authentication filter — `src/main/java/agentic/shortener/delivery/auth/CreatorAuthFilter.java`
   - **Req**: **FR-URL-018**, FR-URL-019 · **Scn**: DS-A · **ADR**: **ADR-013** · **Pre**: T022
   - **Deps**: T022 · **Par**: no (guards create and analytics) · **Artifact**: `Authorization: Bearer <key>`; SHA-256 of the full presented string; **constant-time comparison**; expired and revoked refused with the **same response shape**
   - **TDD**: RED-FIRST · **Validate**: authenticated vs anonymous create; **EC-041** expired-vs-revoked byte-identity; constant-time unit test · **Docs**: `contracts/openapi.yaml` `creatorApiKey` · **Trace**: matrix FR-URL-018, EC-041, CL-001

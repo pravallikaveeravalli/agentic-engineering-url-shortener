@@ -109,21 +109,31 @@ class CredentialTelemetryIT extends PostgresIntegrationTest {
     }
 
     /**
-     * The one logger that is the <em>test's</em> own and not the application's.
+     * The <em>test's own outbound HTTP client</em>, which is not the application.
      *
-     * <p>{@code TestRestTemplate} logs the request body it is about to send, at {@code DEBUG}, from
-     * inside this JVM. That is the test echoing its own input: there is no such client in the running
-     * service, so counting it would fail the assertion for a reason that says nothing about the
-     * application. The exclusion is kept to exactly one logger and asserted to be exactly one, because
-     * the obvious way to make this test pass wrongly is to widen it.
+     * <p>The client logs the request body it is about to send, at {@code DEBUG}, from inside this JVM.
+     * That is the test echoing its own input, and counting it would fail the assertion for a reason that
+     * says nothing about the service.
+     *
+     * <p><strong>By package, not by class name.</strong> This was pinned to
+     * {@code org.springframework.web.client.RestTemplate} and silently stopped matching when T052 forced
+     * the suite onto Apache HttpClient — whose {@code http.wire} logger then reported the credential and
+     * failed this test for the harness's behaviour rather than the application's. A prefix survives that
+     * substitution.
+     *
+     * <p><strong>Why excluding a client logger cannot hide an application leak</strong>: the application
+     * contains no HTTP client at all. It never fetches a destination — that is what makes the SSRF
+     * residual in {@code AbuseGuard} acceptable — so every event from a client package in this JVM is the
+     * test's. {@link #theApplicationHasNoHttpClient} asserts that rather than assuming it.
      */
-    private static final List<String> TEST_HARNESS_LOGGERS =
-            List.of("org.springframework.web.client.RestTemplate");
+    private static final List<String> TEST_HARNESS_LOGGER_PREFIXES = List.of(
+            "org.apache.hc.",
+            "org.springframework.web.client.");
 
     private String capturedText() {
         StringBuilder all = new StringBuilder();
         for (ILoggingEvent event : List.copyOf(captured.list)) {
-            if (TEST_HARNESS_LOGGERS.contains(event.getLoggerName())) {
+            if (isTestHarnessLogger(event.getLoggerName())) {
                 continue;
             }
             all.append(event.getLoggerName()).append(' ')
@@ -135,14 +145,50 @@ class CredentialTelemetryIT extends PostgresIntegrationTest {
         return all.toString();
     }
 
+    private static boolean isTestHarnessLogger(String loggerName) {
+        return TEST_HARNESS_LOGGER_PREFIXES.stream().anyMatch(loggerName::startsWith);
+    }
+
     @Test
-    @DisplayName("the harness exclusion is exactly one test-only logger")
+    @DisplayName("the exclusion covers only outbound HTTP client packages")
     void theExclusionIsNarrow() {
-        // Asserted so that widening it later is a visible change to a test rather than a quiet edit to
-        // a list. Everything else the application emits is in scope.
-        assertEquals(1, TEST_HARNESS_LOGGERS.size(), TEST_HARNESS_LOGGERS.toString());
-        assertTrue(TEST_HARNESS_LOGGERS.get(0).endsWith("client.RestTemplate"),
-                "only the test's own outbound HTTP client may be excluded");
+        // Asserted so that widening it later is a visible change rather than a quiet edit to a list.
+        // Nothing of the application's own is excluded: agentic.shortener is explicitly in scope.
+        assertEquals(2, TEST_HARNESS_LOGGER_PREFIXES.size(), TEST_HARNESS_LOGGER_PREFIXES.toString());
+        for (String prefix : TEST_HARNESS_LOGGER_PREFIXES) {
+            assertFalse(prefix.startsWith("agentic"), "no application logger may be excluded: " + prefix);
+        }
+        assertFalse(isTestHarnessLogger("agentic.shortener.delivery.LinkController"));
+        assertFalse(isTestHarnessLogger("org.springframework.web.servlet.mvc.method.annotation"
+                + ".RequestResponseBodyMethodProcessor"),
+                "the SERVER-side body logger — the one that leaked in the first place — stays in scope");
+        assertTrue(isTestHarnessLogger("org.apache.hc.client5.http.wire"));
+    }
+
+    @Test
+    @DisplayName("the application contains no HTTP client, which is what makes the exclusion safe")
+    void theApplicationHasNoHttpClient() throws Exception {
+        // If the service ever fetched a destination itself, a client-package log line could be the
+        // application's and excluding it would hide a real leak. It does not, and this is where that
+        // stops being an assumption.
+        List<String> offenders = new java.util.ArrayList<>();
+        try (java.util.stream.Stream<Path> sources = Files.walk(Path.of("src/main/java"))) {
+            for (Path file : sources.filter(f -> f.toString().endsWith(".java")).toList()) {
+                String active = Files.readString(file).lines()
+                        .map(String::stripLeading)
+                        .filter(l -> !l.startsWith("*") && !l.startsWith("//") && !l.startsWith("/*"))
+                        .reduce("", (a, b) -> a + "\n" + b);
+                for (String client : List.of("HttpClient", "RestTemplate", "WebClient",
+                        "URLConnection", "org.apache.hc")) {
+                    if (active.contains(client)) {
+                        offenders.add(file + " names " + client);
+                    }
+                }
+            }
+        }
+        assertEquals(List.of(), offenders,
+                "the application would then have its own HTTP client, and the exclusion above could "
+                        + "hide its log lines: " + offenders);
     }
 
     @Test

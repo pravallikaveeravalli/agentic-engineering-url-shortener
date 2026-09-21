@@ -75,6 +75,19 @@
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
+    <!--
+      T052 made the API authenticated, and the JDK's HttpURLConnection cannot report a 401 for a request
+      whose body it streamed: it decides to retry with credentials, finds the body gone, and throws
+      "cannot retry due to server authentication, in streaming mode". The 401 never reaches the test.
+
+      TestRestTemplate uses Apache HttpClient when it is on the classpath, which returns the 401 as a
+      response like any other. Test scope only — nothing in the application uses an HTTP client.
+    -->
+    <dependency>
+      <groupId>org.apache.httpcomponents.client5</groupId>
+      <artifactId>httpclient5</artifactId>
+      <scope>test</scope>
+    </dependency>
     <!-- ADR-011: a real store for data paths; ADR-002 names Testcontainers. -->
     <dependency>
       <groupId>org.testcontainers</groupId>

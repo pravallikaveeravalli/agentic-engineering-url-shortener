@@ -157,12 +157,12 @@ public class PersistenceConfiguration {
     }
 
     @Bean
-    public LinkService linkService(ShortLinkRepository links, CreatorRepository creators,
+    public LinkService linkService(ShortLinkRepository links,
                                   RedirectEventRepository events, IdempotencyRepository markers,
                                   CreateLinkUseCase createLink, IdempotencyResolver idempotency,
                                   DestinationNormalizer normalizer, UrlSyntaxValidator syntax,
                                   AbuseGuard abuse, ExpiryPolicy expiry, Clock clock) {
-        return new LinkService(links, creators, events, markers, createLink, idempotency,
+        return new LinkService(links, events, markers, createLink, idempotency,
                 normalizer, syntax, abuse, expiry, clock);
     }
 }

@@ -1,0 +1,103 @@
+# Red-phase evidence
+
+- **Label**: T052-INJECTED-per-denial-Decision
+- **Captured (UTC)**: 20260921T100917Z
+- **Command**: `./mvnw -Dtest=CreatorAuthFilterTest test`
+- **Exit code**: 1
+- **Requirement**: NFR-TST-002 (red phase evidenced, not asserted); CN-004
+
+## Why this file exists
+
+This is the failing run captured BEFORE the implementation that makes it pass. It is stored
+so that the red phase is readable by a reviewer rather than claimed in a commit message.
+
+## Captured output
+
+```
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< agentic:shortener >--------------------------
+[INFO] Building agentic-sdlc-url-shortener 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ shortener ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 3 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ shortener ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 46 source files with javac [debug parameters release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ shortener ---
+[INFO] skip non existing resourceDirectory /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ shortener ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 46 source files with javac [debug parameters release 21] to target/test-classes
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java uses or overrides a deprecated API.
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.delivery.auth.CreatorAuthFilterTest
+[ERROR] Tests run: 8, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 0.038 s <<< FAILURE! -- in agentic.shortener.delivery.auth.CreatorAuthFilterTest
+[ERROR] agentic.shortener.delivery.auth.CreatorAuthFilterTest.everyDenialIsIdentical -- Time elapsed: 0.015 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: all denials must be the identical value; this one differed ==> expected: agentic.shortener.delivery.auth.CreatorAuthFilter$Decision@1f9e9475<Decision[authenticated=false, creatorId=Optional.empty]> but was: agentic.shortener.delivery.auth.CreatorAuthFilter$Decision@3aa078fd<Decision[authenticated=false, creatorId=Optional.empty]>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertSame.failNotSame(AssertSame.java:50)
+	at org.junit.jupiter.api.AssertSame.assertSame(AssertSame.java:35)
+	at org.junit.jupiter.api.Assertions.assertSame(Assertions.java:2873)
+	at agentic.shortener.delivery.auth.CreatorAuthFilterTest.everyDenialIsIdentical(CreatorAuthFilterTest.java:152)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.delivery.auth.CreatorAuthFilterTest.ec041ExpiredAndRevokedAreIndistinguishable -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: an expired credential's refusal must be byte-identical to a revoked one's (EC-041) ==> expected: agentic.shortener.delivery.auth.CreatorAuthFilter$Decision@2fb0623e<Decision[authenticated=false, creatorId=Optional.empty]> but was: agentic.shortener.delivery.auth.CreatorAuthFilter$Decision@49b2a47d<Decision[authenticated=false, creatorId=Optional.empty]>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertSame.failNotSame(AssertSame.java:50)
+	at org.junit.jupiter.api.AssertSame.assertSame(AssertSame.java:35)
+	at org.junit.jupiter.api.Assertions.assertSame(Assertions.java:2873)
+	at agentic.shortener.delivery.auth.CreatorAuthFilterTest.ec041ExpiredAndRevokedAreIndistinguishable(CreatorAuthFilterTest.java:128)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   CreatorAuthFilterTest.ec041ExpiredAndRevokedAreIndistinguishable:128 an expired credential's refusal must be byte-identical to a revoked one's (EC-041) ==> expected: agentic.shortener.delivery.auth.CreatorAuthFilter$Decision@2fb0623e<Decision[authenticated=false, creatorId=Optional.empty]> but was: agentic.shortener.delivery.auth.CreatorAuthFilter$Decision@49b2a47d<Decision[authenticated=false, creatorId=Optional.empty]>
+[ERROR]   CreatorAuthFilterTest.everyDenialIsIdentical:152 all denials must be the identical value; this one differed ==> expected: agentic.shortener.delivery.auth.CreatorAuthFilter$Decision@1f9e9475<Decision[authenticated=false, creatorId=Optional.empty]> but was: agentic.shortener.delivery.auth.CreatorAuthFilter$Decision@3aa078fd<Decision[authenticated=false, creatorId=Optional.empty]>
+[INFO] 
+[ERROR] Tests run: 8, Failures: 2, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.854 s
+[INFO] Finished at: 2026-09-21T05:09:20-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project shortener: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+```

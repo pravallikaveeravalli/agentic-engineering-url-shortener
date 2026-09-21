@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import agentic.shortener.domain.creator.CreatorRepository;
+import agentic.shortener.support.TestCredentials;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -76,6 +78,31 @@ class AnalyticsRecordingIT {
      * ADR-011's sanctioned injected fake: the real repository until the switch is thrown, so only the
      * reliability proof runs against a substitute.
      */
+    /**
+     * T052 made creation and analytics authenticated. FR-URL-018 says creation MUST NOT succeed
+     * anonymously, so this test presents a credential exactly as a caller would — the requirement
+     * working, not a testing inconvenience.
+     */
+    @Autowired
+    private CreatorRepository creatorsForAuth;
+
+    @Autowired
+    private java.time.Clock clockForAuth;
+
+    private TestCredentials.Provisioned caller;
+
+    @org.junit.jupiter.api.BeforeEach
+    void provisionCaller() {
+        caller = TestCredentials.provision(creatorsForAuth, clockForAuth);
+    }
+
+    /** A GET carrying the caller's credential. Analytics is authenticated since T052. */
+    private org.springframework.http.ResponseEntity<String> getAuthenticated(String fullUrl) {
+        HttpHeaders authorized = new HttpHeaders();
+        authorized.set("Authorization", caller.header());
+        return rest.exchange(fullUrl, HttpMethod.GET, new HttpEntity<>(authorized), String.class);
+    }
+
     @TestConfiguration
     static class FaultInjection {
 
@@ -132,6 +159,7 @@ class AnalyticsRecordingIT {
     private String createLink(String destination) throws Exception {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", caller.header());
         ResponseEntity<String> response = rest.exchange(url("/v1/links"), HttpMethod.POST,
                 new HttpEntity<>("{\"destination\":\"" + destination + "\"}", headers), String.class);
         assertEquals(201, response.getStatusCode().value(), response.getBody());
@@ -140,7 +168,7 @@ class AnalyticsRecordingIT {
 
     private JsonNode analytics(String code) throws Exception {
         ResponseEntity<String> response =
-                rest.getForEntity(url("/v1/links/" + code + "/analytics"), String.class);
+                getAuthenticated(url("/v1/links/" + code + "/analytics"));
         assertEquals(200, response.getStatusCode().value(), response.getBody());
         harness.assertConforms("/v1/links/{shortCode}/analytics", "get", 200, response.getBody());
         return JSON.readTree(response.getBody());
@@ -215,7 +243,7 @@ class AnalyticsRecordingIT {
         String code = createLink("https://example.com/t050/minimal");
         rest.getForEntity(url("/" + code), String.class);
 
-        String body = rest.getForEntity(url("/v1/links/" + code + "/analytics"), String.class)
+        String body = getAuthenticated(url("/v1/links/" + code + "/analytics"))
                 .getBody();
         for (String forbidden : List.of("ip", "userAgent", "user-agent", "referrer", "referer",
                 "device", "geo", "country", "session")) {

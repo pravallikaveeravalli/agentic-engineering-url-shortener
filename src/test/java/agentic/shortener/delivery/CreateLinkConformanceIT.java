@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import agentic.shortener.domain.creator.CreatorRepository;
+import agentic.shortener.support.TestCredentials;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -30,11 +32,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * T042 — {@code POST /v1/links} conformance across every declared response. FR-URL-001, FR-URL-002.
  *
  * <p><strong>Which codes are proved live, and which are not.</strong> The contract declares 201, 200,
- * 400, 401, 409, 429 and 503 for this operation. Four of those are reachable today and are driven
- * against the running application. The other three are not, and saying so is the point:
+ * 400, 401, 409, 429 and 503 for this operation. Five are reachable now — 401 became reachable when T052
+ * added authentication — and are driven against the running application. Two are not, and saying so is
+ * the point:
  *
  * <ul>
- *   <li><strong>401</strong> needs authentication, which is T052. There is no credential to omit yet.
  *   <li><strong>429</strong> needs the rate-limit tiers, which are T054 and T055.
  *   <li><strong>503</strong> needs the store to go away mid-suite. {@code ReadinessDegradationIT} owns
  *       that, with its own container, because stopping the shared one would break every other test in
@@ -72,6 +74,7 @@ class CreateLinkConformanceIT extends PostgresIntegrationTest {
     private ResponseEntity<String> post(String destination, String marker, String expiresAt) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", caller.header());
         if (marker != null) {
             headers.set("Idempotency-Key", marker);
         }
@@ -84,6 +87,31 @@ class CreateLinkConformanceIT extends PostgresIntegrationTest {
 
     private String marker() {
         return "m-" + UUID.randomUUID();
+    }
+
+    /**
+     * T052 made creation and analytics authenticated. FR-URL-018 says creation MUST NOT succeed
+     * anonymously, so this test presents a credential exactly as a caller would — the requirement
+     * working, not a testing inconvenience.
+     */
+    @Autowired
+    private CreatorRepository creatorsForAuth;
+
+    @Autowired
+    private java.time.Clock clockForAuth;
+
+    private TestCredentials.Provisioned caller;
+
+    @org.junit.jupiter.api.BeforeEach
+    void provisionCaller() {
+        caller = TestCredentials.provision(creatorsForAuth, clockForAuth);
+    }
+
+    /** A GET carrying the caller's credential. Analytics is authenticated since T052. */
+    private org.springframework.http.ResponseEntity<String> getAuthenticated(String fullUrl) {
+        HttpHeaders authorized = new HttpHeaders();
+        authorized.set("Authorization", caller.header());
+        return rest.exchange(fullUrl, HttpMethod.GET, new HttpEntity<>(authorized), String.class);
     }
 
     @Test
@@ -99,8 +127,8 @@ class CreateLinkConformanceIT extends PostgresIntegrationTest {
         // T042's guard: the code must be resolvable. Persisted durably before the response, or this
         // read comes back empty.
         String code = body.get("shortCode").asText();
-        ResponseEntity<String> analytics = rest.getForEntity(
-                "http://localhost:" + port + "/v1/links/" + code + "/analytics", String.class);
+        ResponseEntity<String> analytics = getAuthenticated(
+                "http://localhost:" + port + "/v1/links/" + code + "/analytics");
         assertEquals(200, analytics.getStatusCode().value(),
                 "a returned code that cannot be resolved breaks FR-URL-001's negative clause");
     }
@@ -146,8 +174,8 @@ class CreateLinkConformanceIT extends PostgresIntegrationTest {
 
         // Nothing minted past a detected caller error, and nothing changed.
         JsonNode created = JSON.readTree(first.getBody());
-        ResponseEntity<String> stillThere = rest.getForEntity("http://localhost:" + port
-                + "/v1/links/" + created.get("shortCode").asText() + "/analytics", String.class);
+        ResponseEntity<String> stillThere = getAuthenticated("http://localhost:" + port
+                + "/v1/links/" + created.get("shortCode").asText() + "/analytics");
         assertEquals(200, stillThere.getStatusCode().value());
     }
 
@@ -220,12 +248,27 @@ class CreateLinkConformanceIT extends PostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("401, 429 and 503 have their Error shape fixed in the contract already")
+    @DisplayName("401: an unauthenticated create conforms (reachable since T052)")
+    void unauthenticated() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        ResponseEntity<String> response = rest.exchange(
+                "http://localhost:" + port + "/v1/links", HttpMethod.POST,
+                new HttpEntity<>("{\"destination\":\"https://example.com/t042/anon\"}", headers),
+                String.class);
+
+        assertEquals(401, response.getStatusCode().value(), response.getBody());
+        harness.assertConforms("/v1/links", "post", 401, response.getBody());
+    }
+
+    @Test
+    @DisplayName("429 and 503 have their Error shape fixed in the contract already")
     void notYetReachableCodesAreDeclared() {
         // Stated as what it is: a document assertion, not a live one. It fixes the shape now so the
-        // behaviour arriving at T052, T054/T055 and ReadinessDegradationIT cannot quietly invent a
-        // different one.
-        for (int status : List.of(401, 429, 503)) {
+        // behaviour arriving at T054/T055 and in ReadinessDegradationIT cannot quietly invent a
+        // different one. 401 has moved out of this list because T052 made it reachable, and it is now
+        // asserted live above.
+        for (int status : List.of(429, 503)) {
             assertTrue(harness.rejectsUnexpectedFields("/v1/links", "post", status),
                     "POST /v1/links " + status + " must declare a strict Error schema, so the "
                             + "response cannot drift when the behaviour lands");

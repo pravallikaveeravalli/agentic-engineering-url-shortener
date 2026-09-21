@@ -1,8 +1,6 @@
 package agentic.shortener.application;
 
 import agentic.shortener.domain.analytics.RedirectEventRepository;
-import agentic.shortener.domain.creator.Creator;
-import agentic.shortener.domain.creator.CreatorRepository;
 import agentic.shortener.domain.idempotency.IdempotencyRecord;
 import agentic.shortener.domain.idempotency.IdempotencyRepository;
 import agentic.shortener.domain.idempotency.MarkerAlreadyUsedException;
@@ -49,7 +47,6 @@ public final class LinkService {
     }
 
     private final ShortLinkRepository links;
-    private final CreatorRepository creators;
     private final RedirectEventRepository events;
     private final IdempotencyRepository markers;
     private final CreateLinkUseCase createLink;
@@ -60,13 +57,12 @@ public final class LinkService {
     private final ExpiryPolicy expiry;
     private final Clock clock;
 
-    public LinkService(ShortLinkRepository links, CreatorRepository creators,
+    public LinkService(ShortLinkRepository links,
                        RedirectEventRepository events, IdempotencyRepository markers,
                        CreateLinkUseCase createLink, IdempotencyResolver idempotency,
                        DestinationNormalizer normalizer, UrlSyntaxValidator syntax,
                        AbuseGuard abuse, ExpiryPolicy expiry, Clock clock) {
         this.links = Objects.requireNonNull(links, "links");
-        this.creators = Objects.requireNonNull(creators, "creators");
         this.events = Objects.requireNonNull(events, "events");
         this.markers = Objects.requireNonNull(markers, "markers");
         this.createLink = Objects.requireNonNull(createLink, "createLink");
@@ -188,22 +184,4 @@ public final class LinkService {
         return events.countByShortCode(shortCode);
     }
 
-    /**
-     * Ensures a creator exists, for the walking skeleton's unauthenticated path.
-     *
-     * <p><strong>A deliberate scaffold, and named as one.</strong> FR-URL-018 requires link creation to
-     * be authenticated; authentication is T052. Until then a single well-known demonstration creator owns
-     * skeleton-created links, because KE-01 has no state for a link without an owner and the foreign key
-     * would refuse one. It is not a security decision and must not survive into the authenticated path.
-     */
-    public UUID demonstrationCreator() {
-        // All-hex, because a UUID literal must be. An earlier version used
-        // "...00000000dem0", which is not parseable — caught by WalkingSkeletonIT rather
-        // than by review.
-        UUID id = UUID.fromString("00000000-0000-0000-0000-0000000000d0");
-        if (creators.findById(id).isEmpty()) {
-            creators.save(Creator.create(id, "walking-skeleton demonstration creator", clock.instant()));
-        }
-        return id;
-    }
 }

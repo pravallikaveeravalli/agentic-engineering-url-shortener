@@ -3,7 +3,9 @@ package agentic.shortener.delivery;
 import agentic.shortener.application.GetAnalyticsUseCase;
 import agentic.shortener.application.LinkService;
 import agentic.shortener.domain.link.ShortLink;
+import agentic.shortener.delivery.auth.CreatorAuthFilter;
 import agentic.shortener.domain.validation.CredentialRedactor;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -74,7 +76,8 @@ public class LinkController {
     @PostMapping("/v1/links")
     public ResponseEntity<Map<String, Object>> create(
             @RequestBody CreateLinkRequest request,
-            @RequestHeader(value = "Idempotency-Key", required = false) String marker) {
+            @RequestHeader(value = "Idempotency-Key", required = false) String marker,
+            HttpServletRequest httpRequest) {
         if (request == null || request.destination() == null) {
             return error(HttpStatus.BAD_REQUEST, "INVALID_INPUT", "A destination is required.");
         }
@@ -91,10 +94,11 @@ public class LinkController {
             }
         }
 
-        // The demonstration creator is a deliberate scaffold until authentication lands; LinkService
-        // names it as one. KE-01 forbids a link without an owner, so the skeleton needs some owner.
+        // The creator comes from the filter, which has already refused the request if it could not
+        // authenticate one. FR-URL-018: creation MUST NOT succeed anonymously, so there is no fallback
+        // identity here and the demonstration-creator scaffold is gone.
         LinkService.CreationOutcome outcome =
-                links.create(links.demonstrationCreator(), marker, request.destination(), expiresAt);
+                links.create(authenticatedCreator(httpRequest), marker, request.destination(), expiresAt);
 
         return switch (outcome.kind()) {
             case MINT -> ResponseEntity.status(HttpStatus.CREATED)
@@ -112,15 +116,15 @@ public class LinkController {
      * {@link GetAnalyticsUseCase} returns one shared refusal value for both. A difference between the two
      * would let anyone enumerate the keyspace.
      *
-     * <p><strong>The caller identity is the demonstration creator until T052.</strong> That is a scaffold
-     * and is named as one: FR-URL-011 requires this endpoint to be unreachable without creator
-     * authentication, and the authentication is T052's. What is already correct is the scoping — the use
-     * case refuses any caller that does not own the link, so wiring a real identity in is all T052 has to
-     * do here.
+     * <p>The caller is the authenticated creator (T052). An unauthenticated request never reaches this
+     * method: the filter refuses it with 401 first, which is FR-URL-011's "MUST NOT be reachable without
+     * creator authentication" enforced by routing rather than by a check that could be forgotten.
      */
     @GetMapping("/v1/links/{shortCode}/analytics")
-    public ResponseEntity<Map<String, Object>> analytics(@PathVariable String shortCode) {
-        GetAnalyticsUseCase.View view = analytics.get(links.demonstrationCreator(), shortCode);
+    public ResponseEntity<Map<String, Object>> analytics(@PathVariable String shortCode,
+                                                        HttpServletRequest httpRequest) {
+        GetAnalyticsUseCase.View view =
+                analytics.get(authenticatedCreator(httpRequest), shortCode);
 
         if (!view.permitted()) {
             // Identical for a non-owner and for a code that does not exist. Not "similar" — identical.
@@ -136,6 +140,24 @@ public class LinkController {
                 .map(at -> Map.<String, Object>of("occurredAt", at.toString()))
                 .toList());
         return ResponseEntity.ok(body);
+    }
+
+    /**
+     * The creator the filter authenticated.
+     *
+     * <p>Absent means the filter did not run, which can only happen if this endpoint were removed from
+     * {@code AuthConfiguration.AUTHENTICATED_PATTERNS}. That would be a misconfiguration serving
+     * unauthenticated traffic, so it fails loudly rather than falling back to any identity — a fallback
+     * here is how anonymous creation would quietly become possible again.
+     */
+    private static java.util.UUID authenticatedCreator(HttpServletRequest request) {
+        Object creatorId = request.getAttribute(CreatorAuthFilter.CREATOR_ID_ATTRIBUTE);
+        if (creatorId instanceof java.util.UUID id) {
+            return id;
+        }
+        throw new IllegalStateException(
+                "no authenticated creator on an authenticated path: this endpoint is missing from "
+                        + "AuthConfiguration.AUTHENTICATED_PATTERNS (FR-URL-018)");
     }
 
     /**

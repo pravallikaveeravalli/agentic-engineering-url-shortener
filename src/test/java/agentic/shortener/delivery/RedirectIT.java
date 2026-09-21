@@ -7,8 +7,11 @@ import agentic.shortener.support.PostgresIntegrationTest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.Filter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import agentic.shortener.domain.creator.CreatorRepository;
+import agentic.shortener.support.TestCredentials;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -44,8 +47,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p><strong>"A short link that requires login is not a short link."</strong> That is T044's guard,
  * quoted because it is the whole point: the creator authenticates, the follower never does. Two things
  * are asserted — that an anonymous request succeeds, and that a request carrying a credential gets a
- * <em>byte-identical</em> answer. The second is what will still hold after T052 adds authentication, and
- * it fails the moment a filter starts having an opinion about this path.
+ * <em>byte-identical</em> answer. The second still holds now that T052 has added authentication, and it
+ * fails the moment a filter starts having an opinion about this path.
  *
  * <p><strong>Three distinguishable outcomes</strong> (T045): never-issued is 404, expired is 410, and a
  * store failure for a code that may well exist is 503. The damaging collapse is the third into the first:
@@ -125,6 +128,31 @@ class RedirectIT extends PostgresIntegrationTest {
     @Autowired
     private ApplicationContext context;
 
+    /**
+     * T052 made creation and analytics authenticated. FR-URL-018 says creation MUST NOT succeed
+     * anonymously, so this test presents a credential exactly as a caller would — the requirement
+     * working, not a testing inconvenience.
+     */
+    @Autowired
+    private CreatorRepository creatorsForAuth;
+
+    @Autowired
+    private java.time.Clock clockForAuth;
+
+    private TestCredentials.Provisioned caller;
+
+    @org.junit.jupiter.api.BeforeEach
+    void provisionCaller() {
+        caller = TestCredentials.provision(creatorsForAuth, clockForAuth);
+    }
+
+    /** A GET carrying the caller's credential. Analytics is authenticated since T052. */
+    private org.springframework.http.ResponseEntity<String> getAuthenticated(String fullUrl) {
+        HttpHeaders authorized = new HttpHeaders();
+        authorized.set("Authorization", caller.header());
+        return rest.exchange(fullUrl, HttpMethod.GET, new HttpEntity<>(authorized), String.class);
+    }
+
     private String url(String path) {
         return "http://localhost:" + port + path;
     }
@@ -138,6 +166,7 @@ class RedirectIT extends PostgresIntegrationTest {
     private String createLink(String destination) throws Exception {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", caller.header());
         ResponseEntity<String> response = rest.exchange(url("/v1/links"), HttpMethod.POST,
                 new HttpEntity<>("{\"destination\":\"" + destination + "\"}", headers), String.class);
         assertEquals(201, response.getStatusCode().value(), response.getBody());
@@ -202,24 +231,51 @@ class RedirectIT extends PostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("GUARD (forward): no filter in this application touches the redirect path")
-    void noFilterAppliesToTheRedirectPath() {
-        // T044 asks for the auth filter to be asserted not invoked. It does not exist yet — T052 builds
-        // it — so what is asserted now is the property that obligation reduces to: this application
-        // registers no servlet filter of its own.
-        //
-        // When T052 adds CreatorAuthFilter this test MUST FAIL, and that failure is the point: it forces
-        // the filter to be registered with an explicit URL pattern that excludes the redirect path,
-        // rather than auto-registered for /* and relying on internal logic to opt out. This assertion
-        // is deliberately the strict one, so the decision is made rather than defaulted.
-        List<String> ourFilters = context.getBeansOfType(Filter.class).entrySet().stream()
+    @DisplayName("GUARD: no filter of ours is auto-registered for every path")
+    void noFilterIsAutoRegistered() {
+        // Group E asserted there were no filters at all, and said this test MUST FAIL when T052 arrived
+        // — which it did. The obligation it was standing in for is now assertable directly: a Filter
+        // exposed as a BEAN is auto-registered by Spring Boot for /*, which would put authentication on
+        // the redirect path with an internal opt-out. An opt-out inside a filter that runs on every
+        // request is one edit away from not opting out, so the filter must not be a bean at all.
+        List<String> autoRegistered = context.getBeansOfType(Filter.class).entrySet().stream()
                 .filter(e -> e.getValue().getClass().getName().startsWith("agentic.shortener"))
                 .map(Map.Entry::getKey)
                 .toList();
 
-        assertEquals(List.of(), ourFilters,
-                "these filters would run on GET /{shortCode}: " + ourFilters
-                        + ". Register them with URL patterns that exclude the redirect path (T044)");
+        assertEquals(List.of(), autoRegistered,
+                "these filters are beans and therefore run on GET /{shortCode}: " + autoRegistered
+                        + ". Register them through a FilterRegistrationBean with explicit URL patterns "
+                        + "instead (T044)");
+    }
+
+    @Test
+    @DisplayName("GUARD: no registered URL pattern can match a short code")
+    void noRegisteredPatternMatchesAShortCode() {
+        // The other half, and the one that survives future filters: whatever is registered, none of its
+        // patterns may match a single-segment seven-character path. Read from the registrations
+        // themselves rather than from a list of names somebody has to remember to update.
+        List<String> offending = new java.util.ArrayList<>();
+        context.getBeansOfType(FilterRegistrationBean.class).forEach((name, registration) -> {
+            for (Object pattern : registration.getUrlPatterns()) {
+                if (matchesASevenCharacterRootPath(String.valueOf(pattern))) {
+                    offending.add(name + " -> " + pattern);
+                }
+            }
+        });
+
+        assertEquals(List.of(), offending,
+                "these registrations would run on the redirect path: " + offending
+                        + ". A short link that requires login is not a short link (T044)");
+    }
+
+    /** Whether a servlet URL pattern would match {@code /Abc1234}. */
+    private static boolean matchesASevenCharacterRootPath(String pattern) {
+        if (pattern.equals("/*") || pattern.equals("/**")) {
+            return true;
+        }
+        // A prefix pattern matches only if the prefix itself is empty at the root.
+        return pattern.endsWith("/*") && pattern.length() == 2;
     }
 
     @Test
@@ -258,6 +314,7 @@ class RedirectIT extends PostgresIntegrationTest {
         // no clock has to be manipulated and nothing has to sleep for 30 days.
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", caller.header());
         String body = "{\"destination\":\"https://secret.example/expired-campaign\","
                 + "\"expiresAt\":\"2026-09-21T00:00:01Z\"}";
         ResponseEntity<String> created = rest.exchange(url("/v1/links"), HttpMethod.POST,

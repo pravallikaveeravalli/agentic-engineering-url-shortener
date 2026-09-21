@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import agentic.shortener.domain.creator.CreatorRepository;
+import agentic.shortener.support.TestCredentials;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -71,6 +73,31 @@ class WalkingSkeletonIT extends PostgresIntegrationTest {
         return "http://localhost:" + port + path;
     }
 
+    /**
+     * T052 made creation and analytics authenticated. FR-URL-018 says creation MUST NOT succeed
+     * anonymously, so this test presents a credential exactly as a caller would — the requirement
+     * working, not a testing inconvenience.
+     */
+    @Autowired
+    private CreatorRepository creatorsForAuth;
+
+    @Autowired
+    private java.time.Clock clockForAuth;
+
+    private TestCredentials.Provisioned caller;
+
+    @org.junit.jupiter.api.BeforeEach
+    void provisionCaller() {
+        caller = TestCredentials.provision(creatorsForAuth, clockForAuth);
+    }
+
+    /** A GET carrying the caller's credential. Analytics is authenticated since T052. */
+    private org.springframework.http.ResponseEntity<String> getAuthenticated(String fullUrl) {
+        HttpHeaders authorized = new HttpHeaders();
+        authorized.set("Authorization", caller.header());
+        return rest.exchange(fullUrl, HttpMethod.GET, new HttpEntity<>(authorized), String.class);
+    }
+
     @Test
     @DisplayName("liveness reports UP and is unaffected by the store")
     void livenessIsUp() throws Exception {
@@ -127,6 +154,7 @@ class WalkingSkeletonIT extends PostgresIntegrationTest {
         // Create, through the full HTTP stack, into PostgreSQL 16.
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", caller.header());
         String body = "{\"destination\":\"https://example.com/walking-skeleton\"}";
 
         ResponseEntity<String> created = rest.exchange(
@@ -145,8 +173,8 @@ class WalkingSkeletonIT extends PostgresIntegrationTest {
 
         // Read it back. THIS is the round trip the exit condition names: the row was written by one
         // request and is returned to another, from a real store rather than an in-process cache.
-        ResponseEntity<String> fetched = rest.getForEntity(
-                url("/v1/links/" + shortCode + "/analytics"), String.class);
+        ResponseEntity<String> fetched =
+                getAuthenticated(url("/v1/links/" + shortCode + "/analytics"));
         assertEquals(HttpStatus.OK, fetched.getStatusCode(),
                 "the link must be readable back through a separate request; body: " + fetched.getBody());
         assertEquals(shortCode, JSON.readTree(fetched.getBody()).path("shortCode").asText());
@@ -157,6 +185,7 @@ class WalkingSkeletonIT extends PostgresIntegrationTest {
     void theRowIsInThePostgresTable() throws Exception {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", caller.header());
         ResponseEntity<String> created = rest.exchange(url("/v1/links"), HttpMethod.POST,
                 new HttpEntity<>("{\"destination\":\"https://example.com/jdbc-visible\"}", headers),
                 String.class);
@@ -181,6 +210,7 @@ class WalkingSkeletonIT extends PostgresIntegrationTest {
     void disallowedSchemeIsRefusedAtTheEdge() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", caller.header());
 
         // The domain type refuses this (T021). Asserting it again here proves the refusal is not lost
         // in translation at the boundary — a controller that caught the exception and returned 201
@@ -209,6 +239,7 @@ class WalkingSkeletonIT extends PostgresIntegrationTest {
         // the single allow-list, whose messages are constants.
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", caller.header());
 
         String hostile = "javascript:alert(document.cookie)//marker-cnczmt.example";
         ResponseEntity<String> response = rest.exchange(url("/v1/links"), HttpMethod.POST,

@@ -3,6 +3,8 @@ package agentic.shortener.contract;
 import agentic.shortener.support.PostgresIntegrationTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import agentic.shortener.domain.creator.CreatorRepository;
+import agentic.shortener.support.TestCredentials;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -54,11 +56,37 @@ class ContractConformanceIT extends PostgresIntegrationTest {
         return "http://localhost:" + port + path;
     }
 
+    /**
+     * T052 made creation and analytics authenticated. FR-URL-018 says creation MUST NOT succeed
+     * anonymously, so this test presents a credential exactly as a caller would — the requirement
+     * working, not a testing inconvenience.
+     */
+    @Autowired
+    private CreatorRepository creatorsForAuth;
+
+    @Autowired
+    private java.time.Clock clockForAuth;
+
+    private TestCredentials.Provisioned caller;
+
+    @org.junit.jupiter.api.BeforeEach
+    void provisionCaller() {
+        caller = TestCredentials.provision(creatorsForAuth, clockForAuth);
+    }
+
+    /** A GET carrying the caller's credential. Analytics is authenticated since T052. */
+    private org.springframework.http.ResponseEntity<String> getAuthenticated(String fullUrl) {
+        HttpHeaders authorized = new HttpHeaders();
+        authorized.set("Authorization", caller.header());
+        return rest.exchange(fullUrl, HttpMethod.GET, new HttpEntity<>(authorized), String.class);
+    }
+
     @Test
     @DisplayName("POST /v1/links 201 conforms")
     void createConforms() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", caller.header());
         ResponseEntity<String> response = rest.exchange(url("/v1/links"), HttpMethod.POST,
                 new HttpEntity<>("{\"destination\":\"https://example.com/conformance\"}", headers),
                 String.class);
@@ -72,6 +100,7 @@ class ContractConformanceIT extends PostgresIntegrationTest {
     void createRefusalConforms() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", caller.header());
         ResponseEntity<String> response = rest.exchange(url("/v1/links"), HttpMethod.POST,
                 new HttpEntity<>("{\"destination\":\"javascript:alert(1)\"}", headers), String.class);
 
@@ -85,17 +114,16 @@ class ContractConformanceIT extends PostgresIntegrationTest {
     void analyticsConforms() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", caller.header());
         ResponseEntity<String> created = rest.exchange(url("/v1/links"), HttpMethod.POST,
                 new HttpEntity<>("{\"destination\":\"https://example.com/an\"}", headers), String.class);
         String code = created.getBody().replaceAll(".*\"shortCode\":\"([^\"]+)\".*", "$1");
 
-        ResponseEntity<String> ok = rest.getForEntity(url("/v1/links/" + code + "/analytics"),
-                String.class);
+        ResponseEntity<String> ok = getAuthenticated(url("/v1/links/" + code + "/analytics"));
         assertEquals(200, ok.getStatusCode().value());
         harness.assertConforms("/v1/links/{shortCode}/analytics", "get", 200, ok.getBody());
 
-        ResponseEntity<String> missing = rest.getForEntity(url("/v1/links/nosuchcode/analytics"),
-                String.class);
+        ResponseEntity<String> missing = getAuthenticated(url("/v1/links/nosuchcode/analytics"));
         assertEquals(404, missing.getStatusCode().value());
         harness.assertConforms("/v1/links/{shortCode}/analytics", "get", 404, missing.getBody());
     }
