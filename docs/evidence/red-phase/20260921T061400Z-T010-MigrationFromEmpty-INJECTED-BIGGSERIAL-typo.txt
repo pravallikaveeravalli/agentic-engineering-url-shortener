@@ -1,0 +1,432 @@
+# Red-phase evidence
+
+- **Label**: T010-MigrationFromEmpty-INJECTED-BIGGSERIAL-typo
+- **Captured (UTC)**: 20260921T061400Z
+- **Command**: `./mvnw -Dit.test=MigrationFromEmptyIntegrationTest -DfailIfNoTests=false verify`
+- **Exit code**: 1
+- **Requirement**: NFR-TST-002 (red phase evidenced, not asserted); CN-004
+
+## Why this file exists
+
+This is the failing run captured BEFORE the implementation that makes it pass. It is stored
+so that the red phase is readable by a reviewer rather than claimed in a commit message.
+
+## Captured output
+
+```
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< agentic:shortener >--------------------------
+[INFO] Building agentic-sdlc-url-shortener 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ shortener ---
+[INFO] Copying 0 resource from src/main/resources to target/classes
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ shortener ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ shortener ---
+[INFO] skip non existing resourceDirectory /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ shortener ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 5 source files with javac [debug parameters release 21] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.arch.DependencyDirectionFalsifiabilityTest
+01:14:02.289 [main] INFO com.tngtech.archunit.core.PluginLoader -- Detected Java version 21.0.8
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.359 s -- in agentic.shortener.arch.DependencyDirectionFalsifiabilityTest
+[INFO] Running agentic.shortener.arch.DependencyDirectionTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.252 s -- in agentic.shortener.arch.DependencyDirectionTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- jar:3.4.2:jar (default-jar) @ shortener ---
+[INFO] Building jar: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/shortener-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- spring-boot:3.3.4:repackage (repackage) @ shortener ---
+[INFO] Replacing main artifact /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/shortener-0.1.0-SNAPSHOT.jar with repackaged archive, adding nested dependencies in BOOT-INF/.
+[INFO] The original artifact has been renamed to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/shortener-0.1.0-SNAPSHOT.jar.original
+[INFO] 
+[INFO] --- failsafe:3.2.5:integration-test (default) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.persistence.MigrationFromEmptyIntegrationTest
+01:14:03.463 [main] INFO org.testcontainers.images.PullPolicy -- Image pull policy will be performed by: DefaultPullPolicy()
+01:14:03.465 [main] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+01:14:03.477 [main] INFO org.testcontainers.DockerClientFactory -- Testcontainers version: 1.20.1
+01:14:03.623 [main] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Found Docker environment with Environment variables, system properties and defaults. Resolved dockerHost=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+01:14:03.624 [main] INFO org.testcontainers.DockerClientFactory -- Docker host IP address is localhost
+01:14:03.631 [main] INFO org.testcontainers.DockerClientFactory -- Connected to docker: 
+  Server Version: 28.3.3
+  API Version: 1.51
+  Operating System: Ubuntu 24.04.2 LTS
+  Total Memory: 3905 MB
+01:14:03.655 [main] INFO tc.testcontainers/ryuk:0.8.1 -- Creating container for image: testcontainers/ryuk:0.8.1
+01:14:03.703 [main] INFO tc.testcontainers/ryuk:0.8.1 -- Container testcontainers/ryuk:0.8.1 is starting: 4c8d54591e136c6a3da4af23cf2ae394b14bc54000805eb15b4f7a57f3734e68
+01:14:03.784 [main] INFO tc.testcontainers/ryuk:0.8.1 -- Container testcontainers/ryuk:0.8.1 started in PT0.129354S
+01:14:03.786 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:32776
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+01:14:04.048 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:32776
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+01:14:04.303 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:32776
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+01:14:04.562 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:32776
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+01:14:04.820 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:32776
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+01:14:05.078 [main] INFO org.testcontainers.utility.RyukResourceReaper -- Ryuk started - will monitor and terminate Testcontainers containers on JVM exit
+01:14:05.078 [main] INFO org.testcontainers.DockerClientFactory -- Checking the system...
+01:14:05.078 [main] INFO org.testcontainers.DockerClientFactory -- ✔︎ Docker server version should be at least 1.6.0
+01:14:05.079 [main] INFO tc.postgres:16-alpine -- Creating container for image: postgres:16-alpine
+01:14:05.116 [main] INFO tc.postgres:16-alpine -- Container postgres:16-alpine is starting: 1ec55ca940114ead7bec041f86f4ae6bc2048b29c80b0c4bd4e08af5b1aaca2b
+01:14:05.774 [main] INFO tc.postgres:16-alpine -- Container postgres:16-alpine started in PT0.695103S
+01:14:05.775 [main] INFO tc.postgres:16-alpine -- Container is started (JDBC URL: jdbc:postgresql://localhost:32777/shortener?loggerLevel=OFF)
+01:14:08.287 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:32777/shortener (PostgreSQL 16.15)
+01:14:08.300 [main] INFO org.flywaydb.core.internal.database.base.Schema -- Creating schema "migration_from_empty" ...
+01:14:08.302 [main] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Creating Schema History table "migration_from_empty"."flyway_schema_history" ...
+01:14:08.329 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "migration_from_empty": null
+01:14:08.335 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "migration_from_empty" to version "1 - baseline"
+01:14:08.347 [main] ERROR org.flywaydb.core.internal.command.DbMigrate -- Migration of schema "migration_from_empty" to version "1 - baseline" failed! Changes successfully rolled back.
+01:14:08.364 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:32777/shortener (PostgreSQL 16.15)
+01:14:08.368 [main] INFO org.flywaydb.core.internal.database.base.Schema -- Creating schema "migration_shape" ...
+01:14:08.369 [main] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Creating Schema History table "migration_shape"."flyway_schema_history" ...
+01:14:08.385 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "migration_shape": null
+01:14:08.388 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "migration_shape" to version "1 - baseline"
+01:14:08.397 [main] ERROR org.flywaydb.core.internal.command.DbMigrate -- Migration of schema "migration_shape" to version "1 - baseline" failed! Changes successfully rolled back.
+[ERROR] Tests run: 3, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 5.048 s <<< FAILURE! -- in agentic.shortener.persistence.MigrationFromEmptyIntegrationTest
+[ERROR] agentic.shortener.persistence.MigrationFromEmptyIntegrationTest.migrationChainAppliesToACompletelyEmptyDatabase -- Time elapsed: 0.151 s <<< ERROR!
+org.flywaydb.core.internal.command.DbMigrate$FlywayMigrateException: 
+Migration V1__baseline.sql failed
+---------------------------------
+SQL State  : 42704
+Error Code : 0
+Message    : ERROR: type "biggserial" does not exist
+  Position: 737
+Location   : db/migration/V1__baseline.sql (/Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/classes/db/migration/V1__baseline.sql)
+Line       : 74
+Statement  : -- ---------------------------------------------------------------------------------------------
+-- Redirect events. FR-URL-010: per-event capture, TIMESTAMP ONLY.
+--
+-- CL-002's deciding ground was data minimisation: no IP address, no user agent, no referrer, no
+-- follower-identifying field of any kind. That is also what makes indefinite retention safe
+-- (NFR-AUD-003, CR-017) — there is no personal data here to retain.
+--
+-- Unbounded growth is accepted BY DESIGN in this demonstration. Time-partitioning is backlog item
+-- B4, not deferred work that someone intends to do here.
+-- ---------------------------------------------------------------------------------------------
+CREATE TABLE redirect_event (
+    redirect_event_id  BIGGSERIAL   PRIMARY KEY,
+    short_code         TEXT         NOT NULL REFERENCES short_link (short_code),
+    occurred_at        TIMESTAMPTZ  NOT NULL
+)
+
+	at org.flywaydb.core.internal.command.DbMigrate.doMigrateGroup(DbMigrate.java:382)
+	at org.flywaydb.core.internal.command.DbMigrate.lambda$applyMigrations$1(DbMigrate.java:272)
+	at org.flywaydb.core.internal.jdbc.TransactionalExecutionTemplate.execute(TransactionalExecutionTemplate.java:55)
+	at org.flywaydb.core.internal.command.DbMigrate.applyMigrations(DbMigrate.java:271)
+	at org.flywaydb.core.internal.command.DbMigrate.migrateGroup(DbMigrate.java:244)
+	at org.flywaydb.core.internal.command.DbMigrate.lambda$migrateAll$0(DbMigrate.java:139)
+	at org.flywaydb.database.postgresql.PostgreSQLAdvisoryLockTemplate.execute(PostgreSQLAdvisoryLockTemplate.java:73)
+	at org.flywaydb.database.postgresql.PostgreSQLAdvisoryLockTemplate.lambda$execute$0(PostgreSQLAdvisoryLockTemplate.java:56)
+	at org.flywaydb.core.internal.jdbc.TransactionalExecutionTemplate.execute(TransactionalExecutionTemplate.java:55)
+	at org.flywaydb.database.postgresql.PostgreSQLAdvisoryLockTemplate.execute(PostgreSQLAdvisoryLockTemplate.java:56)
+	at org.flywaydb.database.postgresql.PostgreSQLConnection.lock(PostgreSQLConnection.java:96)
+	at org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory.lock(JdbcTableSchemaHistory.java:145)
+	at org.flywaydb.core.internal.command.DbMigrate.migrateAll(DbMigrate.java:139)
+	at org.flywaydb.core.internal.command.DbMigrate.migrate(DbMigrate.java:97)
+	at org.flywaydb.core.Flyway.lambda$migrate$0(Flyway.java:202)
+	at org.flywaydb.core.FlywayExecutor.execute(FlywayExecutor.java:205)
+	at org.flywaydb.core.Flyway.migrate(Flyway.java:147)
+	at agentic.shortener.persistence.MigrationFromEmptyIntegrationTest.migrationChainAppliesToACompletelyEmptyDatabase(MigrationFromEmptyIntegrationTest.java:45)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: org.flywaydb.core.internal.sqlscript.FlywaySqlScriptException: Migration V1__baseline.sql failed
+---------------------------------
+SQL State  : 42704
+Error Code : 0
+Message    : ERROR: type "biggserial" does not exist
+  Position: 737
+Location   : db/migration/V1__baseline.sql (/Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/classes/db/migration/V1__baseline.sql)
+Line       : 74
+Statement  : -- ---------------------------------------------------------------------------------------------
+-- Redirect events. FR-URL-010: per-event capture, TIMESTAMP ONLY.
+--
+-- CL-002's deciding ground was data minimisation: no IP address, no user agent, no referrer, no
+-- follower-identifying field of any kind. That is also what makes indefinite retention safe
+-- (NFR-AUD-003, CR-017) — there is no personal data here to retain.
+--
+-- Unbounded growth is accepted BY DESIGN in this demonstration. Time-partitioning is backlog item
+-- B4, not deferred work that someone intends to do here.
+-- ---------------------------------------------------------------------------------------------
+CREATE TABLE redirect_event (
+    redirect_event_id  BIGGSERIAL   PRIMARY KEY,
+    short_code         TEXT         NOT NULL REFERENCES short_link (short_code),
+    occurred_at        TIMESTAMPTZ  NOT NULL
+)
+
+	at org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor.handleException(DefaultSqlScriptExecutor.java:252)
+	at org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor.executeStatement(DefaultSqlScriptExecutor.java:214)
+	at org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor.execute(DefaultSqlScriptExecutor.java:133)
+	at org.flywaydb.core.internal.resolver.sql.SqlMigrationExecutor.executeOnce(SqlMigrationExecutor.java:65)
+	at org.flywaydb.core.internal.resolver.sql.SqlMigrationExecutor.lambda$execute$0(SqlMigrationExecutor.java:57)
+	at org.flywaydb.core.internal.database.DefaultExecutionStrategy.execute(DefaultExecutionStrategy.java:27)
+	at org.flywaydb.core.internal.resolver.sql.SqlMigrationExecutor.execute(SqlMigrationExecutor.java:56)
+	at org.flywaydb.core.internal.command.DbMigrate.doMigrateGroup(DbMigrate.java:374)
+	... 20 more
+Caused by: org.postgresql.util.PSQLException: ERROR: type "biggserial" does not exist
+  Position: 737
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2733)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2420)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:517)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:434)
+	at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:356)
+	at org.postgresql.jdbc.PgStatement.executeCachedSql(PgStatement.java:341)
+	at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:317)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:312)
+	at org.flywaydb.core.internal.jdbc.JdbcTemplate.executeStatement(JdbcTemplate.java:210)
+	at org.flywaydb.core.internal.sqlscript.ParsedSqlStatement.execute(ParsedSqlStatement.java:89)
+	at org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor.executeStatement(DefaultSqlScriptExecutor.java:206)
+	... 26 more
+
+[ERROR] agentic.shortener.persistence.MigrationFromEmptyIntegrationTest.baselineCreatesTheThreeApplicationPlaneTablesAndTheirGuards -- Time elapsed: 0.045 s <<< ERROR!
+org.flywaydb.core.internal.command.DbMigrate$FlywayMigrateException: 
+Migration V1__baseline.sql failed
+---------------------------------
+SQL State  : 42704
+Error Code : 0
+Message    : ERROR: type "biggserial" does not exist
+  Position: 737
+Location   : db/migration/V1__baseline.sql (/Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/classes/db/migration/V1__baseline.sql)
+Line       : 74
+Statement  : -- ---------------------------------------------------------------------------------------------
+-- Redirect events. FR-URL-010: per-event capture, TIMESTAMP ONLY.
+--
+-- CL-002's deciding ground was data minimisation: no IP address, no user agent, no referrer, no
+-- follower-identifying field of any kind. That is also what makes indefinite retention safe
+-- (NFR-AUD-003, CR-017) — there is no personal data here to retain.
+--
+-- Unbounded growth is accepted BY DESIGN in this demonstration. Time-partitioning is backlog item
+-- B4, not deferred work that someone intends to do here.
+-- ---------------------------------------------------------------------------------------------
+CREATE TABLE redirect_event (
+    redirect_event_id  BIGGSERIAL   PRIMARY KEY,
+    short_code         TEXT         NOT NULL REFERENCES short_link (short_code),
+    occurred_at        TIMESTAMPTZ  NOT NULL
+)
+
+	at org.flywaydb.core.internal.command.DbMigrate.doMigrateGroup(DbMigrate.java:382)
+	at org.flywaydb.core.internal.command.DbMigrate.lambda$applyMigrations$1(DbMigrate.java:272)
+	at org.flywaydb.core.internal.jdbc.TransactionalExecutionTemplate.execute(TransactionalExecutionTemplate.java:55)
+	at org.flywaydb.core.internal.command.DbMigrate.applyMigrations(DbMigrate.java:271)
+	at org.flywaydb.core.internal.command.DbMigrate.migrateGroup(DbMigrate.java:244)
+	at org.flywaydb.core.internal.command.DbMigrate.lambda$migrateAll$0(DbMigrate.java:139)
+	at org.flywaydb.database.postgresql.PostgreSQLAdvisoryLockTemplate.execute(PostgreSQLAdvisoryLockTemplate.java:73)
+	at org.flywaydb.database.postgresql.PostgreSQLAdvisoryLockTemplate.lambda$execute$0(PostgreSQLAdvisoryLockTemplate.java:56)
+	at org.flywaydb.core.internal.jdbc.TransactionalExecutionTemplate.execute(TransactionalExecutionTemplate.java:55)
+	at org.flywaydb.database.postgresql.PostgreSQLAdvisoryLockTemplate.execute(PostgreSQLAdvisoryLockTemplate.java:56)
+	at org.flywaydb.database.postgresql.PostgreSQLConnection.lock(PostgreSQLConnection.java:96)
+	at org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory.lock(JdbcTableSchemaHistory.java:145)
+	at org.flywaydb.core.internal.command.DbMigrate.migrateAll(DbMigrate.java:139)
+	at org.flywaydb.core.internal.command.DbMigrate.migrate(DbMigrate.java:97)
+	at org.flywaydb.core.Flyway.lambda$migrate$0(Flyway.java:202)
+	at org.flywaydb.core.FlywayExecutor.execute(FlywayExecutor.java:205)
+	at org.flywaydb.core.Flyway.migrate(Flyway.java:147)
+	at agentic.shortener.persistence.MigrationFromEmptyIntegrationTest.baselineCreatesTheThreeApplicationPlaneTablesAndTheirGuards(MigrationFromEmptyIntegrationTest.java:66)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: org.flywaydb.core.internal.sqlscript.FlywaySqlScriptException: Migration V1__baseline.sql failed
+---------------------------------
+SQL State  : 42704
+Error Code : 0
+Message    : ERROR: type "biggserial" does not exist
+  Position: 737
+Location   : db/migration/V1__baseline.sql (/Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/classes/db/migration/V1__baseline.sql)
+Line       : 74
+Statement  : -- ---------------------------------------------------------------------------------------------
+-- Redirect events. FR-URL-010: per-event capture, TIMESTAMP ONLY.
+--
+-- CL-002's deciding ground was data minimisation: no IP address, no user agent, no referrer, no
+-- follower-identifying field of any kind. That is also what makes indefinite retention safe
+-- (NFR-AUD-003, CR-017) — there is no personal data here to retain.
+--
+-- Unbounded growth is accepted BY DESIGN in this demonstration. Time-partitioning is backlog item
+-- B4, not deferred work that someone intends to do here.
+-- ---------------------------------------------------------------------------------------------
+CREATE TABLE redirect_event (
+    redirect_event_id  BIGGSERIAL   PRIMARY KEY,
+    short_code         TEXT         NOT NULL REFERENCES short_link (short_code),
+    occurred_at        TIMESTAMPTZ  NOT NULL
+)
+
+	at org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor.handleException(DefaultSqlScriptExecutor.java:252)
+	at org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor.executeStatement(DefaultSqlScriptExecutor.java:214)
+	at org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor.execute(DefaultSqlScriptExecutor.java:133)
+	at org.flywaydb.core.internal.resolver.sql.SqlMigrationExecutor.executeOnce(SqlMigrationExecutor.java:65)
+	at org.flywaydb.core.internal.resolver.sql.SqlMigrationExecutor.lambda$execute$0(SqlMigrationExecutor.java:57)
+	at org.flywaydb.core.internal.database.DefaultExecutionStrategy.execute(DefaultExecutionStrategy.java:27)
+	at org.flywaydb.core.internal.resolver.sql.SqlMigrationExecutor.execute(SqlMigrationExecutor.java:56)
+	at org.flywaydb.core.internal.command.DbMigrate.doMigrateGroup(DbMigrate.java:374)
+	... 20 more
+Caused by: org.postgresql.util.PSQLException: ERROR: type "biggserial" does not exist
+  Position: 737
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2733)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2420)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:517)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:434)
+	at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:356)
+	at org.postgresql.jdbc.PgStatement.executeCachedSql(PgStatement.java:341)
+	at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:317)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:312)
+	at org.flywaydb.core.internal.jdbc.JdbcTemplate.executeStatement(JdbcTemplate.java:210)
+	at org.flywaydb.core.internal.sqlscript.ParsedSqlStatement.execute(ParsedSqlStatement.java:89)
+	at org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor.executeStatement(DefaultSqlScriptExecutor.java:206)
+	... 26 more
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Errors: 
+[ERROR]   MigrationFromEmptyIntegrationTest.baselineCreatesTheThreeApplicationPlaneTablesAndTheirGuards:66 » FlywayMigrate Migration V1__baseline.sql failed
+---------------------------------
+SQL State  : 42704
+Error Code : 0
+Message    : ERROR: type "biggserial" does not exist
+  Position: 737
+Location   : db/migration/V1__baseline.sql (/Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/classes/db/migration/V1__baseline.sql)
+Line       : 74
+Statement  : -- ---------------------------------------------------------------------------------------------
+-- Redirect events. FR-URL-010: per-event capture, TIMESTAMP ONLY.
+--
+-- CL-002's deciding ground was data minimisation: no IP address, no user agent, no referrer, no
+-- follower-identifying field of any kind. That is also what makes indefinite retention safe
+-- (NFR-AUD-003, CR-017) — there is no personal data here to retain.
+--
+-- Unbounded growth is accepted BY DESIGN in this demonstration. Time-partitioning is backlog item
+-- B4, not deferred work that someone intends to do here.
+-- ---------------------------------------------------------------------------------------------
+CREATE TABLE redirect_event (
+    redirect_event_id  BIGGSERIAL   PRIMARY KEY,
+    short_code         TEXT         NOT NULL REFERENCES short_link (short_code),
+    occurred_at        TIMESTAMPTZ  NOT NULL
+)
+
+[ERROR]   MigrationFromEmptyIntegrationTest.migrationChainAppliesToACompletelyEmptyDatabase:45 » FlywayMigrate Migration V1__baseline.sql failed
+---------------------------------
+SQL State  : 42704
+Error Code : 0
+Message    : ERROR: type "biggserial" does not exist
+  Position: 737
+Location   : db/migration/V1__baseline.sql (/Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/classes/db/migration/V1__baseline.sql)
+Line       : 74
+Statement  : -- ---------------------------------------------------------------------------------------------
+-- Redirect events. FR-URL-010: per-event capture, TIMESTAMP ONLY.
+--
+-- CL-002's deciding ground was data minimisation: no IP address, no user agent, no referrer, no
+-- follower-identifying field of any kind. That is also what makes indefinite retention safe
+-- (NFR-AUD-003, CR-017) — there is no personal data here to retain.
+--
+-- Unbounded growth is accepted BY DESIGN in this demonstration. Time-partitioning is backlog item
+-- B4, not deferred work that someone intends to do here.
+-- ---------------------------------------------------------------------------------------------
+CREATE TABLE redirect_event (
+    redirect_event_id  BIGGSERIAL   PRIMARY KEY,
+    short_code         TEXT         NOT NULL REFERENCES short_link (short_code),
+    occurred_at        TIMESTAMPTZ  NOT NULL
+)
+
+[INFO] 
+[ERROR] Tests run: 3, Failures: 0, Errors: 2, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- failsafe:3.2.5:verify (default) @ shortener ---
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  7.238 s
+[INFO] Finished at: 2026-09-21T01:14:08-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-failsafe-plugin:3.2.5:verify (default) on project shortener: 
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/failsafe-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+```

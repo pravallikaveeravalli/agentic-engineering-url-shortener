@@ -174,7 +174,7 @@ register rather than improvised under pressure.
   - **Deps**: T008 · **Par**: yes · **Artifact**: PostgreSQL 16 service only; app runs on host
   - **TDD**: N/A-DOC · **Validate**: `docker compose up -d` then `docker compose restart db` both succeed · **Docs**: `quickstart.md` prerequisites already state Docker + JDK · **Trace**: — 
   - **Guard**: the store MUST be an independently restartable process or CL-009's proof is impossible · **Done**: store starts, restarts, and accepts connections · **Approval**: none
-- [ ] T010 Flyway baseline migration harness — `src/main/resources/db/migration/V1__baseline.sql`
+- [x] T010 Flyway baseline migration harness — `src/main/resources/db/migration/V1__baseline.sql`
   - **Req**: plan §2 versioned deliverables · **Scn**: — · **ADR**: ADR-002 · **Pre**: T009
   - **Deps**: T009 · **Par**: no (schema root) · **Artifact**: forward-only migration chain, applies from empty
   - **TDD**: TEST-WITH · **Validate**: `./mvnw -q -Dtest=MigrationFromEmptyTest test` applies V1 to a fresh container · **Docs**: `contracts/README.md` persistence section · **Trace**: — 
@@ -204,7 +204,7 @@ register rather than improvised under pressure.
   - **Deps**: T014 · **Par**: no · **Artifact**: proof that T014 fails on a deliberately introduced violation
   - **TDD**: EVIDENCE · **Validate**: violation introduced in a fixture → T014's rule reports a failure · **Docs**: ADR-006 §Validation · **Trace**: — 
   - **Guard**: **this is the owner's stated condition for signing a test-enforced rather than compiler-enforced boundary.** Without it the boundary is a comment · **Done**: failure demonstrated and recorded · **Approval**: none
-- [ ] T016 [P] Testcontainers integration harness — `src/test/java/agentic/shortener/support/PostgresIntegrationTest.java`
+- [x] T016 [P] Testcontainers integration harness — `src/test/java/agentic/shortener/support/PostgresIntegrationTest.java`
   - **Req**: NFR-TST-001 · **Scn**: — · **ADR**: **ADR-002**, **ADR-011** · **Pre**: T010
   - **Deps**: T010 · **Par**: yes · **Artifact**: base class providing a real Postgres per suite
   - **TDD**: N/A-DOC · **Validate**: a trivial repository round-trip passes against the container · **Docs**: `quickstart.md` test tiers · **Trace**: — 

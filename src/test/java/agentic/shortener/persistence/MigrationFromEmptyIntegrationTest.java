@@ -34,10 +34,14 @@ class MigrationFromEmptyIntegrationTest extends PostgresIntegrationTest {
                 // A distinct schema keeps this test independent of the harness round-trip table.
                 .schemas("migration_from_empty")
                 .locations("classpath:db/migration")
+                // Flyway 10 disables clean by default, and this test does not need it: the
+                // container is fresh per suite and each test uses its own schema name, so "empty"
+                // is guaranteed by construction rather than by wiping. Relying on clean() would
+                // also mean the test could only ever run against a database it is allowed to
+                // destroy — a property worth not depending on.
+                .createSchemas(true)
                 .load();
 
-        // Empty means empty: nothing pre-created, no baseline-on-migrate shortcut.
-        flyway.clean();
         var result = flyway.migrate();
 
         assertTrue(result.migrationsExecuted >= 1,
@@ -57,8 +61,8 @@ class MigrationFromEmptyIntegrationTest extends PostgresIntegrationTest {
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
                 .schemas("migration_shape")
                 .locations("classpath:db/migration")
+                .createSchemas(true)
                 .load();
-        flyway.clean();
         flyway.migrate();
 
         try (Connection c = connection(); Statement s = c.createStatement()) {

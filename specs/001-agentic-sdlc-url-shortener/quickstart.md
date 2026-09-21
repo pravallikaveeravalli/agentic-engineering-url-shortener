@@ -117,6 +117,24 @@ docker compose up -d        # PostgreSQL only
 <build tool> test           # full suite, no AI key, no network required
 ```
 
+### If the integration tier cannot reach the store
+
+The fast tier needs no Docker. The integration tier starts a real PostgreSQL 16 through
+Testcontainers, and two things can stop it on a machine where Docker is provided by a **Linux VM**
+rather than natively — Colima, Lima or Rancher Desktop. Both produce misleading errors, so they are
+named here rather than left to be rediscovered:
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| *"Could not find a valid Docker environment"* while `docker ps` works fine | Testcontainers looks for `/var/run/docker.sock`; a VM runtime puts the socket elsewhere | `scripts/build.sh` already handles this — it reads the active endpoint from `docker context inspect`. Use the script rather than bare `./mvnw` |
+| *"error while creating mount source path … operation not supported"* starting `testcontainers/ryuk` | The reaper binds the socket path **inside** its own container, and the host path does not exist in the VM | Also handled by `scripts/build.sh`, which sets `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock` for VM runtimes |
+| *"Connection to localhost:NNNNN refused"* against a container that is running | The VM's port forwarder has not published the container's **dynamic** port yet, or is not forwarding dynamic ports at all | **Colima users**: start with `colima start --network-address`, which enables dynamic-port forwarding. If your runtime reaches containers only by the VM's own address, put `host.override=<vm-address>` in `~/.testcontainers.properties` — **machine-side, never in this repository**, because it is specific to one machine's networking |
+
+**The harness also waits for the store to be reachable from the test process**, not merely healthy
+inside its container (`PostgresIntegrationTest`). That race is real on any runtime with an
+out-of-process forwarder, and a harness that passed only when the forwarder happened to win first
+would be flaky by construction.
+
 **Expected**: all tests pass. The run prints per-category counts covering unit, contract,
 persistence, integration, orchestration-transition, approval, retry, timeout, fallback,
 rollback/compensation, safe-stop, resumption, replanning, concurrency, security, and end-to-end.
