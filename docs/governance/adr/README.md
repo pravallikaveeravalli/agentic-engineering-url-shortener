@@ -32,6 +32,7 @@ CR-002** on 2026-09-20.
 | [014](./ADR-014-analytics-consistency.md) | Analytics consistency model — **resolves DF-001** | Accepted | High | Synchronous append, separate transaction, failure isolated |
 | [004-A1](./ADR-004-amendment-01-transport-claude-code-cli.md) | `StageAiProvider` transport — successor record amending ADR-004 | Accepted | High | Local Claude Code CLI subprocess, headless |
 | [004-A2](./ADR-004-amendment-02-always-ai-no-keyless-mode.md) | Orchestration always uses AI — successor record amending ADR-004 | Accepted | Moderate | No keyless mode, no run-level switch, no deterministic counterpart for an AI-capable stage (owner Decision J). Carries Decision K’s fallback retirement |
+| [004-A3](./ADR-004-amendment-03-gemini-cli-for-live-demonstration-runs.md) | Gemini CLI (`agy`) as the live-demonstration transport — successor record amending ADR-004 | Accepted | High | `ClaudeCodeCliStageAiProvider` stays primary/production; T073a-f's live demo runs use `GeminiCliStageAiProvider` because a Claude Code build agent cannot spawn `claude` as a nested subprocess but can spawn `agy` |
 
 ## Evaluated and judged NOT to require an ADR
 
