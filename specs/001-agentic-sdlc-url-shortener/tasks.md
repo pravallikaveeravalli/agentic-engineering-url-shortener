@@ -478,7 +478,7 @@ outcome, including deliberate silence.
   - **Deps**: T027, T080 · **Par**: no · **Artifact**: ApprovalGate(`id`, `stage_id`, `gate_class`, `wait_deadline`, `disclosed_auto_abandon_at`, `requested_at`); GateDecision(`outcome`, `actor`, `decided_at`, `reason`, `repository_record_path`, `supersedes?`)
   - **TDD**: RED-FIRST · **Validate**: schema validation against `contracts/approval.schema.json` · **Docs**: `data-model.md` KE-10/KE-11 · **Trace**: matrix FR-ORC-013, PVT-006
   - **Guard**: `repository_record_path` is **required** — a decision existing only in workflow state does not satisfy the gate · **Done**: entities validate against the contract, including its conditional rules · **Approval**: none
-- [ ] T059 [US2] Five gate outcomes and their workflow effects — `src/main/java/agentic/shortener/orchestration/gates/GateOutcomeHandler.java`
+- [x] T059 [US2] Five gate outcomes and their workflow effects — `src/main/java/agentic/shortener/orchestration/gates/GateOutcomeHandler.java`
   - **Req**: **FR-ORC-013** · **Scn**: DS-A, DS-C · **ADR**: ADR-008 · **Pre**: T058
   - **Deps**: T058 · **Par**: no · **Artifact**: `APPROVED` → stage succeeds; `REJECTED` → run terminates; `CHANGES_REQUESTED` → return to owning stage with changes enumerated and downstream **invalidated**; `ESCALATED` → records what exceeds authority; `TIMED_OUT` → suspension
   - **TDD**: RED-FIRST · **Validate**: one test per outcome · **Docs**: plan §5 · **Trace**: matrix FR-ORC-013
