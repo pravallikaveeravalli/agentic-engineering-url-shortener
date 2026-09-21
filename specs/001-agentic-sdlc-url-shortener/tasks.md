@@ -177,7 +177,7 @@ register rather than improvised under pressure.
 - [x] T010 Flyway baseline migration harness — `src/main/resources/db/migration/V1__baseline.sql`
   - **Req**: plan §2 versioned deliverables · **Scn**: — · **ADR**: ADR-002 · **Pre**: T009
   - **Deps**: T009 · **Par**: no (schema root) · **Artifact**: forward-only migration chain, applies from empty
-  - **TDD**: TEST-WITH · **Validate**: `./mvnw -q -Dtest=MigrationFromEmptyTest test` applies V1 to a fresh container · **Docs**: `contracts/README.md` persistence section · **Trace**: — 
+  - **TDD**: TEST-WITH · **Validate**: `./mvnw -q -Dtest=MigrationFromEmptyIntegrationTest test` applies V1 to a fresh container (built as `MigrationFromEmptyIntegrationTest`, T123's traceability sweep found this line's original name stale) · **Docs**: `contracts/README.md` persistence section · **Trace**: — 
   - **Guard**: migrations are forward-only; a column is deprecated across two versions before removal · **Done**: migration applies from empty in a Testcontainers instance · **Approval**: none
 - [x] T011 [P] Contract parse and meta-schema lint — `src/test/java/agentic/shortener/contract/ContractFilesLintTest.java`
   - **Req**: NFR-TST-001 · **Scn**: — · **ADR**: **ADR-005** · **Pre**: T008
@@ -438,7 +438,7 @@ resolution, and expiry outcomes.
 - [x] T054 [P] [US1] Per-creator creation rate limit — `src/main/java/agentic/shortener/delivery/ratelimit/CreationRateLimiter.java`
   - **Req**: **FR-URL-016**, EC-013 · **Scn**: DS-B · **ADR**: ADR-013 · **Pre**: T052
   - **Deps**: T052 · **Par**: yes · **Artifact**: **PVT-012 — 60 requests/minute per creator**; throttled outcome names the tier
-  - **TDD**: RED-FIRST · **Validate**: `-Dtest=CreationRateLimiterTest` at and above the limit · **Docs**: `contracts/openapi.yaml` 429 · **Trace**: matrix FR-URL-016
+  - **TDD**: RED-FIRST · **Validate**: `-Dtest=RateLimiterTest` at and above the limit (built as `RateLimiterTest`/`RateLimitIT`, T123's traceability sweep found this line's original name stale) · **Docs**: `contracts/openapi.yaml` 429 · **Trace**: matrix FR-URL-016
   - **Guard**: throttling MUST NOT be silently disabled by default configuration (T018 asserts on-by-default) · **Done**: limit enforced; tier named in the response · **Approval**: none
 - [x] T055 [US1] Two-tier redirect rate limiting — `src/main/java/agentic/shortener/delivery/ratelimit/RedirectRateLimiter.java`
   - **Req**: **FR-URL-016** · **Scn**: DS-B · **ADR**: ADR-013 · **Pre**: T044, T054
@@ -683,7 +683,7 @@ from the response JSON. Each is `[P]` because each touches its own files and dep
   - **Deps**: T078 · **Par**: no · **Artifact**: each prohibited transition asserted **rejected**, not merely absent
   - **TDD**: EVIDENCE · **Validate**: `RUNNING→SUCCEEDED` without exit criteria; `AWAITING_APPROVAL→SUCCEEDED` without a recorded decision; `RETRY_WAIT→RUNNING` with an exhausted bound or a missing vote; `FAILED→SUCCEEDED`; leaving `SAFE_STOP` other than by human decision or retention; `COMPENSATING` on an erasable effect; `ROLLING_BACK` on an immutable-store effect
   - **Docs**: plan §3 · **Trace**: matrix FR-ORC-006 · **Guard**: **building the engine means owning transition correctness** — this suite is the control that makes ADR-003's build decision defensible · **Done**: seven prohibited transitions each rejected · **Approval**: none
-- [x] T080 [US3] Atomic state-plus-transition write — `src/main/java/agentic/shortener/orchestration/state/TransitionWriter.java`
+- [x] T080 [US3] Atomic state-plus-transition write — `src/main/java/agentic/shortener/orchestration/store/JdbcRunStore.java` (private `insertTransition`; also duplicated in `SafeStopHandler.java` for its own SAFE_STOP-crossing transitions — see that class's own javadoc for why. Built without a standalone `TransitionWriter` class; T123's traceability sweep found this line's original name stale)
   - **Req**: FR-ORC-004, NFR-AUD-001 · **Scn**: all · **ADR**: **ADR-008** · **Pre**: T079, T027
   - **Deps**: T027, T079 · **Par**: no (**synchronization point — unblocks Phase 4**) · **Artifact**: current state and its append-only `state_transition` row written in **one transaction**
   - **TDD**: RED-FIRST · **Validate**: test asserting a state change **cannot commit** without its transition row · **Docs**: `data-model.md` · **Trace**: matrix FR-ORC-004
@@ -691,7 +691,7 @@ from the response JSON. Each is `[P]` because each touches its own files and dep
 
 ### Context and decision lineage
 
-- [x] T081 [P] [US3] Artifact provenance and versioning — `src/main/java/agentic/shortener/orchestration/lineage/ArtifactVersion.java`
+- [x] T081 [P] [US3] Artifact provenance and versioning — `src/main/java/agentic/shortener/orchestration/lineage/ArtifactProvenance.java` (built as `ArtifactProvenance`, alongside `LineageStore.java`/`ArtifactProvenanceQuery.java`; T123's traceability sweep found this line's original name stale)
   - **Req**: **FR-ORC-005** · **Scn**: all · **ADR**: ADR-008, ADR-010 · **Pre**: T080
   - **Deps**: T080 · **Par**: yes · **Artifact**: content hash plus producing stage; for any artifact, which stage produced it, from which inputs, under which decisions
   - **TDD**: RED-FIRST · **Validate**: provenance query over a completed run returns a complete chain · **Docs**: `data-model.md` KE-11/artifact_version · **Trace**: matrix FR-ORC-005
@@ -955,12 +955,12 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
 
 ### Traceability, documentation, and reporting
 
-- [ ] T123 [US5] Traceability report generator — `src/main/java/agentic/shortener/audit/TraceabilityReporter.java`
+- [x] T123 [US5] Traceability report generator — `src/main/java/agentic/shortener/audit/TraceabilityReporter.java`
   - **Req**: **FR-ORC-027**, `POL-TRC-001` · **Scn**: all · **ADR**: **ADR-006** · **Pre**: T111
   - **Deps**: T111 · **Par**: no · **Artifact**: report over the ten-link chain — requirement → scenario → design → ADR → task → code → test → validation → documentation → evidence
   - **TDD**: RED-FIRST · **Validate**: report generated **mechanically**, not by hand · **Docs**: plan §13 · **Trace**: matrix FR-ORC-027, KE-22
   - **Guard**: the chain now has ten populated columns after CR-006 added Design and ADR — a requirement with no Design or ADR reference is an orphan in the same sense as one with no test · **Done**: report covers all ten links · **Approval**: none
-- [ ] T124 [P] [US5] Zero-orphan bidirectional assertion — `src/test/java/agentic/shortener/audit/ZeroOrphanTest.java`
+- [x] T124 [P] [US5] Zero-orphan bidirectional assertion — `src/test/java/agentic/shortener/audit/ZeroOrphanTest.java`
   - **Req**: FR-ORC-027, **SC-010** · **Scn**: all · **ADR**: — · **Pre**: T123
   - **Deps**: T123 · **Par**: yes · **Artifact**: zero orphan requirements, tasks, implementations, and tests — in **both** directions
   - **TDD**: EVIDENCE · **Validate**: every delivered requirement reaches an executed test and evidence; every test traces back to a requirement · **Docs**: — · **Trace**: matrix, SC-010
@@ -1129,7 +1129,7 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
   - **TDD**: EVIDENCE · **Validate**: dependency-vulnerability and secret scans **executed** with results attached; traceability complete; documentation current · **Docs**: new file · **Trace**: Constitution §Governance
   - **Guard**: **if any mandatory policy remains `FAIL`, this task reports blocked rather than weakening the check** — stop condition 2 · **Done**: report produced with a determination and named conditions · **Approval**: none
 - [ ] T147 [P] Limitations and residual-risk disclosure — `docs/LIMITATIONS.md`
-  - **Req**: Constitution XI · **Scn**: — · **ADR**: — · **Pre**: T146
+  - **Req**: Constitution XI, FR-ORC-015 (retired — this task is its disclosure, T123's traceability sweep found the reference missing here though spec.md's own matrix row already names T147) · **Scn**: — · **ADR**: — · **Pre**: T146
   - **Deps**: T146 · **Par**: yes · **Artifact**: every known limitation and residual risk, including single-host measurement, compressed time parameters, meta-schema lint status, deferred backlog items, **the deliberately deferred per-creator aggregate redirect tier and which run closed it** (cross-checked against the baseline-omissions register, T055a), the **retention posture** — indefinite retention, unbounded table growth by design, production archival recorded as a recommendation (NFR-AUD-003, CR-017) — the **governance-surface posture** (*separation of the two identity models is proven by test; reachability of the governance surfaces is not, because they are unauthenticated by design*), and **PVT-016**'s values as engineering judgement rather than measurement, with the accepted consequence that an unattended run stalls and then suspends **for up to the uniform PVT-006 gate-wait deadline** (owner ruling, 2026-09-20: no separate overrun timeout; reviewer finding A2 declined, cost accepted); the **actor-identity limitation** — governance surfaces are unauthenticated by design, `actorType` is declared and not verified, so the defensible claim is that no workflow step approves anything rather than that impersonation is prevented; verified actor identity is out of scope by owner decision and an operator-issued per-decision token was considered and declined; and — stated as its own named entry because the assignment names the control — **fallback is not demonstrated**: FR-ORC-015 is retired (Decision K, CR-032) because its only implementation was the six deterministic counterparts Decision J struck; **bounded retry then safe suspension is the entire degradation story**; and the reason a token counterpart was not kept is that a control present in the documentation and absent in the engineering is the exists-mainly-to-be-claimed defect this project rejects — **a documented honest absence over a ceremonial presence**, with a re-pointed genuine degradation (a dated advisory snapshot for the S10 vulnerability scan) considered and declined as new scope
   - **TDD**: N/A-DOC · **Validate**: cross-checked against every ADR's Risks section and every DF entry; the fallback retirement is present as a **named absence** stating what the assignment asks, what is demonstrated instead, and why — **not** as a silent omission · **Docs**: new file · **Trace**: Constitution XI point 8
   - **Guard**: **undisclosed limitations are a release-blocking condition** (condition 8). Disclosure is cheaper than discovery · **Done**: no ADR risk or DF item absent · **Approval**: none

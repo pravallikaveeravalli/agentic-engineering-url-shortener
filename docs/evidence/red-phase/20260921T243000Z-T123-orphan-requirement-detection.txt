@@ -1,0 +1,19 @@
+Sabotage: TraceabilityReporter.report — the orphan-requirement filter `!tasksByRequirement.containsKey(id)`
+was replaced with `false`, disabling orphan-requirement detection entirely (an empty result regardless of
+input).
+
+[INFO] Running agentic.shortener.audit.TraceabilityReporterTest
+[ERROR] Tests run: 8, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.049 s <<< FAILURE! -- in agentic.shortener.audit.TraceabilityReporterTest
+[ERROR] agentic.shortener.audit.TraceabilityReporterTest.detectsOrphanRequirement(Path) -- Time elapsed: 0.003 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <1> but was: <0>
+	at agentic.shortener.audit.TraceabilityReporterTest.detectsOrphanRequirement(TraceabilityReporterTest.java:108)
+
+Fix: restored the containsKey check. This is the same defect class T124's own real run (against spec.md and
+tasks.md, not a fixture) found and fixed five real instances of before it could pass: without this filter,
+a requirement seeded in spec.md's matrix but never picked up by any task in tasks.md would report clean —
+exactly the "orphan detection must be a mechanism, not a prohibition" failure mode T124's own Guard clause
+names. T124's ZeroOrphanTest running this same reporter against the REAL project found and fixed FR-ORC-015
+(T147's Req field was missing the reference its own body text already discussed at length) plus a parser
+gap (DF-004, an unrecognized requirement-id prefix) and five stale task-title references (T010, T026, T054,
+T080, T081) where real work existed under a different name than the task line claimed — all corrected in
+the same commit as this file, visible in tasks.md's diff.
