@@ -184,12 +184,12 @@ register rather than improvised under pressure.
   - **Deps**: T008 · **Par**: yes · **Artifact**: test asserting all five contract files parse **and** validate against OpenAPI 3.1 / JSON Schema 2020-12 meta-schemas
   - **TDD**: RED-FIRST · **Validate**: `./mvnw -q -Dtest=ContractFilesLintTest test` — **re-run after CR-013**: both contract files changed shape to v2.0.0, so parse **and** meta-schema lint must pass against the new node model · **Docs**: updates ADR-005 §Validation residual — the meta-schema lint it records as owed · **Trace**: closes ADR-005's disclosed residual
   - **Guard**: **this closes a known gap.** Parse validity was confirmed 2026-09-20; structural conformance was not. Any defect found is a Phase-1 defect, reported not hidden · **Done**: lint passes, or defects are fixed and re-run · **Approval**: none
-- [ ] T012 OpenAPI response-validation harness — `src/test/java/agentic/shortener/contract/OpenApiConformanceTest.java`
+- [x] T012 OpenAPI response-validation harness — `src/test/java/agentic/shortener/contract/OpenApiConformanceTest.java`
   - **Req**: NFR-TST-001, plan §2 · **Scn**: — · **ADR**: **ADR-005** · **Pre**: T011, T032
   - **Deps**: T011, T032 · **Par**: no (needs a live endpoint) · **Artifact**: harness validating live responses against `contracts/openapi.yaml`, covering the **three** orchestration operations — `createRun`, `inspectRun`, `recordGateDecision`
   - **TDD**: RED-FIRST · **Validate**: `./mvnw -q -Dtest=OpenApiConformanceTest test` · **Docs**: `contracts/README.md` verification status · **Trace**: — 
   - **Guard**: validation must reject `additionalProperties`; a permissive config gives false confidence · **Done**: harness validates at least the walking-skeleton endpoint · **Approval**: none
-- [ ] T013 Deliberate contract-drift test — `src/test/java/agentic/shortener/contract/ContractDriftDetectionTest.java`
+- [x] T013 Deliberate contract-drift test — `src/test/java/agentic/shortener/contract/ContractDriftDetectionTest.java`
   - **Req**: ADR-005 Validation · **Scn**: — · **ADR**: **ADR-005** · **Pre**: T012
   - **Deps**: T012 · **Par**: no · **Artifact**: test proving the harness **fails** when a response diverges from the document
   - **TDD**: EVIDENCE · **Validate**: test passes only when the injected drift is detected · **Docs**: ADR-005 §Validation · **Trace**: — 
