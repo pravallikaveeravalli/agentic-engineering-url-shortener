@@ -4,7 +4,7 @@ import agentic.shortener.audit.AuditWriter;
 import agentic.shortener.audit.telemetry.StageTelemetry;
 import agentic.shortener.orchestration.executor.StageExecutor;
 import agentic.shortener.orchestration.executor.ai.AiResponse;
-import agentic.shortener.orchestration.executor.ai.GeminiCliStageAiProvider;
+import agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProvider;
 import agentic.shortener.orchestration.executor.ai.StageAiProvider;
 import agentic.shortener.orchestration.executor.ai.stages.AmbiguityDetectionAiExecutor;
 import agentic.shortener.orchestration.executor.ai.stages.DecompositionAiExecutor;
@@ -54,9 +54,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Task T132 — DS-A's real, live executed run, driven through {@link Conductor} exactly as {@code
- * RunSubmissionController} would, against real AI calls (Gemini CLI, {@code agy}), a real isolated {@code
- * git worktree} for S7, and the real fast test tier for S8. NOT named {@code *Test}/{@code *IT} — the same
- * reason every T073a-f live-demo class is not (surefire/failsafe both skip it by pattern); run explicitly:
+ * RunSubmissionController} would, against real AI calls (the Claude Code CLI, ADR-004's original
+ * primary/production transport, restored to active use by ADR-004-A4/CR-047 after Amendment 03's
+ * nesting-guard finding was corrected), a real isolated {@code git worktree} for S7, and the real fast test
+ * tier for S8. NOT named {@code *Test}/{@code *IT} — the same reason every T073a-f live-demo class is not
+ * (surefire/failsafe both skip it by pattern); run explicitly:
  *
  * <pre>./scripts/build.sh -q -Dtest=DsALiveRun -DfailIfNoTests=false test</pre>
  *
@@ -67,7 +69,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class DsALiveRun extends PostgresIntegrationTest {
 
-    private static final String MODEL = "gemini-3.8-flash-high";
+    private static final String CLI = "claude";
+    private static final String MODEL = "claude-sonnet-5";
     private static final Path REPO_ROOT = Paths.get("").toAbsolutePath();
     private static final String REQUIREMENT =
             "Expose the remaining time-to-expiry for a short link to its owning creator.";
@@ -101,10 +104,10 @@ class DsALiveRun extends PostgresIntegrationTest {
         SafeStopHandler safeStopHandler = new SafeStopHandler(connections, clock, retentionPolicy);
         RetryPolicy retryPolicy = new RetryPolicy(Backoff.sleeping(), StageTelemetry.disabled());
 
-        StageAiProvider s2Provider = recording("S2", new GeminiCliStageAiProvider("agy", MODEL));
-        StageAiProvider s3Provider = recording("S3", new GeminiCliStageAiProvider("agy", MODEL));
-        StageAiProvider s5Provider = recording("S5", new GeminiCliStageAiProvider("agy", MODEL));
-        StageAiProvider s6Provider = recording("S6", new GeminiCliStageAiProvider("agy", MODEL));
+        StageAiProvider s2Provider = recording("S2", new ClaudeCodeCliStageAiProvider(CLI, MODEL));
+        StageAiProvider s3Provider = recording("S3", new ClaudeCodeCliStageAiProvider(CLI, MODEL));
+        StageAiProvider s5Provider = recording("S5", new ClaudeCodeCliStageAiProvider(CLI, MODEL));
+        StageAiProvider s6Provider = recording("S6", new ClaudeCodeCliStageAiProvider(CLI, MODEL));
 
         NormalizationAiExecutor s2 = new NormalizationAiExecutor(s2Provider);
         AmbiguityDetectionAiExecutor s3 = new AmbiguityDetectionAiExecutor(s3Provider);
@@ -112,10 +115,10 @@ class DsALiveRun extends PostgresIntegrationTest {
         DesignAiExecutor s6 = new DesignAiExecutor(s6Provider, clock);
         GitWorktreeBranchApplier branchApplier = new GitWorktreeBranchApplier(REPO_ROOT, "main");
         ImplementationAiExecutor s7 =
-                new ImplementationAiExecutor(recording("S7", new GeminiCliStageAiProvider("agy", MODEL)),
+                new ImplementationAiExecutor(recording("S7", new ClaudeCodeCliStageAiProvider(CLI, MODEL)),
                         branchApplier);
         DocumentationAiExecutor s9 = new DocumentationAiExecutor(recording("S9",
-                new GeminiCliStageAiProvider("agy", MODEL)));
+                new ClaudeCodeCliStageAiProvider(CLI, MODEL)));
 
         EnginePorts ports = new EnginePorts(new ScriptTestSuiteRunner(REPO_ROOT),
                 new PolicySetEvaluator(connections, REPO_ROOT, clock),

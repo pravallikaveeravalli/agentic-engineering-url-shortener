@@ -771,21 +771,31 @@ at authoring time. **Nothing here should be read as an open question.**
 - **A second live-demonstration transport — [ADR-004-A3](../../docs/governance/adr/ADR-004-amendment-03-gemini-cli-for-live-demonstration-runs.md) (CR-042)**:
   `ClaudeCodeCliStageAiProvider` remains the documented primary/production adapter, unmodified. T073a-f's
   live demonstration runs (AS-007) use a second implementation, `GeminiCliStageAiProvider` (the Gemini CLI,
-  `agy`, model `gemini-3.8-flash-high`), because a Claude Code build agent cannot spawn `claude` as a nested
-  subprocess but can spawn `agy` — a real environmental constraint, not a vendor judgment. Since `agy`'s own
-  response names no resolved model id, the **pinned** id is recorded as the model used, disclosed as a pin
-  rather than a response reading. This amendment is itself a second demonstration of the interface's
+  `agy`, model `gemini-3.8-flash-high`), retained as a real, tested, pluggable alternative transport. Since
+  `agy`'s own response names no resolved model id, the **pinned** id is recorded as the model used, disclosed
+  as a pin rather than a response reading. This amendment is itself a second demonstration of the interface's
   reversibility, alongside ADR-004-A1's own.
-- **Consequences**: an authenticated Claude Code CLI on the machine for demonstration runs only, drawing on the
-  same subscription quota as the development tooling. The SDK path would instead need an API key and per-call
-  cost. Either way, **nothing graded requires either** (CN-011).
+- **Amendment 03's own nesting-guard rationale corrected — [ADR-004-A4](../../docs/governance/adr/ADR-004-amendment-04-claude-cli-nesting-corrected.md) (CR-047)**:
+  Amendment 03's stated reason — "a Claude Code build agent cannot spawn `claude` as a nested subprocess" —
+  was a misdiagnosis. The actual cause of the earlier block was a Bash-tool allowlist artifact (a
+  shell-redirect suffix breaking the command-shape match when the agent typed `claude` directly into its own
+  Bash tool), not a structural guard on the `claude` binary or on subprocess nesting. Verified directly: a
+  real, live, nested `claude` call via a clean `ProcessBuilder` invocation (no shell, no redirect syntax)
+  succeeds. **Live and scenario-demonstration AI stages (T132 onward) use `ClaudeCodeCliStageAiProvider`**,
+  restored to the role ADR-004-A1 always gave it, with the model id **read from the response** (`modelUsage`)
+  rather than pinned. `GeminiCliStageAiProvider` remains built, tested, and cited as valid evidence for
+  T073a-f — this correction does not retroactively invalidate it.
+- **Consequences**: an authenticated Claude Code CLI on the machine for demonstration and live/scenario runs,
+  drawing on the same subscription quota as the development tooling. The SDK path would instead need an API
+  key and per-call cost. Either way, **nothing graded requires either** (CN-011).
 - **Risks**: non-determinism in graded runs. **Mitigation**: reliability proofs use injected fakes, never
   the live provider (FR-ORC-030). **Transport-specific risk**: the stage prompt is untrusted content, so the
   subprocess MUST be invoked with an **argv array, never a shell string** — see ADR-004-A1 §Risks.
 - **Reversibility**: high — demonstrated by ADR-004-A1, which changed transport without touching the interface,
-  the stage definitions, the flag, the labels, or any requirement, and demonstrated a second time by
-  ADR-004-A3's swap to a different vendor's CLI entirely under the same constraint. **Validation**: SC-014 —
-  full run with no key, no network.
+  the stage definitions, the flag, the labels, or any requirement; demonstrated a second time by ADR-004-A3's
+  swap to a different vendor's CLI entirely; and demonstrated a third time by ADR-004-A4's swap back, with
+  zero change to either adapter's own implementation. **Validation**: SC-014 — full run with no key, no
+  network.
 
 ### ADR-005 — Contract validation approach
 
