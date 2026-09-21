@@ -7,6 +7,10 @@ package (2026-09-20) — it was **not** independently gated. Changes to it pass 
 for the plan. The authoritative entity definitions are the spec's `KE-*` entries; this document elaborates them
 and must not contradict them.
 
+Amended by **CR-011** (2026-09-20): aligned with CR-001's `ai` flag, CR-005's `executorKindUsed` rename, and the
+owner's instance-keyed node-identity decision. Before that amendment this document was the only artifact still
+carrying the pre-CR-001 run-level `executor_mode` enum.
+
 Technology-neutral. Types are logical; the physical mapping follows ADR-002. Field-level validation
 traces to the FR that requires it.
 
@@ -74,7 +78,7 @@ effects. Same marker + differing fingerprint → conflict; mint nothing, change 
 | `policy_set_version` | string | Required; the version evaluated |
 | `last_activity_at` | timestamp | Drives the idle clock — **never** creation time |
 | `auto_abandon_at` | timestamp? | Computed; exposed via inspection when suspended |
-| `executor_mode` | enum | `DETERMINISTIC` \| `AI` — per-run selection |
+| `ai` | enum | `on` \| `off`, **default `off`** — whether AI executors participate. Named for the one thing it controls: a run with `ai: off` may still contain a `HUMAN` execution at the stage-7 no-plan gate, so a run-level determinism claim would over-promise (FR-ORC-029, renamed by **CR-001**) |
 | `suspension_reason` | text? | Required when `SAFE_STOP` |
 
 **Terminal set is exactly** `COMPLETED`, `REJECTED`, `ABANDONED` (CL-005).
@@ -83,15 +87,19 @@ effects. Same marker + differing fingerprint → conflict; mint nothing, change 
 
 | Entity | Fields |
 |---|---|
-| StageNode | `id`, `run_id`, `stage_number` (1–12), `state`, `executor_class`, `executor_mode_used`, `attempts_used`, `entered_at`, `exited_at?`, `blocking_reason?` |
-| DependencyEdge | `id`, `run_id`, `from_stage`, `to_stage`, `join_semantics` (`ALL` \| `ANY`) |
+| StageNode | `id`, `run_id`, `node_key` (string — `"S1".."S12"` for a singleton or fan-out-parent stage, `"S7.1".."S7.n"` for a fan-out child, `"S7.join"` for its join node; **unique per run**), `stage_number` (1–12 — the stage the node belongs to, no longer the node's identity), `node_role` (`SINGLETON` \| `FAN_OUT_PARENT` \| `FAN_OUT_CHILD` \| `JOIN`), `parent_node_key?` (set on a `FAN_OUT_CHILD` and a `JOIN`, null otherwise), `state`, `executor_class`, `executor_kind_used`, `attempts_used`, `entered_at`, `exited_at?`, `blocking_reason?` |
+| DependencyEdge | `id`, `run_id`, `from_node_key`, `to_node_key`, `join_semantics` (`ALL` \| `ANY`) — edges address **nodes**, never stage numbers, so each fan-out child's edges are individually declared and a replanned instance's topology stays queryable (FR-ORC-002, ADR-008) |
 
 **Stage states**: `BLOCKED`, `READY`, `RUNNING`, `AWAITING_APPROVAL`, `RETRY_WAIT`, `FALLBACK`,
 `ROLLING_BACK`, `COMPENSATING`, `SUCCEEDED`, `FAILED`, `INVALIDATED`, `SKIPPED`. Allowed and
 **prohibited** transitions per `plan.md` §3; prohibited ones are rejected and tested.
 
-`executor_mode_used` is **required on every executed stage** — an unlabelled execution may not appear
-in evidence (FR-ORC-029).
+`executor_kind_used` — `DETERMINISTIC` | `AI` | `HUMAN` — is **required on every executed node**; an unlabelled
+execution may not appear in evidence (FR-ORC-029; renamed from `executor_mode_used` by **CR-005** and extended
+with `HUMAN` by **CR-001**). `HUMAN` is **never flag-selectable**: it is recorded only as the outcome of a
+no-plan-gate decision (FR-ORC-031). Note the deliberate asymmetry with `executor_class`, whose vocabulary is
+`DETERMINISTIC | AI_CAPABLE | HUMAN_GATE` and which **does not include `HUMAN`** — a stage may not be declared
+human-implemented up front.
 
 ### StageEffectContract (KE-29)
 
@@ -178,6 +186,14 @@ skips S4.
 3. AuditRecord, GateDecision, PolicyCheckResult, RedirectEvent are **append-only**.
 4. `terminal_state` is non-null **iff** `state` ∈ the three terminal values.
 5. `auto_abandon_at` is non-null **iff** `state = SAFE_STOP`.
-6. Every executed StageNode has a non-null `executor_mode_used`.
+6. Every executed StageNode has a non-null `executor_kind_used`.
 7. A StageEffectContract with `IRREVERSIBLE` and no `compensating_action` **fails to load** (EC-034).
 8. Every RetryRuling carries both signatures; a retry with one is invalid (EC-032).
+9. `node_key` is unique per run. Every stage 1–12 appears exactly once as either a `SINGLETON` or a
+   `FAN_OUT_PARENT`, so a freshly materialised run holds **thirteen** nodes: eleven singletons, the S7 fan-out
+   parent, and its `JOIN`. There is **no fixed upper bound** — the old "exactly twelve" invariant was wrong,
+   because it made S7's per-task fan-out unrepresentable (analyze finding H4).
+10. A `FAN_OUT_PARENT` has exactly one `JOIN` node from the outset and **zero or more** `FAN_OUT_CHILD` nodes,
+    created when the preceding stage yields tasks. The join does not proceed while any child is incomplete or
+    failed (EC-018, FR-ORC-003). Uniqueness and this join invariant are asserted by T074's test rather than by
+    JSON Schema, which cannot express uniqueness-by-property.

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Agentic SDLC URL Shortener API
-  version: 1.0.0
+  version: 2.0.0
   description: >
     Application-plane API for the URL shortener, plus read-only control-plane inspection.
     Versioning: additive changes are MINOR; removing or narrowing a field, renaming, or changing a
@@ -10,6 +10,11 @@ info:
 
     Redirect resolution is public and MUST NOT require authentication (FR-URL-018).
     Link creation and analytics require a creator API key.
+
+    Control-plane operations (run creation, run inspection, gate decisions) carry NO credential. The shortener's
+    actor model and the orchestrator's actor model are separate domains and no credential class crosses the
+    boundary (CN-012, owner ruling 2026-09-20). Orchestrator governance surfaces sit under the machine-access
+    trust boundary, as creator provisioning does (FR-URL-019).
 
     Redirects are TEMPORARY, never permanent — resolved at the Gate 4 closing package (DF-002, CR-003).
     A permanent redirect would be cached by clients, after which follows never reach the service, defeating
@@ -27,7 +32,7 @@ tags:
   - name: operations
     description: Health and readiness
   - name: orchestration
-    description: Control-plane run inspection
+    description: Control-plane governance surfaces — run creation, inspection, and gate decisions. No credential crosses from the shortener's actor model (CN-012).
 
 paths:
   /v1/links:
@@ -282,6 +287,105 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Health' }
 
+  /v1/runs:
+    post:
+      tags: [orchestration]
+      summary: Create a workflow run from a submitted requirement
+      operationId: createRun
+      description: >
+        Admits a requirement and creates a governed run with a durable identifier that propagates to every log,
+        metric, trace, audit row and evidence artifact (FR-ORC-007, NFR-OBS-001). Stage S1.
+
+        Carries NO credential: this is an orchestrator governance surface under the machine-access trust boundary
+        (CN-012). A creator API key is neither required nor accepted here.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateRunRequest' }
+      responses:
+        '201':
+          description: Run created and persisted with its identifier
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RunInspection' }
+        '400':
+          description: Malformed submission. Nothing is persisted and no run identifier is issued.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '503':
+          description: Store unavailable. No run is created; the caller may retry.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /v1/runs/{runId}/gates/{gateId}/decision:
+    post:
+      tags: [orchestration]
+      summary: Record a human decision on a pending gate
+      operationId: recordGateDecision
+      description: >
+        Records one of the four submittable outcomes against a pending gate (FR-ORC-013).
+
+        TIMED_OUT is deliberately NOT submittable: it is produced by the gate-wait deadline expiring, never by a
+        caller, and silence is never an input. Absence of a call to this operation is what produces suspension.
+
+        repositoryRecordPath is REQUIRED: the decision's repository record must already exist in the working tree
+        before the decision takes effect (Constitution v1.1.0 Gate semantics, FR-ORC-013). The contract refuses a
+        decision that exists only in workflow state.
+
+        Carries NO credential (CN-012). Actor authority is asserted from the recorded actor, and an agent actor is
+        refused for any approving outcome at every autonomy setting (FR-ORC-021, EC-024).
+      security: []
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: gateId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GateDecisionRequest' }
+      responses:
+        '200':
+          description: Decision recorded; the run state reflects its effect
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RunInspection' }
+        '400':
+          description: >
+            Malformed decision — unknown outcome, CHANGES_REQUESTED with an empty change list, or a missing
+            repositoryRecordPath.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '403':
+          description: >
+            The actor has no recorded authority for this gate class, or an agent actor attempted an approving
+            outcome. Recorded as an autonomy violation (EC-024, FR-ORC-021).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404':
+          description: No such run, or no such pending gate on it
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: >
+            The gate already carries a decision. Gate decisions are append-only and corrected by a superseding
+            record, never overwritten (Compensation Register).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
   /v1/runs/{runId}:
     get:
       tags: [orchestration]
@@ -291,8 +395,11 @@ paths:
         Per-stage status, graph position, parallel and join structure, blocking condition, retry
         history, pending gates, and — when suspended — the computed auto-abandon-at (FR-ORC-008,
         FR-ORC-032).
-      security:
-        - creatorApiKey: []
+
+        Carries NO credential (CN-012). A creator API key is neither required nor accepted: run inspection is an
+        orchestrator governance surface, and creators are a URL-shortener concept that must not leak into the
+        orchestrator (owner ruling, 2026-09-20).
+      security: []
       parameters:
         - name: runId
           in: path
@@ -334,6 +441,63 @@ components:
         nothing from the distinction.
 
   schemas:
+    CreateRunRequest:
+      type: object
+      required: [requirement]
+      additionalProperties: false
+      properties:
+        requirement:
+          type: string
+          minLength: 1
+          maxLength: 20000
+          description: >
+            The requirement text to govern. Treated as UNTRUSTED CONTENT throughout: it reaches AI stages as prompt
+            input, so the CLI adapter MUST pass it as an argv element and never as a shell string (ADR-004-A1).
+        ai:
+          type: string
+          enum: ["on", "off"]
+          default: "off"
+          description: Whether AI executors participate in this run. Default off — the keyless reviewer path (CN-011).
+
+    GateDecisionRequest:
+      type: object
+      required: [outcome, actorType, actorName, reason, repositoryRecordPath]
+      additionalProperties: false
+      properties:
+        outcome:
+          type: string
+          enum: [APPROVED, REJECTED, CHANGES_REQUESTED, ESCALATED]
+          description: >
+            Four submittable outcomes. TIMED_OUT is absent by design — it is produced by deadline expiry, never
+            submitted, because silence must never be expressible as an input (Constitution III).
+        actorType:
+          type: string
+          enum: [human]
+          description: >
+            Only a human may submit a gate decision. The system actor is permitted solely for deadline expiry and
+            retention-driven abandonment, neither of which is an approval and neither of which uses this operation.
+        actorName: { type: string, minLength: 1 }
+        reason:
+          type: string
+          minLength: 1
+          description: Mandatory. A decision without a reason is not a gate record.
+        repositoryRecordPath:
+          type: string
+          pattern: '^docs/governance/'
+          description: >
+            Path to the decision's materialized repository record, which MUST already exist. Writing that record is
+            not itself work the decision authorizes, so this rule cannot deadlock (FR-ORC-013).
+        changes:
+          type: array
+          items: { type: string, minLength: 1 }
+          description: Required and non-empty when outcome is CHANGES_REQUESTED; the changes are enumerated, never implied.
+        noPlanOption:
+          type: string
+          enum: [GOVERNANCE_ONLY, HUMAN_IMPLEMENTED, ABANDON]
+          description: >
+            Required only on the no-change-plan gate class (FR-ORC-031, CR-001). HUMAN_IMPLEMENTED records
+            executorKindUsed HUMAN on the implementation node.
+
     CreateLinkRequest:
       type: object
       required: [destination]
@@ -395,7 +559,7 @@ components:
 
     RunInspection:
       type: object
-      required: [runId, state, policySetVersion, ai, stages]
+      required: [runId, state, policySetVersion, ai, nodes]
       additionalProperties: false
       properties:
         runId: { type: string }
@@ -423,13 +587,19 @@ components:
           format: date-time
           description: Non-null iff state is SAFE_STOP.
         blockingCondition: { type: [string, 'null'] }
-        stages:
+        nodes:
           type: array
           items:
             type: object
-            required: [stageNumber, name, state, executorClass]
+            additionalProperties: false
+            required: [nodeKey, stageNumber, nodeRole, name, state, executorClass]
             properties:
+              nodeKey:
+                type: string
+                pattern: '^S([1-9]|1[0-2])(\.([1-9][0-9]*|join))?$'
               stageNumber: { type: integer, minimum: 1, maximum: 12 }
+              nodeRole: { type: string, enum: [SINGLETON, FAN_OUT_PARENT, FAN_OUT_CHILD, JOIN] }
+              parentNodeKey: { type: [string, 'null'] }
               name: { type: string }
               state:
                 type: string
@@ -440,14 +610,21 @@ components:
                 type: [string, 'null']
                 enum: [DETERMINISTIC, AI, HUMAN, null]
                 description: >
-                  Executor kind actually used. Required on every executed stage (FR-ORC-029). HUMAN is recorded
-                  for a stage the human implemented under the no-plan gate (FR-ORC-031); it is never
+                  Executor kind actually used. Required on every executed node (FR-ORC-029). HUMAN is recorded
+                  for a node the human implemented under the no-plan gate (FR-ORC-031); it is never
                   flag-selectable.
               attemptsUsed: { type: integer, minimum: 0 }
-              dependsOn: { type: array, items: { type: integer } }
+              dependsOn:
+                type: array
+                items: { type: string }
+                description: Node keys this node depends on, with join semantics carried on the edge (FR-ORC-003).
         pendingGate:
           type: [object, 'null']
+          additionalProperties: false
+          required: [gateId, nodeKey, gateClass, waitDeadline, disclosedAutoAbandonAt]
           properties:
+            gateId: { type: string, description: Addresses this gate in the decision operation. }
+            nodeKey: { type: string, description: The node the gate is attached to. }
             gateClass: { type: string }
             waitDeadline: { type: string, format: date-time }
             disclosedAutoAbandonAt: { type: string, format: date-time }

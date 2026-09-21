@@ -2,11 +2,11 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://agentic-sdlc-url-shortener/contracts/workflow-state.schema.json",
   "title": "WorkflowStateSnapshot",
-  "version": "1.0.0",
-  "description": "Persisted run state. Validated against persisted snapshots in contract tests so the invariants below are machine-enforced rather than documented.",
+  "version": "2.0.0",
+  "description": "Persisted run state. Validated against persisted snapshots in contract tests so the invariants below are machine-enforced rather than documented. v2.0.0 (CR-013) replaces integer stage identity with instance-keyed node identity, because the previous fixed twelve-element array could not represent S7's per-task fan-out (FR-ORC-003).",
   "type": "object",
   "additionalProperties": false,
-  "required": ["runId", "state", "policySetVersion", "ai", "lastActivityAt", "stages", "edges"],
+  "required": ["runId", "state", "policySetVersion", "ai", "lastActivityAt", "nodes", "edges"],
   "properties": {
     "runId": { "type": "string" },
     "state": { "type": "string", "enum": ["PENDING", "RUNNING", "SAFE_STOP", "COMPLETED", "REJECTED", "ABANDONED"] },
@@ -25,16 +25,31 @@
     "lastActivityAt": { "type": "string", "format": "date-time", "description": "Drives the idle clock. Never creation time — a run that received attention must not be reaped on age." },
     "autoAbandonAt": { "type": ["string", "null"], "format": "date-time" },
     "suspensionReason": { "type": ["string", "null"] },
-    "stages": {
+    "nodes": {
       "type": "array",
-      "minItems": 12,
-      "maxItems": 12,
+      "minItems": 13,
+      "description": "Execution nodes, not stages. A freshly materialised run holds thirteen: eleven SINGLETON stages, the S7 FAN_OUT_PARENT, and its JOIN. FAN_OUT_CHILD nodes are appended when the preceding stage yields tasks, so there is no upper bound (FR-ORC-003). nodeKey uniqueness and the join invariant are asserted by T074's test — JSON Schema cannot express uniqueness by property.",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["stageNumber", "name", "state", "executorClass", "attemptsUsed"],
+        "required": ["nodeKey", "stageNumber", "nodeRole", "name", "state", "executorClass", "attemptsUsed"],
         "properties": {
-          "stageNumber": { "type": "integer", "minimum": 1, "maximum": 12 },
+          "nodeKey": {
+            "type": "string",
+            "pattern": "^S([1-9]|1[0-2])(\\.([1-9][0-9]*|join))?$",
+            "description": "Node identity. \"S1\"..\"S12\" for a singleton or fan-out parent; \"S7.1\"..\"S7.n\" for a fan-out child; \"S7.join\" for its join node. Unique per run."
+          },
+          "stageNumber": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12,
+            "description": "The stage this node belongs to. A STORED value, never derived by parsing nodeKey — T074 asserts the column wins when the two deliberately disagree."
+          },
+          "nodeRole": { "type": "string", "enum": ["SINGLETON", "FAN_OUT_PARENT", "FAN_OUT_CHILD", "JOIN"] },
+          "parentNodeKey": {
+            "type": ["string", "null"],
+            "description": "Set on FAN_OUT_CHILD and JOIN nodes; null on SINGLETON and FAN_OUT_PARENT."
+          },
           "name": { "type": "string" },
           "state": {
             "type": "string",
@@ -45,13 +60,21 @@
           "executorKindUsed": {
             "type": ["string", "null"],
             "enum": ["DETERMINISTIC", "AI", "HUMAN", null],
-            "description": "Executor kind actually used. HUMAN is recorded for a stage the human implemented under the no-plan gate (FR-ORC-031); it is never flag-selectable. Required on every executed stage (FR-ORC-029)."
+            "description": "Executor kind actually used. HUMAN is recorded for a node the human implemented under the no-plan gate (FR-ORC-031); it is never flag-selectable. Required on every executed node (FR-ORC-029)."
           },
           "attemptsUsed": { "type": "integer", "minimum": 0 },
           "blockingReason": { "type": ["string", "null"] },
           "enteredAt": { "type": ["string", "null"], "format": "date-time" },
           "exitedAt": { "type": ["string", "null"], "format": "date-time" }
-        }
+        },
+        "allOf": [
+          {
+            "description": "A FAN_OUT_CHILD or JOIN node names its parent; a SINGLETON or FAN_OUT_PARENT does not.",
+            "if": { "properties": { "nodeRole": { "enum": ["FAN_OUT_CHILD", "JOIN"] } } },
+            "then": { "properties": { "parentNodeKey": { "type": "string", "minLength": 2 } } },
+            "else": { "properties": { "parentNodeKey": { "const": null } } }
+          }
+        ]
       }
     },
     "edges": {
@@ -60,10 +83,10 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["fromStage", "toStage", "joinSemantics"],
+        "required": ["fromNodeKey", "toNodeKey", "joinSemantics"],
         "properties": {
-          "fromStage": { "type": "integer", "minimum": 1, "maximum": 12 },
-          "toStage": { "type": "integer", "minimum": 1, "maximum": 12 },
+          "fromNodeKey": { "type": "string" },
+          "toNodeKey": { "type": "string" },
           "joinSemantics": {
             "type": "string",
             "enum": ["ALL", "ANY"],
@@ -77,11 +100,15 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["occurredAt", "cause", "invalidatedStages"],
+        "required": ["occurredAt", "cause", "invalidatedNodes"],
         "properties": {
           "occurredAt": { "type": "string", "format": "date-time" },
           "cause": { "type": "string" },
-          "invalidatedStages": { "type": "array", "items": { "type": "integer" } },
+          "invalidatedNodes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Node keys invalidated by the replan. Node-level, not stage-level: a replan may invalidate one fan-out child and leave its siblings intact (FR-ORC-019, ADR-009)."
+          },
           "voidedApprovals": { "type": "array", "items": { "type": "string" }, "description": "Decision IDs voided by superseding record, never deleted (EC-020)." }
         }
       }
