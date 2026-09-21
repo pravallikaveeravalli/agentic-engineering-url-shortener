@@ -58,19 +58,42 @@ final class AiStageSupport {
     }
 
     /**
-     * Extracts JSON from a model's answer, tolerating a single markdown code fence around it — models
-     * asked for "JSON" commonly wrap it in {@code ```json ... ```} even when told not to, and refusing that
-     * shape outright would fail every real answer for a formatting habit rather than a genuine defect.
+     * Extracts JSON from a model's answer, tolerating a markdown code fence around it — models asked for
+     * "JSON, no prose" commonly wrap it in {@code ```json ... ```} anyway, and often prepend a sentence of
+     * reasoning before the fence even when told not to (verified against a real live call for T073d: the
+     * model prefixed <em>"Now I have enough context. Here is the design output."</em> before its own fence).
+     * Refusing either shape outright would fail a real, usable answer for a formatting habit rather than a
+     * genuine defect, so the fence is located ANYWHERE in the text, not only at its start.
      *
      * @throws MalformedProviderOutputException if the (defenced) content does not parse as JSON at all
      */
     static JsonNode parseJson(String content) {
         String text = content.strip();
-        if (text.startsWith("```")) {
-            int firstNewline = text.indexOf('\n');
+        int fenceStart = text.indexOf("```");
+        if (fenceStart >= 0) {
+            // Skip past the fence marker and an optional language tag (letters only — "json") immediately
+            // after it. NOT anchored on finding a newline: a real live answer for T073d put its closing
+            // fence on the SAME line as its content ("```json {...} ```"), and requiring a newline there
+            // refused a perfectly usable answer.
+            int contentStart = fenceStart + 3;
+            while (contentStart < text.length() && Character.isLetter(text.charAt(contentStart))) {
+                contentStart++;
+            }
             int lastFence = text.lastIndexOf("```");
-            if (firstNewline >= 0 && lastFence > firstNewline) {
-                text = text.substring(firstNewline + 1, lastFence).strip();
+            if (lastFence > contentStart) {
+                text = text.substring(contentStart, lastFence).strip();
+            }
+        } else if (!text.isEmpty() && text.charAt(0) != '{' && text.charAt(0) != '[') {
+            // No fence at all, but the answer does not open on JSON either — a leading sentence before a
+            // bare (unfenced) object or array. Trim to the first JSON-opening character, if there is one;
+            // if there is none, the text is left as-is and fails the parse below with the full content in
+            // the refusal, which is the honest outcome for an answer that never contained JSON.
+            int firstBrace = text.indexOf('{');
+            int firstBracket = text.indexOf('[');
+            int start = firstBrace < 0 ? firstBracket
+                    : firstBracket < 0 ? firstBrace : Math.min(firstBrace, firstBracket);
+            if (start > 0) {
+                text = text.substring(start).strip();
             }
         }
         try {
