@@ -565,7 +565,7 @@ and replan records, driven entirely by **injected scriptable executors** — no 
   - **Deps**: T020 · **Par**: no (every executor depends on it) · **Artifact**: one interface for all twelve stages; input is workflow data
   - **TDD**: RED-FIRST · **Validate**: `-Dtest=StageExecutorContractTest` — the contract every implementation must satisfy · **Docs**: spec §Stage Executor Model · **Trace**: matrix FR-ORC-028
   - **Guard**: **no executor may branch on recognizing specific demonstration inputs** (CN-010). Deterministic executors are generic engines over workflow data — the engine does not know the build · **Done**: interface defined; contract test applies to any implementation · **Approval**: none
-- [ ] T070 [P] [US3] Stage effect contracts — `src/main/java/agentic/shortener/orchestration/executor/StageEffectContract.java`
+- [x] T070 [P] [US3] Stage effect contracts — `src/main/java/agentic/shortener/orchestration/executor/StageEffectContract.java`
   - **Req**: FR-ORC-014 rule 4, FR-ORC-016 rule 3 · **Scn**: DS-B · **ADR**: **ADR-003** · **Pre**: T069
   - **Deps**: T069 · **Par**: yes · **Artifact**: per stage — `retryable_categories`, `effect_idempotent` (**design-time, never executor self-certified**), `effect_reversibility`, `compensating_action?`
   - **TDD**: RED-FIRST · **Validate**: **registration fails to load** a stage declaring `IRREVERSIBLE` without a named compensating action (EC-034); and the loaded contract for each of the twelve nodes matches **plan §3’s `Declared retryable set` column exactly** — asserted from the plan’s table so a drifted declaration fails a test rather than silently narrowing what retries · **Docs**: `data-model.md` KE-29 · **Trace**: matrix FR-ORC-014, EC-034
