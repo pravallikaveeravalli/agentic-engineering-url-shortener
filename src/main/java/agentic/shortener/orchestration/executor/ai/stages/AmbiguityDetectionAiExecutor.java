@@ -75,8 +75,10 @@ public final class AmbiguityDetectionAiExecutor implements StageExecutor {
                 + "substantively, what checks you actually performed — never an empty array standing in "
                 + "for \"all clear\". Each element: {\"ambiguityClass\": one of MISSING_ACCEPTANCE_CRITERIA"
                 + "|UNDEFINED_TERM|UNBOUNDED_QUANTIFIER|MISSING_ACTOR|SELF_REFERENTIAL_CONSTRAINT|"
-                + "CONTRADICTORY_BOUNDS|SEMANTIC_CONTRADICTION, \"affectedPath\": string naming the "
-                + "specific requirement(s) or field(s) involved, \"resolutionState\": \"MATERIAL_PENDING\" "
+                + "CONTRADICTORY_BOUNDS|SEMANTIC_CONTRADICTION, \"affectedPath\": a SUBSTANTIVE description "
+                + "(at least one full sentence, not a bare field reference like \"R1.statement\") of "
+                + "exactly which requirement(s) or clause(s) are involved and why, \"resolutionState\": "
+                + "\"MATERIAL_PENDING\" "
                 + "or \"NOT_MATERIAL\", \"qualityChecksPerformed\": substantive string, "
                 + "\"noClarificationReason\": substantive string, REQUIRED when resolutionState is "
                 + "NOT_MATERIAL, omitted otherwise}.\n\nNormalized requirements:\n" + requirements;

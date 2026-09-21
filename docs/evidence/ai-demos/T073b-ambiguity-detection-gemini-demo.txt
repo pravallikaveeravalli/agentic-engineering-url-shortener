@@ -1,0 +1,24 @@
+AS-007 DEMONSTRATION EXECUTION — T073b AmbiguityDetectionAiExecutor
+=====================================================================
+Date: 2026-09-21
+Transport: GeminiCliStageAiProvider (agy), per ADR-004 Amendment 03 / CR-042
+Command run: ./mvnw -q -Dtest=AmbiguityDetectionAiExecutorLiveDemo -DfailIfNoTests=false test
+Pinned request model: gemini-3.8-flash-high
+Result: SUCCESS on the SECOND attempt (1/1 tests passed)
+
+First attempt failed — NOT a CLI failure, the adapter's own quality guard working correctly: the live
+model answered with affectedPath="R1.statement" (12 chars), refused by CR-007's substantive-length guard
+(<20 chars is a placeholder, not a description). Root cause: AmbiguityDetectionAiExecutor's own prompt
+asked for affectedPath "naming the specific requirement(s) or field(s) involved" without saying it must be
+a substantive description — a real, fixed prompt-clarity gap (the SAME class this repo's real code lives
+in was edited: src/main/java/.../AmbiguityDetectionAiExecutor.java, the affectedPath instruction tightened
+to explicitly require a full-sentence description rather than a bare field reference). Second attempt, same
+input, ran against the corrected prompt.
+
+Stdout captured verbatim (second, successful attempt):
+
+AS-007 DEMO T073b AmbiguityDetectionAiExecutor — actually-used model id: gemini-3.8-flash-high
+AS-007 DEMO T073b AmbiguityDetectionAiExecutor — produced artifact: [{"id":"4ea01653-2945-4609-8254-12999a337fc5","ambiguityClass":"MISSING_ACCEPTANCE_CRITERIA","affectedPath":"In requirement R1 ('A short link must redirect to its destination within 200 milliseconds.'), the statement lacks verifiable acceptance criteria defining the measurement boundary (server processing latency vs. end-to-end client round-trip time), the statistical percentile threshold (such as p95 or p99), and the required HTTP redirect status code (e.g., 301, 302, 307, or 308).","resolutionState":"MATERIAL_PENDING","qualityChecksPerformed":"Verified requirement for testable measurement boundaries, statistical percentile distributions, load baseline preconditions, and protocol-level success criteria."},{"id":"7e5ec99b-4757-4853-b79f-5038bbab3031","ambiguityClass":"UNDEFINED_TERM","affectedPath":"In requirement R1 ('A short link must redirect to its destination within 200 milliseconds.'), the key terms 'short link', 'redirect', and 'destination' lack operational definitions specifying the link format and schema, the redirection mechanism (HTTP redirect header vs. meta-refresh/JavaScript), and valid destination target constraints.","resolutionState":"MATERIAL_PENDING","qualityChecksPerformed":"Evaluated all domain nouns and operational verbs against system glossary standards to verify precise technical definition and scope."},{"id":"a28bbc94-3fbd-4474-9788-82d196550bb3","ambiguityClass":"UNBOUNDED_QUANTIFIER","affectedPath":"In requirement R1 ('A short link must redirect to its destination within 200 milliseconds.'), the timing constraint 'within 200 milliseconds' operates as an unbounded universal requirement over 100% of transactions without qualifying traffic volume, concurrency limits, or network degradation allowances.","resolutionState":"MATERIAL_PENDING","qualityChecksPerformed":"Evaluated performance assertions to detect absolute universal quantifiers that omit operational load envelopes, throughput ceilings, or failure tolerances."},{"id":"4dd5c27c-9195-4ab8-874a-91466c65f7a0","ambiguityClass":"MISSING_ACTOR","affectedPath":"In requirement R1 ('A short link must redirect to its destination within 200 milliseconds.'), the grammatical subject 'A short link' assigns active behavior to a passive data entity rather than naming the specific system component, service, or server responsible for executing the lookup and redirection.","resolutionState":"MATERIAL_PENDING","qualityChecksPerformed":"Checked subject-verb agency and architectural role assignment to ensure functional obligations are mapped to an explicit software actor."}]
+
+Note on the model id: recorded from GeminiCliStageAiProvider, which (per ADR-004-A3) records the PINNED
+request model, not a value read back from agy's own response.

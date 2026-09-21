@@ -1,0 +1,15 @@
+AS-007 DEMONSTRATION EXECUTION — T073a NormalizationAiExecutor
+================================================================
+Date: 2026-09-21
+Transport: GeminiCliStageAiProvider (agy), per ADR-004 Amendment 03 / CR-042
+Command run: ./mvnw -q -Dtest=NormalizationAiExecutorLiveDemo -DfailIfNoTests=false test
+Pinned request model: gemini-3.8-flash-high
+Result: SUCCESS (1/1 tests passed)
+
+Stdout captured verbatim:
+
+AS-007 DEMO T073a NormalizationAiExecutor — actually-used model id: gemini-3.8-flash-high
+AS-007 DEMO T073a NormalizationAiExecutor — produced artifact: [{"id":"afb8ad07-af22-4936-8b59-44517cae56cb","externalId":"REQ-1-1","type":"FUNCTIONAL","statement":"When a client accesses a short link, the system shall redirect the request to the associated destination URL.","status":"NORMALIZED"},{"id":"cdf5f05f-c2dc-4d38-b50a-46d5bfec71a4","externalId":"REQ-1-2","type":"NON_FUNCTIONAL","statement":"The system shall complete the short link redirection to its destination URL within 200 milliseconds of receiving the request.","status":"NORMALIZED"}]
+
+Note on the model id: recorded from GeminiCliStageAiProvider, which (per ADR-004-A3) records the PINNED
+request model, not a value read back from agy's own response — agy's JSON names no resolved-model field.

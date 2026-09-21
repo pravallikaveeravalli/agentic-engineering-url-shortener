@@ -2,7 +2,7 @@ package agentic.shortener.orchestration.executor.ai.stages;
 
 import agentic.shortener.orchestration.executor.StageInput;
 import agentic.shortener.orchestration.executor.StageOutcome;
-import agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProvider;
+import agentic.shortener.orchestration.executor.ai.GeminiCliStageAiProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -21,15 +21,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * <p>This is a DEMONSTRATION execution, not a reliability proof — FR-ORC-030 still holds: every other test
  * of this adapter's parsing and guards runs against a fake provider ({@code NormalizationAiExecutorTest}).
- * This is the one place a real subprocess call to the real, installed {@code claude} CLI happens for this
- * adapter, and its only job is to prove the wiring — prompt to real model to real parse — actually works.
+ * This is the one place a real subprocess call to a real, installed CLI happens for this adapter, and its
+ * only job is to prove the wiring — prompt to real model to real parse — actually works. Uses the Gemini
+ * CLI ({@code agy}), not the Claude CLI: ADR-004-A3 (CR-042) — a Claude Code build agent cannot spawn
+ * {@code claude} as a nested subprocess, but can spawn {@code agy}.
  */
 class NormalizationAiExecutorLiveDemo {
 
     @Test
-    @DisplayName("AS-007 DEMO: one real Claude Code CLI call through the real prompt/parse/guard chain")
+    @DisplayName("AS-007 DEMO: one real Gemini CLI (agy) call through the real prompt/parse/guard chain")
     void oneRealCallThroughTheRealChain() throws Exception {
-        var realProvider = new ClaudeCodeCliStageAiProvider("claude", "claude-sonnet-5");
+        var realProvider = new GeminiCliStageAiProvider("agy", "gemini-3.8-flash-high");
         var recording = new RecordingStageAiProvider(realProvider);
         var executor = new NormalizationAiExecutor(recording);
 

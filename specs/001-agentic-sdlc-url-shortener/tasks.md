@@ -606,25 +606,25 @@ Each adapter shares the same shape: prompt template, output parsing, tests, and 
 ADR-004 as amended — CLI transport through T073, argv-array rule, executor-kind labels, pinned model recorded
 from the response JSON. Each is `[P]` because each touches its own files and depends only on T073.
 
-- [ ] T073a [P] [US3] S2 normalization AI adapter — `src/main/java/agentic/shortener/orchestration/executor/ai/stages/NormalizationAiExecutor.java`
+- [x] T073a [P] [US3] S2 normalization AI adapter — `src/main/java/agentic/shortener/orchestration/executor/ai/stages/NormalizationAiExecutor.java`
   - **Req**: FR-ORC-009, FR-ORC-029 · **Scn**: DS-A, DS-C · **ADR**: **ADR-004**, ADR-004-A1 · **Pre**: T073, T082
   - **Deps**: T073, T082 · **Par**: yes · **Artifact**: prompt template producing identified, typed, testable `RequirementRecord`s; parser mapping output to the entity
   - **TDD**: RED-FIRST · **Validate**: parse test over recorded CLI fixtures; **negative** — malformed output classified `INTERNAL`/permanent, never coerced to an empty requirement set; demo verification with a real CLI call recorded as evidence
   - **Docs**: spec §Stage Executor Model · **Trace**: matrix FR-ORC-009
   - **Guard**: normalization MUST NOT discard, merge, or silently reinterpret a submitted requirement — the parser asserts input-count preservation · **Done**: parse tests pass; one recorded demo run stamped `AI` with the model id · **Approval**: none
-- [ ] T073b [P] [US3] S3 ambiguity-detection AI adapter — `src/main/java/agentic/shortener/orchestration/executor/ai/stages/AmbiguityDetectionAiExecutor.java`
+- [x] T073b [P] [US3] S3 ambiguity-detection AI adapter — `src/main/java/agentic/shortener/orchestration/executor/ai/stages/AmbiguityDetectionAiExecutor.java`
   - **Req**: **FR-ORC-010**, FR-ORC-029 · **Scn**: DS-A, DS-C · **ADR**: ADR-004 · **Pre**: T073, T082
   - **Deps**: T073, T082 · **Par**: yes · **Artifact**: prompt producing `AmbiguityRecord`s with class and affected path, **plus the quality checks performed and `no_clarification_reason` when none is found**
   - **TDD**: RED-FIRST · **Validate**: DS-C's conflicting input → conflict detected with the conflicting elements **named**; DS-A's clean input → no ambiguity **and** a populated `no_clarification_reason`, asserted to be **substantive** — naming the checks performed — rather than a placeholder, because it is the only artifact that makes a non-detection inspectable; demo verification recorded
   - **Docs**: spec §DS-A, §DS-C · **Trace**: matrix FR-ORC-010
   - **Guard**: **output feeds a human gate, so variability is safe here** — but the adapter MUST NOT resolve material ambiguity itself, and an uncertain classification MUST be treated as material and routed to the human (CR-007's definition). **This adapter is the only detector of semantic contradiction in the system, and after Decision J it is the only detector of anything at this stage.** A false positive costs a question — the reason variability is acceptable here. A **miss** is the real risk: it is indistinguishable from an absence of ambiguity unless `no_clarification_reason` is recorded and readable, which is why that field is required rather than optional · **Done**: both inputs behave correctly; demo run recorded · **Approval**: none
-- [ ] T073c [P] [US3] S5 decomposition AI adapter — `src/main/java/agentic/shortener/orchestration/executor/ai/stages/DecompositionAiExecutor.java`
+- [x] T073c [P] [US3] S5 decomposition AI adapter — `src/main/java/agentic/shortener/orchestration/executor/ai/stages/DecompositionAiExecutor.java`
   - **Req**: FR-ORC-012, FR-ORC-029 · **Scn**: DS-A · **ADR**: ADR-004 · **Pre**: T073, T082
   - **Deps**: T073, T082 · **Par**: yes · **Artifact**: prompt producing dependency-ordered `TaskRecord`s, each tracing to ≥1 requirement
   - **TDD**: RED-FIRST · **Validate**: **orphan-task rejection** — a produced task with zero requirement references is refused, not stored; no-invented-scope check against the input requirement set; demo verification recorded
   - **Docs**: — · **Trace**: matrix FR-ORC-012
   - **Guard**: decomposition MUST NOT invent scope (Constitution I). The parser rejects tasks referencing requirements absent from the input · **Done**: orphan and invented-scope tests pass; demo run recorded · **Approval**: none
-- [ ] T073d [P] [US3] S6 architecture-and-design AI adapter — `src/main/java/agentic/shortener/orchestration/executor/ai/stages/DesignAiExecutor.java`
+- [x] T073d [P] [US3] S6 architecture-and-design AI adapter — `src/main/java/agentic/shortener/orchestration/executor/ai/stages/DesignAiExecutor.java`
   - **Req**: FR-ORC-020, FR-ORC-029 · **Scn**: DS-A, DS-B · **ADR**: ADR-004, **ADR-006** · **Pre**: T073, T107
   - **Deps**: T073, T107 · **Par**: yes · **Artifact**: prompt producing a design output plus **contract and schema impact identification**; for brownfield, the seven-dimension impact analysis
   - **TDD**: RED-FIRST · **Validate**: all **seven** impact dimensions present or the output is rejected; demo verification recorded
@@ -636,7 +636,7 @@ from the response JSON. Each is `[P]` because each touches its own files and dep
   - **TDD**: RED-FIRST · **Validate**: a run where an AI-authored change **fails** verification and routes back; a run where one passes; both with executor-kind labels. **Timeout here is NOT retryable** — the git effect is non-idempotent (EC-033)
   - **Docs**: spec §FR-ORC-031 · **Trace**: matrix FR-ORC-031
   - **Guard**: **AI output is never executed as text.** The patch is applied on a branch and judged by the real suite — that pipeline *is* the safety net, and a failing AI patch being caught is the governance working, not a failed demonstration. Where no change plan exists in deterministic mode, the no-plan gate fires instead (T065) · **Done**: both runs recorded; failure-routing proven · **Approval**: none
-- [ ] T073f [P] [US3] S9 documentation AI adapter — `src/main/java/agentic/shortener/orchestration/executor/ai/stages/DocumentationAiExecutor.java`
+- [x] T073f [P] [US3] S9 documentation AI adapter — `src/main/java/agentic/shortener/orchestration/executor/ai/stages/DocumentationAiExecutor.java`
   - **Req**: FR-ORC-029, Constitution X · **Scn**: DS-A, DS-B · **ADR**: ADR-004 · **Pre**: T073
   - **Deps**: T073 · **Par**: yes · **Artifact**: prompt producing documentation updates reflecting the change delivered in the same run
   - **TDD**: RED-FIRST · **Validate**: output references only behaviour present in the run's test results — a documented behaviour with no corresponding executed test is rejected; demo verification recorded

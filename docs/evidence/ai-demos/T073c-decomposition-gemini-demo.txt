@@ -1,0 +1,15 @@
+AS-007 DEMONSTRATION EXECUTION — T073c DecompositionAiExecutor
+================================================================
+Date: 2026-09-21
+Transport: GeminiCliStageAiProvider (agy), per ADR-004 Amendment 03 / CR-042
+Command run: ./mvnw -q -Dtest=DecompositionAiExecutorLiveDemo -DfailIfNoTests=false test
+Pinned request model: gemini-3.8-flash-high
+Result: SUCCESS (1/1 tests passed)
+
+Stdout captured verbatim:
+
+AS-007 DEMO T073c DecompositionAiExecutor — actually-used model id: gemini-3.8-flash-high
+AS-007 DEMO T073c DecompositionAiExecutor — produced artifact: [{"id":"c2683a2c-b6ff-4428-9af1-082558c4a221","taskId":"implement-short-link-redirect","requirementIds":["R1"],"dependsOn":[]},{"id":"dadf1e60-1799-4451-ab07-4911bdfef53f","taskId":"record-redirect-timestamp-analytics","requirementIds":["R2"],"dependsOn":["implement-short-link-redirect"]},{"id":"522e56d6-7634-44b6-9e45-96c9f9751fc5","taskId":"optimize-and-verify-200ms-redirect-latency","requirementIds":["R1"],"dependsOn":["implement-short-link-redirect","record-redirect-timestamp-analytics"]}]
+
+Note on the model id: recorded from GeminiCliStageAiProvider, which (per ADR-004-A3) records the PINNED
+request model, not a value read back from agy's own response.

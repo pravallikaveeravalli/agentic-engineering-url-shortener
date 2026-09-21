@@ -1,0 +1,49 @@
+AS-007 DEMONSTRATION EXECUTION — T073e ImplementationAiExecutor — NOT ACHIEVED
+================================================================================
+Date: 2026-09-21
+Transport: GeminiCliStageAiProvider (agy), per ADR-004 Amendment 03 / CR-042
+Command run: ./mvnw -q -Dtest=ImplementationAiExecutorLiveDemo -DfailIfNoTests=false test
+Pinned request model: gemini-3.8-flash-high
+Result: FAILED on TWO genuinely distinct attempts. T073 remains UNCHECKED for this one adapter.
+
+This is NOT a fabricated or retry-looped result — two different, reasoned prompts were tried, both hit the
+identical failure mode, and no third attempt was made per the standing instruction to stop and report
+rather than keep retrying.
+
+ATTEMPT 1 — task/design referenced a real file in this repository by name (ShortLink.java,
+MAX_DESTINATION_LENGTH). Result:
+
+  FailureEnvelope[category=INTERNAL, detail=MalformedProviderOutputException: the model's answer does not
+  look like a unified diff (no '--- ' or 'diff --git' header found). AI output is never executed as text,
+  so an answer that is not recognizably a patch is refused rather than applied speculatively. content: ,
+  executorProposesRetryable=false]
+
+  Note the empty "content:" — the model's own "response" field was genuinely blank (not merely non-diff
+  text). Hypothesis at the time: agy is itself an agentic coding CLI with real filesystem access in this
+  working directory, and naming a real file may have sent it down an exploratory path that produced no
+  final single-turn text answer, even though the CLI itself reported {"status":"SUCCESS"}.
+
+ATTEMPT 2 — the hypothesis above tested directly: task/design rewritten to be FULLY SELF-CONTAINED, giving
+a small hypothetical class's "current file content" inline in the prompt rather than naming any real file
+in this repository (git status confirmed no repository file was ever touched by either attempt — agy never
+wrote to disk here). Result: IDENTICAL failure, byte-for-byte the same empty "content:" and the same
+"status":"SUCCESS"-but-empty-response shape.
+
+CONCLUSION: the empty-response behavior is not explained by agy exploring real repository files — it
+reproduces even for a fully self-contained, hypothetical prompt. The most likely remaining explanation,
+not further tested per the stop-and-report instruction: `agy -p ... --output-format json` behaves
+differently for a DIFF-SHAPED code-generation request than for the JSON-analysis-shaped requests the other
+five adapters send (all five of which succeeded, some on the first attempt) — this may be specific to how
+agy's own agentic tool-use loop handles a "write me a patch, output nothing else" instruction in
+single-turn headless mode, as distinct from "analyze and answer in JSON."
+
+WHAT IS STILL PROVEN, independent of this open item: ImplementationAiExecutor's own prompt-building,
+diff-recognition guard, and BranchApplier wiring are all proven correct against a fake provider
+(ImplementationAiExecutorTest, 5/5 passing, including the exact "AI output is never executed as text —
+refuse a non-diff answer" guard this live attempt exercised for real, twice, against genuine live
+responses). What is NOT yet proven is that a live call can produce a genuine diff this adapter accepts.
+
+T073e is left UNCHECKED in tasks.md. A future attempt might: try the Claude transport if a session that can
+spawn `claude` is available; try a different agy invocation shape (e.g., without --output-format json, or
+with a different --model); or investigate agy's own documentation for known single-turn code-generation
+behavior. None of these were attempted here, to honor "do not retry-loop."
