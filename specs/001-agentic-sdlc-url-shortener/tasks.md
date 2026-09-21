@@ -179,7 +179,7 @@ register rather than improvised under pressure.
   - **Deps**: T009 · **Par**: no (schema root) · **Artifact**: forward-only migration chain, applies from empty
   - **TDD**: TEST-WITH · **Validate**: `./mvnw -q -Dtest=MigrationFromEmptyTest test` applies V1 to a fresh container · **Docs**: `contracts/README.md` persistence section · **Trace**: — 
   - **Guard**: migrations are forward-only; a column is deprecated across two versions before removal · **Done**: migration applies from empty in a Testcontainers instance · **Approval**: none
-- [ ] T011 [P] Contract parse and meta-schema lint — `src/test/java/agentic/shortener/contract/ContractFilesLintTest.java`
+- [x] T011 [P] Contract parse and meta-schema lint — `src/test/java/agentic/shortener/contract/ContractFilesLintTest.java`
   - **Req**: NFR-TST-001 · **Scn**: — · **ADR**: **ADR-005** · **Pre**: T008
   - **Deps**: T008 · **Par**: yes · **Artifact**: test asserting all five contract files parse **and** validate against OpenAPI 3.1 / JSON Schema 2020-12 meta-schemas
   - **TDD**: RED-FIRST · **Validate**: `./mvnw -q -Dtest=ContractFilesLintTest test` — **re-run after CR-013**: both contract files changed shape to v2.0.0, so parse **and** meta-schema lint must pass against the new node model · **Docs**: updates ADR-005 §Validation residual — the meta-schema lint it records as owed · **Trace**: closes ADR-005's disclosed residual
@@ -214,12 +214,12 @@ register rather than improvised under pressure.
   - **Deps**: T016 · **Par**: yes · **Artifact**: fast tier (no container, no framework context) separate from integration tier
   - **TDD**: N/A-DOC · **Validate**: `./mvnw -q test` runs the fast tier without Docker · **Docs**: `quickstart.md` · **Trace**: — 
   - **Guard**: if the red-green loop requires a container it will be abandoned and TDD becomes a claim · **Done**: fast tier runs container-free · **Approval**: none
-- [ ] T018 [P] Secure configuration defaults — `src/main/resources/application.yml`
+- [x] T018 [P] Secure configuration defaults — `src/main/resources/application.yml`
   - **Req**: FR-URL-016, plan §8 · **Scn**: — · **ADR**: **ADR-004**, **ADR-004-A2** · **Pre**: T008
   - **Deps**: T008 · **Par**: yes · **Artifact**: throttling on, verbose error detail off, readiness fails closed
   - **TDD**: TEST-WITH · **Validate**: config test asserting each default · **Docs**: `quickstart.md` prerequisites · **Trace**: FR-URL-016
   - **Guard**: **no mode flag exists** (ADR-004-A2); the remaining defaults are unaffected by its removal · **Done**: three defaults asserted · **Approval**: none
-- [ ] T019 [P] Secret and dependency scanning wiring — `.github/workflows/scan.yml` *(or)* `scripts/scan.sh`
+- [x] T019 [P] Secret and dependency scanning wiring — `.github/workflows/scan.yml` *(or)* `scripts/scan.sh`
   - **Req**: **NFR-SEC-002**, NFR-SEC-004, `POL-SEC-002`, `POL-SEC-003` · **Scn**: — · **ADR**: ADR-013 · **Pre**: T008
   - **Deps**: T008 · **Par**: yes · **Artifact**: runnable scan over repository **and** captured telemetry
   - **TDD**: TEST-WITH · **Validate**: `scripts/scan.sh` exits non-zero on a planted `crk_` string · **Docs**: `quickstart.md` · **Trace**: `POL-SEC-002`

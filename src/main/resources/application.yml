@@ -1,0 +1,59 @@
+# Secure configuration defaults. Task T018.
+#
+# plan §8 names three: throttling on, verbose error detail off, readiness fails closed.
+# There is NO mode flag (ADR-004 Amendment 02 / CR-028) — the former `ai: off` default is gone with
+# the flag itself, which is why this file names three defaults and not four.
+#
+# Each default is asserted by SecureDefaultsTest. A default that is only written here is a comment.
+
+spring:
+  application:
+    name: agentic-sdlc-url-shortener
+  datasource:
+    url: jdbc:postgresql://localhost:5432/shortener
+    username: shortener
+    password: shortener
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate      # Flyway owns the schema (ADR-002). Hibernate may check, never create.
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  error:
+    # Verbose error detail OFF. A stack trace or message on an error response leaks internals to an
+    # unauthenticated caller, and the redirect surface is public by design (FR-URL-018).
+    include-stacktrace: never
+    include-message: never
+    include-binding-errors: never
+    include-exception: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Liveness and readiness only. Every other actuator endpoint stays closed: an open env or
+        # configprops endpoint would expose the datasource credential.
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+      show-components: never
+
+shortener:
+  ratelimit:
+    # Throttling ON by default. FR-URL-016 is two-sided and two-tier; the third tier (per-creator
+    # aggregate redirects, PVT-014) is the deliberately deferred brownfield subject and is absent
+    # here on purpose — see docs/delivery/baseline-omissions.md, not this file.
+    enabled: true
+    creation-per-creator-per-minute: 60
+    redirect-per-code-per-minute: 600
+  readiness:
+    # Readiness FAILS CLOSED. If the store cannot be reached, the instance reports not-ready rather
+    # than accepting traffic it cannot serve. Failing open would make a broken instance look healthy,
+    # which is the failure mode this default exists to prevent.
+    fail-closed: true
