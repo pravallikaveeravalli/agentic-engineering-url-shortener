@@ -263,7 +263,7 @@ register rather than improvised under pressure.
   - **Deps**: T021, T022, T023, T024 · **Par**: no (spans all entities) · **Artifact**: interfaces owned by the domain; no framework or JPA type in a signature
   - **TDD**: TEST-WITH · **Validate**: T014 confirms no outward dependency from `domain` · **Docs**: `data-model.md` · **Trace**: NFR-MNT-002
   - **Guard**: this boundary is what makes ADR-002's reversibility real; a leaked persistence type destroys it · **Done**: T014 passes with the interfaces present · **Approval**: none
-- [ ] T026 Repository implementations and domain migration — `src/main/java/agentic/shortener/persistence/`, `V2__domain.sql`
+- [x] T026 Repository implementations and domain migration — `src/main/java/agentic/shortener/persistence/`, `V2__domain.sql`
   - **Req**: FR-URL-006, FR-URL-014 · **Scn**: DS-A · **ADR**: ADR-002 · **Pre**: T025
   - **Deps**: T025 · **Par**: no (shared migration file) · **Artifact**: implementations plus tables with a **unique index on `short_code`**
   - **TDD**: RED-FIRST · **Validate**: `./mvnw -q -Dtest=*RepositoryIT verify` against Testcontainers · **Docs**: `contracts/README.md` · **Trace**: matrix FR-URL-006
