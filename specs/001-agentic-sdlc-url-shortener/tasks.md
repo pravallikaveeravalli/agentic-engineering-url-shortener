@@ -850,27 +850,27 @@ names it.
   - **Deps**: T103 · **Par**: yes · **Artifact**: an approved exception passing its expiry mid-run blocks progression
   - **TDD**: EVIDENCE · **Validate**: **EC-027** with clock control · **Docs**: plan §9 · **Trace**: matrix FR-ORC-022, EC-027
   - **Guard**: expiry must be evaluated **at use**, not only at approval · **Done**: EC-027 proven · **Approval**: none
-- [ ] T106 [P] [US4] Change-request and impact-analysis model — `src/main/java/agentic/shortener/policy/ChangeRequest.java`
+- [x] T106 [P] [US4] Change-request and impact-analysis model — `src/main/java/agentic/shortener/policy/ChangeRequest.java`
   - **Req**: Constitution VI, `POL-CHG-001`, NFR-CHG-001 · **Scn**: DS-B · **ADR**: — · **Pre**: T100
   - **Deps**: T100 · **Par**: yes · **Artifact**: record carrying owner, version impact, compatibility impact, affected consumers, tests, documentation, rollout steps, approval
   - **TDD**: RED-FIRST · **Validate**: a contract or schema change without a record → `POL-CHG-001` `FAIL` · **Docs**: `CLAUDE.md` change-control location · **Trace**: matrix FR-ORC-022
   - **Guard**: **material change implemented without impact analysis is a detection target**; the policy check is the detector · **Done**: eight fields required; missing record blocks · **Approval**: none
-- [ ] T108 [P] [US4] Upstream change triggers downstream invalidation — `src/test/java/agentic/shortener/policy/UpstreamChangeIT.java`
+- [x] T108 [P] [US4] Upstream change triggers downstream invalidation — `src/test/java/agentic/shortener/policy/UpstreamChangeIT.java`
   - **Req**: Constitution §Workflow, FR-ORC-019 · **Scn**: DS-C · **ADR**: ADR-009 · **Pre**: T096, T106
   - **Deps**: T096, T106 · **Par**: yes · **Artifact**: a change to an approved artifact invalidates affected downstream stages rather than leaving stale artifacts
   - **TDD**: EVIDENCE · **Validate**: stale-artifact count zero after an upstream change · **Docs**: plan §9 · **Trace**: matrix FR-ORC-019
   - **Guard**: stages MUST NOT be reordered for convenience, and returning to an earlier stage MUST re-run affected downstream stages · **Done**: zero stale artifacts · **Approval**: none
-- [ ] T109 [US4] Release-readiness evaluator — `src/main/java/agentic/shortener/policy/ReleaseReadinessEvaluator.java`
+- [x] T109 [US4] Release-readiness evaluator — `src/main/java/agentic/shortener/policy/ReleaseReadinessEvaluator.java`
   - **Req**: **FR-ORC-025** · **Scn**: DS-A · **ADR**: **ADR-011** · **Pre**: T102, T105, T107
   - **Deps**: T102, T105, T107 · **Par**: no · **Artifact**: all **nine** constitutional blocking conditions evaluated; report **names every unmet condition**
   - **TDD**: RED-FIRST · **Validate**: report is blocking when any condition holds and names it · **Docs**: plan §9 · **Trace**: matrix FR-ORC-025, KE-21
   - **Guard**: **readiness MUST NOT be self-certified by an agent** — the evaluator produces a recommendation requiring the release owner's recorded decision. Generated-but-unexecuted tests never count as passing · **Done**: nine conditions evaluated; recommendation-not-certification asserted · **Approval**: none
-- [ ] T110 [US4] Nine negative release-readiness tests — `src/test/java/agentic/shortener/policy/ReleaseBlockingConditionsIT.java`
+- [x] T110 [US4] Nine negative release-readiness tests — `src/test/java/agentic/shortener/policy/ReleaseBlockingConditionsIT.java`
   - **Req**: FR-ORC-025, **SC-009** · **Scn**: DS-A · **ADR**: ADR-011 · **Pre**: T109
   - **Deps**: T109 · **Par**: no (**synchronization point**) · **Artifact**: one negative test per blocking condition, each seeded individually
   - **TDD**: EVIDENCE · **Validate**: nine tests, each producing a blocking determination that **names its condition** · **Docs**: — · **Trace**: matrix FR-ORC-025, SC-009
   - **Guard**: this is the suite that proves a failed mandatory policy **prevents** release readiness rather than merely being reported · **Done**: nine tests pass · **Approval**: none
-- [ ] T110a [P] [US4] Missing-evidence blocking condition — `src/test/java/agentic/shortener/policy/MissingEvidenceBlockingTest.java`
+- [x] T110a [P] [US4] Missing-evidence blocking condition — `src/test/java/agentic/shortener/policy/MissingEvidenceBlockingTest.java`
   - **Req**: **FR-ORC-025**, FR-ORC-023, SC-009 · **Scn**: DS-A · **ADR**: ADR-010, ADR-011 · **Pre**: T109, T110
   - **Deps**: T109 · **Par**: yes · **Artifact**: an evidence artifact that is **missing or unreadable** at readiness evaluation produces a **blocking** determination naming constitutional condition 9, never a pass and never a warning
   - **TDD**: EVIDENCE · **Validate**: **EC-028** — seed a completed stage whose evidence artifact is deleted, then one whose artifact is present but unparseable; both block; both name condition 9 and the artifact · **Docs**: plan §9 · **Trace**: matrix FR-ORC-025, EC-028

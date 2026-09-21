@@ -1,0 +1,20 @@
+Sabotage: ArtifactProvenanceQuery.SELECT_STALE — the producer-state filter was inverted from
+`sn.state = 'INVALIDATED'` to `sn.state = 'SUCCEEDED'`, so the query flagged exactly the artifacts that
+are STILL VALID as stale, and missed the ones that genuinely are.
+
+[ERROR] Tests run: 5, Failures: 4, Errors: 0, Skipped: 0 <<< FAILURE! -- in agentic.shortener.policy.UpstreamChangeIT
+[ERROR] UpstreamChangeIT.upstreamArtifactIsNeverFlaggedStale -- FAILURE!
+org.opentest4j.AssertionFailedError: ... expected: <[s5-output]> but was: <[s2-output]>
+[ERROR] UpstreamChangeIT.beforeTheChangeArtifactIsNotStale -- FAILURE!
+org.opentest4j.AssertionFailedError: nothing is stale before any change ... expected: <[]> but was: <[s5-output]>
+[ERROR] UpstreamChangeIT.inFlightNodesArtifactIsNeverFlaggedStale -- FAILURE!
+org.opentest4j.AssertionFailedError: expected: <[s5-output]> but was: <[]>
+[ERROR] UpstreamChangeIT.afterTheChangeArtifactIsStale -- FAILURE!
+org.opentest4j.AssertionFailedError: s5-output's producer (S5) is now INVALIDATED, so it must be flagged
+stale ... expected: <[s5-output]> but was: <[]>
+
+Fix: restored `sn.state = 'INVALIDATED'`. All four tests independently caught the inversion — the query is
+genuinely load-bearing across every angle T108 asks for: before/after, upstream-untouched, and the EC-019
+in-flight exception. A query flagging the wrong artifacts as stale is worse than one that flags none: code
+reading it would treat genuinely-stale downstream output as current, and correctly-current upstream output
+as suspect.

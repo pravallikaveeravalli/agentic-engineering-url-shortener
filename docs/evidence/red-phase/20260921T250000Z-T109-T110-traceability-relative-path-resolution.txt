@@ -1,0 +1,30 @@
+Sabotage: PolicySetEvaluator.checkZeroTraceabilityOrphans and ReleaseReadinessEvaluator.condition6TraceabilityComplete
+both reverted to `new TraceabilityReporter(repoRoot).report(SPEC_MD, TASKS_MD)`, passing the relative
+constants SPEC_MD/TASKS_MD directly instead of resolving them against repoRoot first.
+
+This is a REAL bug, not a test-only concern: Files.readAllLines resolves a relative Path against the JVM's
+working directory, never against a repoRoot passed to a constructor. Both classes were silently reading the
+REAL project's spec.md/tasks.md (2125 lines, 51 requirements) instead of whatever repoRoot they were
+actually constructed with — found only because T110's ReleaseBlockingConditionsIT is the first test to
+construct either evaluator against a repository OTHER than the real one (an isolated fixture). Every
+prior test (PolicySetEvaluatorIT, T100) happened to pass repoRoot = Path.of(".") — the same as the JVM's
+own working directory under Maven — so the bug produced the right answer for the wrong reason and nothing
+caught it until repoRoot and the working directory diverged.
+
+[ERROR] Tests run: 11, Failures: 1, Errors: 0, Skipped: 0 <<< FAILURE! -- in agentic.shortener.policy.ReleaseBlockingConditionsIT
+[ERROR] ReleaseBlockingConditionsIT.fixtureIsReady -- FAILURE!
+org.opentest4j.AssertionFailedError: NOT READY — 2 condition(s) unmet: [condition 2: 12 checks evaluated
+under policy-set-1.1.0, 1 mandatory FAIL ([POL-TRC-001]), 0 EXCEPTION_REQUESTED, blocking=true] [condition
+6: orphans found: 0 requirement(s), 0 task(s), 126 implementation(s), 38 test(s)] ==> expected: <true> but
+was: <false>
+	at agentic.shortener.policy.ReleaseBlockingConditionsIT.fixtureIsReady(ReleaseBlockingConditionsIT.java:138)
+
+(126 implementation orphans + 38 test orphans: the real project's ~130-task tasks.md, cross-referenced
+against the fixture's near-empty src/ tree — exactly the symptom of reading the wrong repository entirely.)
+
+Fix: both call sites now resolve `repoRoot.resolve(SPEC_MD)` / `repoRoot.resolve(TASKS_MD)` before passing
+them to TraceabilityReporter.report(). A production deployment that ever runs PolicySetEvaluator or
+ReleaseReadinessEvaluator from a working directory other than the repository root (a CI runner with a
+different CWD, a packaged JAR invoked from elsewhere) would have had POL-TRC-001 and condition 6 silently
+evaluate the wrong files — a governance check that looks green while checking nothing real, which is
+precisely what this whole engagement's own artifact-coverage-sweep discipline exists to catch.

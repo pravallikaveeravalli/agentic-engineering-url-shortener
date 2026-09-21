@@ -1,0 +1,12 @@
+Sabotage: ChangeRequest.changedArtifactsMissingARecord — the filter logic was replaced with `return List.of();`,
+disabling the detector entirely (always reports nothing missing).
+
+[INFO] Running agentic.shortener.policy.ChangeRequestTest
+[ERROR] Tests run: 4, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.017 s <<< FAILURE! -- in agentic.shortener.policy.ChangeRequestTest
+[ERROR] agentic.shortener.policy.ChangeRequestTest.changedArtifactWithNoRecordIsFlagged -- Time elapsed: 0.008 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <[contracts/unrecorded.schema.json]> but was: <[]>
+	at agentic.shortener.policy.ChangeRequestTest.changedArtifactWithNoRecordIsFlagged(ChangeRequestTest.java:71)
+
+Fix: restored the filter. This is T106's own Guard clause made concrete: "material change implemented
+without impact analysis is a detection target; the policy check is the detector." A detector that always
+reports clean detects nothing.

@@ -74,24 +74,39 @@ public final class PolicySetEvaluator implements PolicyEvaluator {
     @Override
     public PolicyVerdict evaluate(Map<String, String> artifacts) throws Exception {
         List<PolicyCheckResult> results = new ArrayList<>();
-        results.add(checkSchemeAllowList());
-        results.add(checkSecretScan());
-        results.add(checkDependencyVulnerabilityScan());
-        results.add(checkNoPersonalDataField());
-        results.add(checkAuditRecordSixFields());
-        results.add(checkApprovedDependencies());
-        results.add(checkPermittedLicenses());
-        results.add(checkChangeControlRecordsComplete());
-        results.add(checkGateDecisionsMaterialized());
-        results.add(checkMajorVersionDiscipline());
-        results.add(checkRequiredTestCategories());
-        results.add(checkZeroTraceabilityOrphans());
+        results.add(safely("POL-SEC-001", this::checkSchemeAllowList));
+        results.add(safely("POL-SEC-002", this::checkSecretScan));
+        results.add(safely("POL-SEC-003", this::checkDependencyVulnerabilityScan));
+        results.add(safely("POL-PRIV-001", this::checkNoPersonalDataField));
+        results.add(safely("POL-AUD-001", this::checkAuditRecordSixFields));
+        results.add(safely("POL-DEP-001", this::checkApprovedDependencies));
+        results.add(safely("POL-LIC-001", this::checkPermittedLicenses));
+        results.add(safely("POL-CHG-001", this::checkChangeControlRecordsComplete));
+        results.add(safely("POL-CHG-002", this::checkGateDecisionsMaterialized));
+        results.add(safely("POL-CHG-003", this::checkMajorVersionDiscipline));
+        results.add(safely("POL-TST-001", this::checkRequiredTestCategories));
+        results.add(safely("POL-TRC-001", this::checkZeroTraceabilityOrphans));
 
         UUID runId = agentic.shortener.audit.CorrelationContext.current().orElseGet(UUID::randomUUID);
         Instant now = clock.instant();
         PolicyEvaluationResult result = PolicyEvaluationResult.of(runId, PolicySet.CURRENT_VERSION, now,
                 results);
         return new PolicyVerdict(result.blocking(), result.summary());
+    }
+
+    /**
+     * EC-025, applied uniformly: a check that throws is recorded {@code FAIL}, never allowed to abort the
+     * other eleven. Before this, only {@code POL-AUD-001} protected itself this way — a thrown exception
+     * from any other check (a missing {@code pom.xml}, an unreadable migration file) crashed the whole
+     * evaluation instead of failing just the one check it actually broke.
+     */
+    private PolicyCheckResult safely(String policyId, java.util.function.Supplier<PolicyCheckResult> check) {
+        try {
+            return check.get();
+        } catch (Exception e) {
+            return PolicyCheckResult.of(def(policyId), PolicyOutcome.FAIL,
+                    "could not evaluate (EC-025: unevaluable is never PASS): " + e);
+        }
     }
 
     // ==============================================================================================
@@ -395,7 +410,12 @@ public final class PolicySetEvaluator implements PolicyEvaluator {
 
     private PolicyCheckResult checkZeroTraceabilityOrphans() {
         PolicyDefinition def = def("POL-TRC-001");
-        TraceabilityReport report = new TraceabilityReporter(repoRoot).report(SPEC_MD, TASKS_MD);
+        // Resolved against repoRoot, not left relative — Files.readAllLines resolves a relative Path
+        // against the JVM working directory, which silently reads the REAL spec.md/tasks.md instead of a
+        // fixture's when repoRoot points elsewhere (found running ReleaseBlockingConditionsIT, T110,
+        // against an isolated fixture repository).
+        TraceabilityReport report = new TraceabilityReporter(repoRoot)
+                .report(repoRoot.resolve(SPEC_MD), repoRoot.resolve(TASKS_MD));
         if (!report.isClean()) {
             return PolicyCheckResult.of(def, PolicyOutcome.FAIL, "traceability orphans found: "
                     + report.orphanRequirements().size() + " requirement(s), " + report.orphanTasks().size()

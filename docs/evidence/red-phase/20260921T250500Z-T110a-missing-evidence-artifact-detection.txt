@@ -1,0 +1,22 @@
+Sabotage: ReleaseReadinessEvaluator.condition9EvidenceVerifiable — the explicit `!Files.exists(file)` guard
+was replaced with `if (false)`, disabling the intended fast path for a deleted evidence artifact.
+
+[ERROR] Tests run: 5, Failures: 1, Errors: 0, Skipped: 0 <<< FAILURE! -- in agentic.shortener.policy.MissingEvidenceBlockingTest
+[ERROR] MissingEvidenceBlockingTest.deletedEvidenceArtifactBlocksAndNamesItself -- FAILURE!
+org.opentest4j.AssertionFailedError: NOT READY — 1 condition(s) unmet: [condition 9: evidence artifact(s)
+missing or unreadable: [FR-TEST-001's evidence file docs/evidence/completed-stage.md is unreadable:
+/var/folders/.../docs/evidence/completed-stage.md]] ==> expected: <true> but was: <false>
+	at agentic.shortener.policy.MissingEvidenceBlockingTest.deletedEvidenceArtifactBlocksAndNamesItself(MissingEvidenceBlockingTest.java:126)
+
+Notable: the test still correctly detected NOT READY overall (blocking held via the fallback
+Files.readString catch clause reporting "unreadable" for the now-missing file), but the test's specific
+assertion on the wording "does not exist" failed — the sabotage was still caught, just by a different,
+less-specific code path producing different wording than EC-028's two distinct seeds are meant to produce
+(missing vs. unparseable should read differently to a reviewer). This is a genuine, if narrower, finding:
+the explicit exists-check is what keeps "deleted" and "present but blank" distinguishable in the report
+text, which is exactly what EC-028 asks for.
+
+Fix: restored the `!Files.exists(file)` guard. Both MissingEvidenceBlockingTest.deletedEvidenceArtifactBlocksAndNamesItself
+and unparseableEvidenceArtifactBlocksAndNamesItself now assert on the exact wording distinguishing "does
+not exist" from "unreadable" — a reviewer reading the report can tell which of EC-028's two seeds it is
+without opening the repository.

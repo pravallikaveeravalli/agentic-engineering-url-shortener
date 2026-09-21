@@ -79,6 +79,18 @@ public final class ArtifactProvenanceQuery {
                     + "  WHERE sn.run_id = av.run_id AND sn.node_key = av.produced_by_node_key) "
                     + "ORDER BY av.artifact_key";
 
+    /**
+     * T108's definition of "stale": an artifact whose producing node's CURRENT state is
+     * {@code INVALIDATED}. Derived rather than stored — {@code artifact_version} is append-only (V5's own
+     * {@code REVOKE UPDATE}), so staleness could not be a mutated column even if this project wanted one;
+     * it is answered by joining forward to the node's live state instead.
+     */
+    private static final String SELECT_STALE =
+            "SELECT DISTINCT av.artifact_key FROM artifact_version av "
+                    + "JOIN stage_node sn ON sn.run_id = av.run_id AND sn.node_key = av.produced_by_node_key "
+                    + "WHERE av.run_id = ? AND sn.state = 'INVALIDATED' "
+                    + "ORDER BY av.artifact_key";
+
     private final ConnectionSource connections;
 
     public ArtifactProvenanceQuery(ConnectionSource connections) {
@@ -210,6 +222,25 @@ public final class ArtifactProvenanceQuery {
             throw new IllegalStateException("failed to read the decisions in force for run " + runId, e);
         }
         return decisions;
+    }
+
+    /**
+     * Task T108. Artifact keys produced by a node the run has since invalidated — the set a caller MUST
+     * NOT treat as current input for anything downstream. See {@link #SELECT_STALE} for the definition.
+     */
+    public List<String> staleArtifactKeys(UUID runId) {
+        List<String> stale = new ArrayList<>();
+        try (Connection c = connections.get(); PreparedStatement ps = c.prepareStatement(SELECT_STALE)) {
+            ps.setObject(1, runId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    stale.add(rs.getString(1));
+                }
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("failed to check run " + runId + " for stale artifacts", e);
+        }
+        return List.copyOf(stale);
     }
 
     /** Empty in a sound run. See {@link #SELECT_ORPHANS} for why it is asked at all. */
