@@ -238,22 +238,22 @@ register rather than improvised under pressure.
 
 **Blocking**: T020. **Synchronization point**: T032 gates Phase 3.
 
-- [ ] T021 [P] ShortLink entity — `src/main/java/agentic/shortener/domain/link/ShortLink.java`
+- [x] T021 [P] ShortLink entity — `src/main/java/agentic/shortener/domain/link/ShortLink.java`
   - **Req**: **FR-URL-001**, FR-URL-008, FR-URL-009 · **Scn**: DS-A · **ADR**: ADR-007 · **Pre**: T020
   - **Deps**: T020 · **Par**: yes · **Artifact**: `short_code` (PK, unique, fixed alphabet), `destination` (non-empty, **≤ 2048**, allow-listed scheme, normalized), `creator_id` (**required — no link without an owner**), `created_at` (immutable), `expires_at` (**must be future at creation**), `state` (`ACTIVE` | `EXPIRED`)
   - **TDD**: RED-FIRST · **Validate**: `./mvnw -q -Dtest=ShortLinkTest test` · **Docs**: `data-model.md` KE-01 · **Trace**: matrix FR-URL-001
   - **Guard**: **never deleted** — the only permitted mutation is `ACTIVE → EXPIRED`, which is also its compensating action · **Done**: invariants enforced in the type, not by callers · **Approval**: none
-- [ ] T022 [P] Creator and CreatorCredential entities — `src/main/java/agentic/shortener/domain/creator/`
+- [x] T022 [P] Creator and CreatorCredential entities — `src/main/java/agentic/shortener/domain/creator/`
   - **Req**: **FR-URL-018**, FR-URL-019 · **Scn**: DS-A · **ADR**: **ADR-013** · **Pre**: T020
   - **Deps**: T020 · **Par**: yes · **Artifact**: Creator(`id`, `name`, `created_at`, `active`); CreatorCredential(`id`, `creator_id`, `key_hash`, `created_at`, `expires_at?`, `revoked_at?`) — **`key_hash` only, SHA-256 of the full presented string including the `crk_` prefix**; `expires_at` nullable, **null reachable only via explicit `never`**
   - **TDD**: RED-FIRST · **Validate**: `./mvnw -q -Dtest=CreatorCredentialTest test` · **Docs**: `data-model.md` KE-23/KE-24 · **Trace**: matrix FR-URL-018/019
   - **Guard**: the type MUST NOT be constructible from plaintext key material · **Done**: no field or accessor exposes a plaintext key · **Approval**: none
-- [ ] T023 [P] IdempotencyRecord entity — `src/main/java/agentic/shortener/domain/idempotency/IdempotencyRecord.java`
+- [x] T023 [P] IdempotencyRecord entity — `src/main/java/agentic/shortener/domain/idempotency/IdempotencyRecord.java`
   - **Req**: **FR-URL-012** · **Scn**: DS-A · **ADR**: ADR-007 · **Pre**: T020
   - **Deps**: T020 · **Par**: yes · **Artifact**: `marker` (PK, scoped per creator), `request_fingerprint` (hash), `short_code`, `created_at`
   - **TDD**: RED-FIRST · **Validate**: `./mvnw -q -Dtest=IdempotencyRecordTest test` · **Docs**: `data-model.md` KE-03 · **Trace**: matrix FR-URL-012
   - **Guard**: fingerprint must distinguish same-marker-different-content, which is CL-008 case 3 · **Done**: fingerprint comparison covered by test · **Approval**: none
-- [ ] T024 [P] RedirectEvent entity — `src/main/java/agentic/shortener/domain/analytics/RedirectEvent.java`
+- [x] T024 [P] RedirectEvent entity — `src/main/java/agentic/shortener/domain/analytics/RedirectEvent.java`
   - **Req**: **FR-URL-010**, NFR-SEC-005 · **Scn**: DS-B · **ADR**: **ADR-014** · **Pre**: T020
   - **Deps**: T020 · **Par**: yes · **Artifact**: `id`, `short_code`, `occurred_at` — **and nothing else**
   - **TDD**: RED-FIRST · **Validate**: schema-assertion test proving no IP, user agent, referrer, device identifier, or geolocation field exists · **Docs**: `data-model.md` KE-02 · **Trace**: matrix FR-URL-010, `POL-PRIV-001`, CL-002
