@@ -630,7 +630,7 @@ from the response JSON. Each is `[P]` because each touches its own files and dep
   - **TDD**: RED-FIRST · **Validate**: all **seven** impact dimensions present or the output is rejected; demo verification recorded
   - **Docs**: plan §9 · **Trace**: matrix FR-ORC-020, KE-13
   - **Guard**: **T107 sits in this phase deliberately** — see the parallelism note; this adapter is the one of the six with a same-phase prerequisite beyond the transport. An impact analysis omitting a dimension MUST be rejected rather than accepted partially — the parser enforces completeness so a silent omission cannot reach the gate · **Done**: seven-dimension enforcement proven; demo run recorded · **Approval**: none
-- [ ] T073e [P] [US3] S7 implementation AI adapter — AI authors, engine applies, real suite judges — `src/main/java/agentic/shortener/orchestration/executor/ai/stages/ImplementationAiExecutor.java`
+- [x] T073e [P] [US3] S7 implementation AI adapter — AI authors, engine applies, real suite judges — `src/main/java/agentic/shortener/orchestration/executor/ai/stages/ImplementationAiExecutor.java`
   - **Req**: **FR-ORC-031**, FR-ORC-029 · **Scn**: DS-B · **ADR**: **ADR-004**, ADR-004-A1, **ADR-004-A2** · **Pre**: T073, T065
   - **Deps**: T065, T073 · **Par**: yes · **Artifact**: AI authors the change from the design output; the **engine** applies it on a branch; the **real** build and test suite verify; failure routes back with the report under bounded attempts before escalating to the gate
   - **TDD**: RED-FIRST · **Validate**: a run where an AI-authored change **fails** verification and routes back; a run where one passes; both with executor-kind labels. **Timeout here is NOT retryable** — the git effect is non-idempotent (EC-033)

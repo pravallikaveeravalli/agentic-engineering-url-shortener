@@ -1,3 +1,10 @@
+RESOLVED 2026-09-21 — see T073e-implementation-gemini-demo.txt (this session, later run) for the real
+success evidence and the root-cause fix (an explicit "do not use tools" prompt instruction). This file is
+kept, not deleted or edited below this notice: its own two-attempt investigation is what narrowed the
+cause down to the fix that resolved it, and CLAUDE.md's own immutability discipline for evidence records
+applies here by the same reasoning it applies to gate/change-control records — corrected forward, not
+rewritten.
+
 AS-007 DEMONSTRATION EXECUTION — T073e ImplementationAiExecutor — NOT ACHIEVED
 ================================================================================
 Date: 2026-09-21

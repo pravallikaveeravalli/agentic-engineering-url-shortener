@@ -105,10 +105,21 @@ public final class ImplementationAiExecutor implements StageExecutor {
                 ExecutorKind.AI);
     }
 
+    /**
+     * The "do not use tools" sentence is load-bearing, not decorative. T073e's first two live attempts
+     * against the Gemini CLI adapter both returned {@code status:SUCCESS} with an empty {@code response} —
+     * an agentic coding CLI, asked for a diff in a domain it can also directly edit files in, appears to
+     * enter its own tool-use loop instead of answering in text; headless (stdin from {@code /dev/null}, no
+     * interactive terminal), that loop cannot complete, and the empty string is what a CLI reports back
+     * when nothing else was said. Adding this sentence — verified against a real live call, not assumed —
+     * fixed it twice in a row, at the same pinned model, with no other change.
+     */
     private static String buildPrompt(String task, String design) {
         return "You are the implementation stage of a software requirement pipeline. Author a change that "
                 + "implements the task below, following the design. Respond with ONLY a unified diff (git "
-                + "apply-compatible), no prose, no markdown fence, no explanation before or after it.\n\n"
+                + "apply-compatible), no prose, no markdown fence, no explanation before or after it. Do "
+                + "not use any tools. Do not read or write any files. Produce the diff as plain text in "
+                + "your final reply only.\n\n"
                 + "Task:\n" + task + "\n\nDesign:\n" + design;
     }
 

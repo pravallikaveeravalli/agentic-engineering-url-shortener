@@ -1,0 +1,35 @@
+AS-007 DEMONSTRATION EXECUTION — T073e ImplementationAiExecutor
+================================================================
+Date: 2026-09-21
+Transport: GeminiCliStageAiProvider (agy), per ADR-004 Amendment 03 / CR-042
+Command run: ./mvnw -q -Dtest=ImplementationAiExecutorLiveDemo -DfailIfNoTests=false test
+Pinned request model: gemini-3.8-flash-high
+Result: SUCCESS (1/1 tests passed)
+
+Root cause and fix, superseding T073e-implementation-gemini-demo-BLOCKED.txt (kept, not deleted —
+that file's own two-attempt investigation is what narrowed the cause down to this fix):
+
+agy is an AGENTIC coding CLI, not a pure text-completion API — asked for a diff in a domain (source code
+editing) it can also act on directly, it appears to enter its own tool-use loop rather than answering in
+text. Running headless (stdin redirected from /dev/null, no interactive terminal to approve a tool call)
+that loop cannot complete, and agy reports back `status:SUCCESS` with an empty `response` — a real,
+reproducible behavior of `agy -p` for a diff-shaped generation request, not a flaky response.
+
+Fix: ImplementationAiExecutor.buildPrompt() now adds "Do not use any tools. Do not read or write any
+files. Produce the diff as plain text in your final reply only." to the existing "respond with ONLY a
+unified diff" instruction — nothing else changed (same pinned model, same --output-format json, same
+adapter). Verified against TWO real, independent live calls before this was applied to production code
+(raw `agy` invocations outside the Java pipeline, ~190-200s each, both produced a correct, well-formed
+unified diff with no tool use) — then verified a THIRD time through the real Java pipeline below.
+
+Stdout captured verbatim:
+
+AS-007 DEMO T073e ImplementationAiExecutor — actually-used model id: gemini-3.8-flash-high
+AS-007 DEMO T073e ImplementationAiExecutor — produced artifact (branch ref): demo/T1
+
+Note on the model id: recorded from GeminiCliStageAiProvider, which (per ADR-004-A3) records the PINNED
+request model, not a value read back from agy's own response — agy's JSON names no resolved-model field.
+
+Note on latency: this call took roughly 60s end to end through the Java pipeline (agy's own generation
+plus JVM/process overhead); the two raw pre-verification calls took 187-202s each directly against agy.
+Both are well inside GeminiCliStageAiProvider's own 10-minute PROCESS_WAIT_CEILING.
