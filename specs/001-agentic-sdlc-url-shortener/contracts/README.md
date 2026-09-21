@@ -26,6 +26,39 @@ Persistence schema lives separately as Flyway migrations (`db/migration/V*.sql`)
 | Removing/narrowing a field, renaming, changing a status code, new required request field | MAJOR | New path version (`/v2`) + change-control record + migration plan |
 | Wording, description, example fixes | PATCH | Change-control record only if a consumer-visible meaning shifts |
 
+### Migrations: the same classification, a different mechanism (T029)
+
+Database migrations are versioned deliverables too, and the table above classifies them — but a
+migration cannot be "applied in place", so the mechanism differs and is stated rather than inferred.
+
+| Migration change | Classification | Requirement |
+|---|---|---|
+| New table, new nullable column, new index, new CHECK on new data | **MINOR** | Change-control record; a new `V<n>__*.sql` |
+| New **NOT NULL** column on a populated table, new CHECK that existing rows could violate | **MAJOR** | Change-control record; **two** migrations — one adding it nullable and backfilling, one enforcing it |
+| Dropping or renaming a column, narrowing a type, removing a constraint | **MAJOR** | Change-control record; **deprecate across two versions before removal** (below) |
+| Comment, index name, non-semantic reordering | **PATCH** | No record unless a consumer-visible meaning shifts |
+
+**The deprecation rule, stated concretely because "deprecate across two versions" is otherwise
+advice rather than a procedure.** To remove column `X`:
+
+1. **Version n** — stop writing `X`, stop reading `X`. The column stays, keeps its data, and gains a
+   `COMMENT` naming the version that will drop it and the record that authorised the removal.
+2. **Version n+1** — drop `X`, once no code has referenced it for a full version.
+
+A single migration doing both is a MAJOR change pretending to be one step: a rollback to version n
+would then find the data already gone.
+
+**There is a live example of this rule in the repository**, which is why it is worth spelling out.
+`V1__baseline.sql` put `api_key_hash` and `key_expires_at` on `creator` directly. That shape cannot
+express credential rotation — a creator holds several credentials over time, one revoked and one
+current — so `V2__domain.sql` introduced `creator_credential`. **The V1 columns were not dropped.**
+They are written once with a non-secret placeholder digest, never read, and await a formal
+deprecation comment plus a later removal under this rule. Dropping them in V2 would have been exactly
+the single-migration shortcut the rule forbids.
+
+**Migrations are forward-only** (ADR-002). There are no `down` scripts: a down script is a second,
+untested code path that runs only when something has already gone wrong.
+
 **When these rules bind.** They protect *consumers of a served contract*, so they bind **from the first served
 release onward**. This document has never been served and has no consumer, so a MAJOR change before first service is
 **recorded with its MAJOR classification and applied in place**, without a new path prefix. The classification is
@@ -62,6 +95,13 @@ was in the state schema’s `required` array, so this is a removal rather than a
 rule below permits it in place, and its precondition — nothing implemented, no consumer, no persisted snapshot —
 is exactly this situation. **Re-parse required after application**: the last two shape changes each found a real
 defect only by running a parser.
+
+**Meta-schema lint status, corrected 2026-09-21 (T011).** ADR-005 recorded a meta-schema lint as an
+owed residual. It is now discharged for **all five files**: each parses, each compiles as a schema,
+and each is shown to *discriminate* — an empty object must be rejected. The first version of that test
+covered only `openapi.yaml` and `workflow-state.schema.json`, so `approval`, `audit-event` and
+`policy-evaluation` shipped unlinted while T011 was marked complete. The gap was found when T029 read
+this file's own five-file table, and it is recorded here rather than quietly closed.
 
 **`nodes` model, v2.0.0 (CR-013)**: the fixed twelve-element `stages` array was replaced because it could not
 represent S7's per-task fan-out. **Re-parsed 2026-09-20 after the change** — `workflow-state.schema.json` via

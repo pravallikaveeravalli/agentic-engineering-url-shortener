@@ -119,6 +119,12 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                missingCredential:
+                  value:
+                    code: "UNAUTHENTICATED"
+                    message: "A creator API key is required to create a link."
+                    detail: "Link creation is authenticated; redirect resolution is public (FR-URL-018)."
         '409':
           description: >
             Idempotency conflict. Same marker with different request content: nothing is minted and
@@ -148,6 +154,12 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                storeUnavailable:
+                  value:
+                    code: "STORE_UNAVAILABLE"
+                    message: "The link store is not reachable."
+                    detail: "Readiness fails closed rather than accepting traffic it cannot serve."
 
   /{shortCode}:
     get:
@@ -210,6 +222,12 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                storeUnavailableOnRedirect:
+                  value:
+                    code: "STORE_UNAVAILABLE"
+                    message: "The link store is not reachable."
+                    detail: "A redirect cannot be resolved without the store; analytics failure alone would notcause this (EC-012)."
 
   /v1/links/{shortCode}/analytics:
     get:
@@ -246,6 +264,12 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                analyticsUnauthenticated:
+                  value:
+                    code: "UNAUTHENTICATED"
+                    message: "A creator API key is required to read analytics."
+                    detail: "Analytics are creator-scoped (FR-URL-011)."
         '404':
           description: >
             Not found OR not owned by this creator — deliberately indistinguishable, so the endpoint
@@ -253,6 +277,12 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                analyticsNotFound:
+                  value:
+                    code: "NOT_FOUND"
+                    message: "No link with that code belongs to this creator."
+                    detail: "Scoped lookup: another creator's code reports not-found rather than forbidden, sothe response does not confirm the code exists."
 
   /health/live:
     get:
@@ -266,6 +296,10 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Health' }
+              examples:
+                alive:
+                  value:
+                    status: "UP"
 
   /health/ready:
     get:
@@ -281,11 +315,23 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Health' }
+              examples:
+                ready:
+                  value:
+                    status: "UP"
+                    checks:
+                      store: "UP"
         '503':
           description: Not ready — a required dependency is unavailable
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Health' }
+              examples:
+                notReady:
+                  value:
+                    status: "DOWN"
+                    checks:
+                      store: "DOWN"
 
   /v1/runs:
     post:
@@ -310,16 +356,55 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/RunInspection' }
+              examples:
+                runCreated:
+                  value:
+                    runId: "0f7d2c18-6a4e-4f8b-9d3a-1c2b3e4f5a60"
+                    state: "RUNNING"
+                    terminalState: null
+                    policySetVersion: "policy-set-1.1.0"
+                    suspensionReason: null
+                    autoAbandonAt: null
+                    blockingCondition: null
+                    nodes:
+                      - nodeKey: "S1"
+                        stageNumber: 1
+                        nodeRole: "SINGLETON"
+                        name: "Ingestion"
+                        state: "SUCCEEDED"
+                        executorClass: "DETERMINISTIC"
+                        executorKindUsed: "DETERMINISTIC"
+                        attemptsUsed: 1
+                      - nodeKey: "S2"
+                        stageNumber: 2
+                        nodeRole: "SINGLETON"
+                        name: "Normalization"
+                        state: "RUNNING"
+                        executorClass: "AI_CAPABLE"
+                        executorKindUsed: "AI"
+                        attemptsUsed: 1
         '400':
           description: Malformed submission. Nothing is persisted and no run identifier is issued.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                emptyRequirement:
+                  value:
+                    code: "INVALID_INPUT"
+                    message: "A requirement is required to create a run."
+                    detail: "The submitted text is treated as untrusted content throughout (ADR-004-A1)."
         '503':
           description: Store unavailable. No run is created; the caller may retry.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                orchestratorUnavailable:
+                  value:
+                    code: "STORE_UNAVAILABLE"
+                    message: "Run state cannot be persisted."
+                    detail: "A run is not created unless its state is durable (FR-ORC-004)."
 
   /v1/runs/{runId}/gates/{gateId}/decision:
     post:
@@ -359,6 +444,25 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/RunInspection' }
+              examples:
+                decisionRecorded:
+                  value:
+                    runId: "0f7d2c18-6a4e-4f8b-9d3a-1c2b3e4f5a60"
+                    state: "RUNNING"
+                    terminalState: null
+                    policySetVersion: "policy-set-1.1.0"
+                    suspensionReason: null
+                    autoAbandonAt: null
+                    blockingCondition: null
+                    nodes:
+                      - nodeKey: "S4"
+                        stageNumber: 4
+                        nodeRole: "SINGLETON"
+                        name: "Human clarification"
+                        state: "SUCCEEDED"
+                        executorClass: "HUMAN_GATE"
+                        executorKindUsed: "HUMAN"
+                        attemptsUsed: 1
         '400':
           description: >
             Malformed decision — unknown outcome, CHANGES_REQUESTED with an empty change list, or a missing
@@ -366,6 +470,12 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                missingRepositoryRecord:
+                  value:
+                    code: "INVALID_INPUT"
+                    message: "repositoryRecordPath is required and must begin with docs/governance/."
+                    detail: "A gate decision is not usable until its repository record exists (CR-013)."
         '403':
           description: >
             The actor has no recorded authority for this gate class, or an agent actor attempted an approving
@@ -373,11 +483,22 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                nonHumanActorRefused:
+                  value:
+                    code: "FORBIDDEN"
+                    message: "Only a human actor may record a gate decision."
+                    detail: "actorType accepts only human (CR-021). Actor identity is declared, not verified:see FR-ORC-021 for the disclosed limitation."
         '404':
           description: No such run, or no such pending gate on it
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                gateNotFound:
+                  value:
+                    code: "NOT_FOUND"
+                    message: "No open gate with that identifier on this run."
         '409':
           description: >
             The gate already carries a decision. Gate decisions are append-only and corrected by a superseding
@@ -385,6 +506,12 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                gateAlreadyDecided:
+                  value:
+                    code: "CONFLICT"
+                    message: "That gate already carries a recorded decision."
+                    detail: "A decision is not replaceable; a changed decision is a new record referencing theprior one."
 
   /v1/runs/{runId}:
     get:
@@ -411,11 +538,35 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/RunInspection' }
+              examples:
+                suspendedRun:
+                  value:
+                    runId: "0f7d2c18-6a4e-4f8b-9d3a-1c2b3e4f5a60"
+                    state: "SAFE_STOP"
+                    terminalState: null
+                    policySetVersion: "policy-set-1.1.0"
+                    suspensionReason: "Awaiting human clarification at stage 4."
+                    autoAbandonAt: "2026-12-20T12:00:00Z"
+                    blockingCondition: null
+                    nodes:
+                      - nodeKey: "S4"
+                        stageNumber: 4
+                        nodeRole: "SINGLETON"
+                        name: "Human clarification"
+                        state: "AWAITING_APPROVAL"
+                        executorClass: "HUMAN_GATE"
+                        executorKindUsed: null
+                        attemptsUsed: 0
         '404':
           description: No such run
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                runNotFound:
+                  value:
+                    code: "NOT_FOUND"
+                    message: "No run with that identifier."
 
 components:
   securitySchemes:

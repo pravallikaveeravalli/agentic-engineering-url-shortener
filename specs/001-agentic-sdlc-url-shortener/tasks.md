@@ -278,12 +278,12 @@ register rather than improvised under pressure.
   - **Deps**: T027 · **Par**: no · **Artifact**: test asserting an UPDATE against `audit_record` is **rejected by the store**
   - **TDD**: EVIDENCE · **Validate**: `./mvnw -q -Dtest=AuditImmutabilityIT verify` · **Docs**: ADR-010 §Validation · **Trace**: NFR-AUD-001
   - **Guard**: **immutability must be a control, not a claim.** If this test passes because the UPDATE succeeded, the grant is missing · **Done**: UPDATE rejected; DELETE rejected · **Approval**: none
-- [ ] T029 [P] Schema versioning and compatibility rules — `contracts/README.md`
+- [x] T029 [P] Schema versioning and compatibility rules — `contracts/README.md`
   - **Req**: plan §2 · **Scn**: — · **ADR**: **ADR-005** · **Pre**: T011
   - **Deps**: T011 · **Par**: yes · **Artifact**: MAJOR/MINOR/PATCH classification table already present, extended with the migration deprecation rule
   - **TDD**: N/A-DOC · **Validate**: every contract file has a stated version and a classification rule · **Docs**: this file · **Trace**: — 
   - **Guard**: additive enum values are MINOR; renaming a property is MAJOR — recorded so a future change is classified, not argued · **Done**: rules cover all five files plus migrations · **Approval**: none
-- [ ] T030 [P] Representative examples per contract response — `contracts/openapi.yaml`
+- [x] T030 [P] Representative examples per contract response — `contracts/openapi.yaml`
   - **Req**: plan §2 · **Scn**: DS-A · **ADR**: ADR-005 · **Pre**: T011
   - **Deps**: T011 · **Par**: yes · **Artifact**: at least one example per response code, including every error shape
   - **TDD**: TEST-WITH · **Validate**: contract test asserts each example validates against its own schema · **Docs**: `contracts/openapi.yaml` · **Trace**: — 

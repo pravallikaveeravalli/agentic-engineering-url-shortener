@@ -44,6 +44,32 @@ class ContractFilesLintTest {
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
 
     @Test
+    @DisplayName("the three governance schemas compile and DISCRIMINATE")
+    void governanceSchemasCompileAndDiscriminate() throws Exception {
+        JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
+
+        for (String name : List.of("approval.schema.json", "audit-event.schema.json",
+                "policy-evaluation.schema.json")) {
+            Path file = CONTRACTS.resolve(name);
+            assertTrue(Files.exists(file), "missing contract file: " + name);
+
+            JsonNode document = JSON.readTree(Files.readString(file));
+            JsonSchema compiled = factory.getSchema(document);
+
+            // Same standard the state schema is held to: compiling proves it is structurally a
+            // schema, and rejecting an empty object proves it enforces something. A schema that
+            // accepts anything is decorative, and three of these shipped unchecked until now.
+            Set<ValidationMessage> onEmpty = compiled.validate(JSON.readTree("{}"));
+            assertFalse(onEmpty.isEmpty(),
+                    name + " accepted an empty object, so it enforces nothing");
+
+            assertTrue(document.has("$schema") || document.has("$id"),
+                    name + " must declare its dialect or identity, or a consumer cannot know which "
+                            + "validator to use");
+        }
+    }
+
+    @Test
     @DisplayName("workflow-state.schema.json parses and validates against JSON Schema 2020-12")
     void stateSchemaParsesAndConformsToItsMetaSchema() throws Exception {
         Path file = CONTRACTS.resolve("workflow-state.schema.json");
@@ -130,10 +156,14 @@ class ContractFilesLintTest {
     }
 
     @Test
-    @DisplayName("every contract file named by contracts/README.md exists and parses")
+    @DisplayName("ALL FIVE contract files exist, parse, and compile as schemas where applicable")
     void everyDeclaredContractFileExistsAndParses() throws Exception {
-        // README is the index; a file listed there but absent would be a broken promise to a reader.
-        for (String name : List.of("openapi.yaml", "workflow-state.schema.json")) {
+        // T011's Artifact says ALL FIVE files. An earlier version of this test checked two, which was
+        // a real gap in T011: three schema files were shipped unlinted while the task was marked
+        // complete. Found when T029 read the README's five-file table.
+        for (String name : List.of("openapi.yaml", "workflow-state.schema.json",
+                "approval.schema.json", "audit-event.schema.json",
+                "policy-evaluation.schema.json")) {
             Path file = CONTRACTS.resolve(name);
             assertTrue(Files.exists(file), "declared contract file missing: " + name);
             ObjectMapper mapper = name.endsWith(".yaml") ? YAML : JSON;
