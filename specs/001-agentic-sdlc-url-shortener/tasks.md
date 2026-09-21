@@ -771,7 +771,7 @@ from the response JSON. Each is `[P]` because each touches its own files and dep
   - **Deps**: T091 · **Par**: yes · **Artifact**: idle clock from **last activity, never creation**; **PVT-015 — 90 days**; expiry → `ABANDONED` with an audit event citing the retention policy version, actor type `system`, authority "pre-approved retention policy"; `auto-abandon-at` exposed via inspection
   - **TDD**: RED-FIRST · **Validate**: **EC-036** — activity one day before expiry **resets** the clock; **EC-037** — expiry while a gate is pending abandons terminally and **does not satisfy the gate** · **Docs**: plan §3 · **Trace**: matrix FR-ORC-032, EC-036, EC-037
   - **Guard**: auto-abandonment is a **run lifecycle** transition and is **not** a data purge — there is no purge anywhere (NFR-AUD-003, CR-017); an abandoned run's records stay in the tables like every other record. **Policy-driven abandonment is never an approval.** A run that received attention must not be reaped on age. Demonstration runs may compress the period, labelled per AS-007 · **Done**: EC-036 and EC-037 both proven · **Approval**: none
-- [ ] T093 [US3] Resumption across orchestrator-process restart — `src/main/java/agentic/shortener/orchestration/recovery/ResumeService.java`
+- [x] T093 [US3] Resumption across orchestrator-process restart — `src/main/java/agentic/shortener/orchestration/recovery/ResumeService.java`
   - **Req**: **FR-ORC-018**, NFR-REL-003, SC-006 · **Scn**: DS-C · **ADR**: ADR-008 · **Pre**: T080, T091
   - **Deps**: T080, T091 · **Par**: no · **Artifact**: resumption from persisted state reaching a deterministic terminal outcome, **committed effects exactly once**
   - **TDD**: EVIDENCE · **Validate**: process killed at **every stage boundary**; each resumes; zero duplicated committed effects (EC-015) · **Docs**: plan §6 · **Trace**: matrix FR-ORC-018, EC-015
@@ -781,7 +781,7 @@ from the response JSON. Each is `[P]` because each touches its own files and dep
   - **Deps**: T093 · **Par**: yes · **Artifact**: `docker compose restart db` mid-run → `UNAVAILABLE` in the envelope → proposed transient → bounded retry → suspension on exhaustion → correct resumption when the store returns
   - **TDD**: EVIDENCE · **Validate**: **EC-038** against a **real restartable store process** · **Docs**: `quickstart.md` §3 · **Trace**: matrix FR-ORC-004, EC-038
   - **Guard**: **this proof is why an embedded store was disqualified** — there would be nothing to kill. An in-memory substitute here would reimport the very loophole CL-009 closed · **Done**: EC-038 proven end to end · **Approval**: none
-- [ ] T095 [P] [US3] Run lease preventing concurrent resumption — `src/main/java/agentic/shortener/orchestration/recovery/RunLease.java`
+- [x] T095 [P] [US3] Run lease preventing concurrent resumption — `src/main/java/agentic/shortener/orchestration/recovery/RunLease.java`
   - **Req**: FR-ORC-018 · **Scn**: — · **ADR**: ADR-008 · **Pre**: T093
   - **Deps**: T093 · **Par**: yes · **Artifact**: run-level lease making concurrent resumption of one persisted state impossible
   - **TDD**: RED-FIRST · **Validate**: **EC-026** — two concurrent resume attempts; exactly one advances · **Docs**: plan §6 · **Trace**: matrix FR-ORC-018, EC-026
