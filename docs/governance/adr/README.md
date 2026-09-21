@@ -3,7 +3,7 @@
 Feature 001 — Agentic Software Engineering System: URL Shortener.
 Governing constitution v1.1.0. Created 2026-09-19.
 
-**All fourteen ADRs and one amendment record are `Accepted`** — 2026-09-20, by Pravallika Veeravalli at Gate 4. Decision record:
+**All fourteen ADRs and two amendment records are `Accepted`** — 2026-09-20, by Pravallika Veeravalli at Gate 4. Decision record:
 [`gate-04-adr.md`](../gate-decisions/gate-04-adr.md), which carries the acceptance grounds, the owner's
 interventions and revision histories, and the provenance of the adopted grounds.
 
@@ -19,7 +19,7 @@ CR-002** on 2026-09-20.
 | [001](./ADR-001-language-and-framework.md) | Programming language and web framework | Accepted | **Low** | Java 21 + Spring Boot 3 |
 | [002](./ADR-002-persistence-strategy.md) | Persistence strategy | Accepted | High | PostgreSQL 16 via Docker + Testcontainers |
 | [003](./ADR-003-orchestration-model.md) | Orchestration model — build vs adopt | Accepted | Moderate | Purpose-built persisted DAG |
-| [004](./ADR-004-ai-provider-and-autonomy-bounding.md) | AI provider and autonomy bounding | Accepted | High | Anthropic Claude behind an interface; `ai: off` default; stage-7 no-plan gate |
+| [004](./ADR-004-ai-provider-and-autonomy-bounding.md) | AI provider and autonomy bounding | Accepted | High | Anthropic Claude behind an interface; stage-7 no-plan gate. **The `ai: off` default is superseded by 004-A2** |
 | [005](./ADR-005-contract-validation-approach.md) | API contract validation approach | Accepted | High | Spec as source of truth + executable response validation |
 | [006](./ADR-006-application-architecture.md) | Application architecture and plane separation | Accepted | Moderate–High | Single project, package split, enforced by architecture test |
 | [007](./ADR-007-short-code-generation.md) | Short-code generation and collision handling | Accepted | High | CSPRNG random + unique constraint + bounded retry |
@@ -31,6 +31,7 @@ CR-002** on 2026-09-20.
 | [013](./ADR-013-authentication-and-authorization-mechanism.md) | Authentication and authorization mechanism | Accepted | High | Opaque 256-bit key, SHA-256, constant-time compare |
 | [014](./ADR-014-analytics-consistency.md) | Analytics consistency model — **resolves DF-001** | Accepted | High | Synchronous append, separate transaction, failure isolated |
 | [004-A1](./ADR-004-amendment-01-transport-claude-code-cli.md) | `StageAiProvider` transport — successor record amending ADR-004 | Accepted | High | Local Claude Code CLI subprocess, headless |
+| [004-A2](./ADR-004-amendment-02-always-ai-no-keyless-mode.md) | Orchestration always uses AI — successor record amending ADR-004 | Accepted | Moderate | No keyless mode, no run-level switch, no deterministic counterpart for an AI-capable stage (owner Decision J). Carries Decision K’s fallback retirement |
 
 ## Evaluated and judged NOT to require an ADR
 
@@ -81,7 +82,8 @@ ADR-011 (testing)             ── depends on ADR-002 and ADR-004
 - **ADR-005 discloses an unverified artifact.** The Phase 1 contract files were **parse-validated 2026-09-20**,
   finding and fixing one real defect (`RunInspection.ai` coerced to `[true, false]` by YAML 1.1). **Meta-schema lint
   remains owed** and is T011, the first Slice 1 task. Both files were **re-parsed after CR-013** changed them to
-  v2.0.0.
+  v2.0.0, and **again after CR-029** took them to **v3.0.0** by removing the run-level `ai` flag — including from
+  the state schema’s `required` array. The `RunInspection.ai` defect noted above is now moot: the field is gone.
 - **DF-002 and DF-003 were resolved at the Gate 4 closing package, 2026-09-20** — DF-002 by CR-003 (redirects are
   temporary, never permanent) and DF-003 by CR-004 (the audit retention clock starts at run termination). Neither was
   resolved *by* an ADR; both interact with ones here — DF-002 with ADR-014, DF-003 with ADR-010. **Retention was then
