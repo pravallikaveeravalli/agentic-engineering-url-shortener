@@ -209,13 +209,24 @@ class ArtifactProvenanceIT extends PostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("a completed run has no artifact without provenance")
-    void completedRunHasNoOrphanArtifacts() {
+    @DisplayName("a COMPLETED run returns a complete chain, and has no artifact without provenance")
+    void completedRunHasACompleteChainAndNoOrphans() {
         UUID runId = runWithAChain();
         JdbcRunStore store = storeAt(T0.plusSeconds(600));
         store.transitionRun(runId, RunState.RUNNING, RunState.COMPLETED, "all stages done");
 
         assertEquals(RunState.COMPLETED, store.run(runId).orElseThrow().state());
+
+        // T081's Validate clause is specifically "a provenance query over a COMPLETED run returns a complete
+        // chain", and the first version of this class only checked orphans here while proving the chain
+        // against a still-running run. Surfaced by the Slice 4 artifact-coverage sweep reading the task's
+        // Artifact and Validate fields rather than re-reading the test: a clause that happens to be true but
+        // is unasserted means a future change can break it in silence.
+        ArtifactProvenanceQuery.Chain chain = query.chainFor(runId, "plan");
+        assertTrue(chain.complete(), "unresolved: " + chain.unresolvedInputs());
+        assertEquals(List.of("plan", "spec", "brief"),
+                chain.links().stream().map(ArtifactProvenance::artifactKey).toList());
+
         assertEquals(List.of(), query.artifactsWithoutProvenance(runId),
                 "T081's Done clause: no orphan artifacts in a completed run");
     }
