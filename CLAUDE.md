@@ -64,6 +64,17 @@ constitution's `## Amendment History` section, not here.
 recorded human decision at the ADR gate, never by the acting agent. A superseded ADR is marked
 superseded with a reference to the record replacing it, rather than edited in place.
 
+**Cross-record orphan check** — every change-control package ends with one, before it is reported as ready and before
+anything is applied. Records in this repository are immutable once applied and they quote each other's text, so a record
+applied on Monday can be made false by a record drafted on Tuesday, and neither file shows it. The check asks five
+questions of the package as a whole: does every `OLD` string a record quotes still exist in its target; does any record
+quote text another record removes first; does any *already applied* record now assert something the new package
+falsifies; do the records' stated application orders agree with each other; and does any survival of the thing being
+removed remain unclaimed by any record. A falsified claim in an applied record is **never edited in place** — it is
+corrected forward by a record in the current package, which is itself an orphan-check finding and is labelled as one.
+The check has found real defects in every package it has been run on; treat a clean result as the exception to verify,
+not the expectation.
+
 ## Lifecycle
 
 SpecKit is the sole lifecycle framework. The authoritative stage order and the mandatory human gate
