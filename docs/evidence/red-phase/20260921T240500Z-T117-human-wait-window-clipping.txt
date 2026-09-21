@@ -1,0 +1,23 @@
+Sabotage: HumanWaitTracker.humanWaitWithin — the window-clipping lines
+`maxOf(interval.enteredAt(), windowStart)` / `minOf(interval.exitedAt(), windowEnd)` were replaced with
+the interval's own raw enteredAt/exitedAt, disabling clipping to the target window entirely.
+
+[INFO] Running agentic.shortener.audit.HumanWaitTrackerTest
+[ERROR] Tests run: 9, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 0.029 s <<< FAILURE! -- in agentic.shortener.audit.HumanWaitTrackerTest
+[ERROR] agentic.shortener.audit.HumanWaitTrackerTest.intervalClippedAtWindowStart -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: only the portion from T0 to T0+10s falls in the window ==> expected: <PT10S> but was: <PT30S>
+[ERROR] agentic.shortener.audit.HumanWaitTrackerTest.intervalOutsideWindowContributesNothing -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <PT0S> but was: <PT50S>
+[ERROR] agentic.shortener.audit.HumanWaitTrackerTest.intervalClippedAtWindowEnd -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: only the portion from T0+20s to T0+30s falls in the window ==> expected: <PT10S> but was: <PT30S>
+
+[ERROR] Failures:
+[ERROR]   HumanWaitTrackerTest.intervalClippedAtWindowEnd:52 only the portion from T0+20s to T0+30s falls in the window ==> expected: <PT10S> but was: <PT30S>
+[ERROR]   HumanWaitTrackerTest.intervalClippedAtWindowStart:44 only the portion from T0 to T0+10s falls in the window ==> expected: <PT10S> but was: <PT30S>
+[ERROR]   HumanWaitTrackerTest.intervalOutsideWindowContributesNothing:60 expected: <PT0S> but was: <PT50S>
+[INFO] Tests run: 9, Failures: 3, Errors: 0, Skipped: 0
+
+Fix: restored the maxOf/minOf clipping. Without it, a gate-wait interval that started before a recovery
+window (e.g. left over from an earlier stage) would count its entire duration against this recovery's
+human-wait figure, inflating the exclusion and deflating individualRecoveryDuration for a reason that has
+nothing to do with this failure's own recovery.

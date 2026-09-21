@@ -1,0 +1,25 @@
+Sabotage: MttrCalculator.calculate — the divisor was changed from `recovered.size()` (RECOVERED events
+only) to `events.size()` (the full population, including unrecovered events), reproducing exactly the
+"folding unrecovered failures into MTTR would flatter the number" defect T119's own Guard clause names.
+
+[INFO] Running agentic.shortener.audit.MttrCalculatorTest
+[ERROR] Tests run: 4, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.019 s <<< FAILURE! -- in agentic.shortener.audit.MttrCalculatorTest
+[ERROR] agentic.shortener.audit.MttrCalculatorTest.handComputedMttr -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <PT20S> but was: <PT12S>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:177)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1145)
+	at agentic.shortener.audit.MttrCalculatorTest.handComputedMttr(MttrCalculatorTest.java:53)
+
+(60s summed over 3 recovered events, divided by 5 total events instead of 3 recovered ones: 60/5 = 12s,
+a flatteringly LOWER MTTR that hides the two events which never recovered at all.)
+
+Fix: restored `recovered.size()` as the divisor. This is precisely T119's own concern made concrete: an
+MTTR calculation that silently widens its own denominator to include unrecovered rows produces a smaller,
+better-looking number for the wrong reason — the unrecovered failures did not get faster to recover from,
+they got averaged away. MttrCalculatorTest.handComputedMttr and MttrDenominatorTest (T119) both guard this
+specific defect from two angles: the hand-computed value here, and a dedicated seeded-population proof
+with the separate count asserted in MttrDenominatorTest.

@@ -1,0 +1,18 @@
+Sabotage: FailureEvent's compact constructor — the consistency check comparing the computed
+individualRecoveryDuration against the caller-supplied value was replaced with `if (false) { ... }`,
+disabling it entirely.
+
+[INFO] Running agentic.shortener.audit.FailureEventTest
+[ERROR] Tests run: 10, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.021 s <<< FAILURE! -- in agentic.shortener.audit.FailureEventTest
+[ERROR] agentic.shortener.audit.FailureEventTest.wrongComputedDurationIsRejected -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown.
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:73)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3115)
+	at agentic.shortener.audit.FailureEventTest.wrongComputedDurationIsRejected(FailureEventTest.java:53)
+
+Fix: restored the `if (!expected.equals(individualRecoveryDuration))` check. This is the invariant that
+makes individualRecoveryDuration trustworthy for T118's MTTR average — without it, a caller could pass an
+inflated or deflated duration and nothing downstream would catch it, since MttrCalculator trusts the stored
+field rather than recomputing it from raw timestamps on every read.

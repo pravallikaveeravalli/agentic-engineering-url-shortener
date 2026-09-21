@@ -912,27 +912,27 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
 
 ### MTTR instrumentation and reporting
 
-- [ ] T115 [US5] `failure_event` capture with nine fields — `src/main/java/agentic/shortener/audit/FailureEvent.java`, `V5__failure_event.sql`
+- [x] T115 [US5] `failure_event` capture with nine fields — `src/main/java/agentic/shortener/audit/FailureEvent.java`, `V5__failure_event.sql`
   - **Req**: **FR-ORC-024**, plan §7 · **Scn**: DS-B · **ADR**: **ADR-010** · **Pre**: T111
   - **Deps**: T111 · **Par**: no (consumed by T116–T122) · **Artifact**: `failure_detected_at`, `recovery_started_at`, `recovery_completed_at`, `individual_recovery_duration`, `human_wait_duration`, `recovery_mechanism`, `recovered`, `run_id`, `stage_id`, `failure_category`
   - **TDD**: RED-FIRST · **Validate**: schema test asserting all nine present and non-null where applicable · **Docs**: plan §7 · **Trace**: matrix FR-ORC-024
   - **Guard**: **this table must exist before Slice 8 runs**, or the scenarios produce no MTTR population — a critical-path dependency recorded in T004 · **Done**: nine fields captured · **Approval**: none
-- [ ] T116 [P] [US5] Recovery-mechanism classification — `src/main/java/agentic/shortener/audit/RecoveryMechanism.java`
+- [x] T116 [P] [US5] Recovery-mechanism classification — `src/main/java/agentic/shortener/audit/RecoveryMechanism.java`
   - **Req**: FR-ORC-024 · **Scn**: DS-B · **ADR**: ADR-010 · **Pre**: T115
   - **Deps**: T115 · **Par**: yes · **Artifact**: `retry` | `rollback` | `compensation` | `resume` | `human` — **five values. `fallback` removed with FR-ORC-015 (Decision K, CR-032)**: an enum value that can never be emitted is a claim, not a classification
   - **TDD**: RED-FIRST · **Validate**: each mechanism produces its own classification in a scripted scenario; and a negative assertion that **no recovery event carries a `fallback` mechanism**, because a value no code path can produce should not be reachable from the API either · **Docs**: plan §7 · **Trace**: matrix FR-ORC-024
   - **Guard**: rollback and compensation must remain **distinguishable here too**, not merged into one bucket · **Done**: five mechanisms each exercised; `fallback` unreachable · **Approval**: none
-- [ ] T117 [P] [US5] Human-wait exclusion capture — `src/main/java/agentic/shortener/audit/HumanWaitTracker.java`
+- [x] T117 [P] [US5] Human-wait exclusion capture — `src/main/java/agentic/shortener/audit/HumanWaitTracker.java`
   - **Req**: plan §7 declared exclusion · **Scn**: DS-C · **ADR**: ADR-010 · **Pre**: T115, T091
   - **Deps**: T091, T115 · **Par**: yes · **Artifact**: time in `AWAITING_APPROVAL` and `SAFE_STOP` measured and stored **separately** from recovery duration
   - **TDD**: RED-FIRST · **Validate**: a recovery spanning a gate wait excludes the wait from `individual_recovery_duration` and records it in `human_wait_duration` · **Docs**: plan §7 · **Trace**: matrix FR-ORC-024
   - **Guard**: **including human wait would make MTTR a function of when a person was at a keyboard**, measuring reviewer latency rather than system recovery. The exclusion is **declared**, never silent · **Done**: separation proven on a gate-spanning recovery · **Approval**: none
-- [ ] T118 [US5] MTTR calculation — `src/main/java/agentic/shortener/audit/MttrCalculator.java`
+- [x] T118 [US5] MTTR calculation — `src/main/java/agentic/shortener/audit/MttrCalculator.java`
   - **Req**: FR-ORC-024, NFR-REC-002, plan §7 · **Scn**: DS-B · **ADR**: ADR-010 · **Pre**: T116, T117
   - **Deps**: T116, T117 · **Par**: no · **Artifact**: `MTTR = Σ(recovery_completed_at − failure_detected_at) over RECOVERED events ÷ count(RECOVERED events)`, with human wait excluded from each duration
   - **TDD**: RED-FIRST · **Validate**: calculation test over a seeded population with a hand-computed expected value · **Docs**: plan §7 · **Trace**: matrix FR-ORC-024
   - **Guard**: the formula is mandated; this task implements it exactly rather than an approximation · **Done**: hand-computed value matches · **Approval**: none
-- [ ] T119 [P] [US5] Unrecovered failures excluded from the denominator — `src/test/java/agentic/shortener/audit/MttrDenominatorTest.java`
+- [x] T119 [P] [US5] Unrecovered failures excluded from the denominator — `src/test/java/agentic/shortener/audit/MttrDenominatorTest.java`
   - **Req**: plan §7 · **Scn**: DS-B · **ADR**: — · **Pre**: T118
   - **Deps**: T118 · **Par**: yes · **Artifact**: `recovered = false` rows excluded from the denominator **and counted separately**
   - **TDD**: EVIDENCE · **Validate**: seeded population with unrecovered rows; denominator asserted; separate count reported · **Docs**: plan §7 · **Trace**: matrix FR-ORC-024
