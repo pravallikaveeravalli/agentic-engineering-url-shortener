@@ -20,9 +20,12 @@
         "DESTRUCTIVE_OR_IRREVERSIBLE_ACTION",
         "CONSTITUTIONAL_EXCEPTION",
         "MATERIAL_RISK_ACCEPTANCE",
+        "NO_CHANGE_PLAN",
+        "NODE_OVERRUN",
         "RELEASE_READINESS",
         "FINAL_SUBMISSION"
-      ]
+      ],
+      "description": "The ten plan §5 gate classes (CR-040). NO_CHANGE_PLAN and NODE_OVERRUN each carry named choices beyond the five standard outcomes — governance-only/human-implemented/abandon, and keep-waiting/kill-the-node respectively — recorded by whichever of those a decision selects; this field still names the CLASS, not the extra choice."
     },
     "outcome": {
       "type": "string",
