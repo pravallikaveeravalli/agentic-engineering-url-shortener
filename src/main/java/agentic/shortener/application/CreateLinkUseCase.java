@@ -6,7 +6,6 @@ import agentic.shortener.domain.link.ShortLinkRepository;
 import agentic.shortener.domain.shortcode.ShortCodeGenerator;
 
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -43,9 +42,6 @@ public final class CreateLinkUseCase {
     /** ADR-007's bound. Public so the test asserts against the same number the code uses. */
     public static final int MAX_CODE_ATTEMPTS = 5;
 
-    /** PVT-011's default TTL, applied when the caller supplies no expiry (FR-URL-009). */
-    private static final Duration DEFAULT_TTL = Duration.ofDays(30);
-
     private final ShortLinkRepository links;
     private final ShortCodeGenerator codes;
     private final Clock clock;
@@ -67,8 +63,12 @@ public final class CreateLinkUseCase {
      */
     public ShortLink create(UUID creatorId, String destination, Instant expiresAt) {
         Objects.requireNonNull(creatorId, "creatorId");
+        // The expiry arrives already resolved. PVT-011's default and EC-014's refusal live in
+        // ExpiryPolicy (T046), once — a second copy of the default here is how two answers to one
+        // question start to diverge.
+        Objects.requireNonNull(expiresAt, "expiresAt: resolve it through ExpiryPolicy first");
         Instant now = clock.instant();
-        Instant expiry = expiresAt != null ? expiresAt : now.plus(DEFAULT_TTL);
+        Instant expiry = expiresAt;
 
         ShortCodeCollisionException lastCollision = null;
         for (int attempt = 1; attempt <= MAX_CODE_ATTEMPTS; attempt++) {

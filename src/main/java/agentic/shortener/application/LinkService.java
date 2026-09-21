@@ -6,6 +6,7 @@ import agentic.shortener.domain.creator.CreatorRepository;
 import agentic.shortener.domain.idempotency.IdempotencyRecord;
 import agentic.shortener.domain.idempotency.IdempotencyRepository;
 import agentic.shortener.domain.idempotency.MarkerAlreadyUsedException;
+import agentic.shortener.domain.link.ExpiryPolicy;
 import agentic.shortener.domain.link.ShortLink;
 import agentic.shortener.domain.link.ShortLinkRepository;
 import agentic.shortener.domain.validation.AbuseGuard;
@@ -15,7 +16,6 @@ import agentic.shortener.domain.validation.SchemeAllowList;
 import agentic.shortener.domain.validation.UrlSyntaxValidator;
 
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
@@ -37,9 +37,6 @@ import java.util.UUID;
  */
 public final class LinkService {
 
-    /** PVT-011's default TTL, applied when the caller supplies no expiry (FR-URL-009). */
-    private static final Duration DEFAULT_TTL = Duration.ofDays(30);
-
     /**
      * What happened, in CL-008's terms. The controller maps this to 201, 200 or 409 and nothing else.
      *
@@ -60,13 +57,14 @@ public final class LinkService {
     private final DestinationNormalizer normalizer;
     private final UrlSyntaxValidator syntax;
     private final AbuseGuard abuse;
+    private final ExpiryPolicy expiry;
     private final Clock clock;
 
     public LinkService(ShortLinkRepository links, CreatorRepository creators,
                        RedirectEventRepository events, IdempotencyRepository markers,
                        CreateLinkUseCase createLink, IdempotencyResolver idempotency,
                        DestinationNormalizer normalizer, UrlSyntaxValidator syntax,
-                       AbuseGuard abuse, Clock clock) {
+                       AbuseGuard abuse, ExpiryPolicy expiry, Clock clock) {
         this.links = Objects.requireNonNull(links, "links");
         this.creators = Objects.requireNonNull(creators, "creators");
         this.events = Objects.requireNonNull(events, "events");
@@ -76,6 +74,7 @@ public final class LinkService {
         this.normalizer = Objects.requireNonNull(normalizer, "normalizer");
         this.syntax = Objects.requireNonNull(syntax, "syntax");
         this.abuse = Objects.requireNonNull(abuse, "abuse");
+        this.expiry = Objects.requireNonNull(expiry, "expiry");
         this.clock = Objects.requireNonNull(clock, "clock");
     }
 
@@ -145,7 +144,8 @@ public final class LinkService {
     public CreationOutcome create(UUID creatorId, String marker, String destination,
                                   Instant expiresAt) {
         Objects.requireNonNull(creatorId, "creatorId");
-        Instant expiry = expiresAt != null ? expiresAt : clock.instant().plus(DEFAULT_TTL);
+        // PVT-011's default and EC-014's refusal, both owned by ExpiryPolicy (T046).
+        Instant resolvedExpiry = this.expiry.resolve(expiresAt);
 
         // Normalization and every refusal happen BEFORE the marker is consulted. A request that is
         // going to be refused must be refused whether or not it carries a marker, and the fingerprint
@@ -153,24 +153,24 @@ public final class LinkService {
         String vetted = vet(destination);
 
         IdempotencyResolver.Resolution resolution =
-                idempotency.resolve(creatorId, marker, vetted, expiry);
+                idempotency.resolve(creatorId, marker, vetted, resolvedExpiry);
         if (resolution.kind() != IdempotencyResolver.Kind.MINT) {
             return new CreationOutcome(resolution.kind(), resolution.replayed(), resolution.reason());
         }
 
-        ShortLink minted = createLink.create(creatorId, vetted, expiry);
+        ShortLink minted = createLink.create(creatorId, vetted, resolvedExpiry);
         if (marker == null || marker.isBlank()) {
             return new CreationOutcome(IdempotencyResolver.Kind.MINT, Optional.of(minted), "");
         }
 
         try {
-            markers.save(IdempotencyRecord.of(creatorId, marker, vetted, expiry,
+            markers.save(IdempotencyRecord.of(creatorId, marker, vetted, resolvedExpiry,
                     minted.shortCode(), clock.instant()));
             return new CreationOutcome(IdempotencyResolver.Kind.MINT, Optional.of(minted), "");
         } catch (MarkerAlreadyUsedException raced) {
             links.expire(minted);
             IdempotencyResolver.Resolution settled =
-                    idempotency.resolve(creatorId, marker, vetted, expiry);
+                    idempotency.resolve(creatorId, marker, vetted, resolvedExpiry);
             return new CreationOutcome(settled.kind(), settled.replayed(), settled.reason());
         }
     }

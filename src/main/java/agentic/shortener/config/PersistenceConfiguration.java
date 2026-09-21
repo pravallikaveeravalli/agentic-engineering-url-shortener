@@ -3,10 +3,12 @@ package agentic.shortener.config;
 import agentic.shortener.application.CreateLinkUseCase;
 import agentic.shortener.application.IdempotencyResolver;
 import agentic.shortener.application.LinkService;
+import agentic.shortener.application.ResolveLinkUseCase;
 import agentic.shortener.domain.analytics.RedirectEventRepository;
 import agentic.shortener.domain.creator.CreatorRepository;
 import agentic.shortener.domain.idempotency.IdempotencyRepository;
 import agentic.shortener.domain.shortcode.ShortCodeGenerator;
+import agentic.shortener.domain.link.ExpiryPolicy;
 import agentic.shortener.domain.link.ShortLinkRepository;
 import agentic.shortener.domain.validation.AbuseGuard;
 import agentic.shortener.domain.validation.DestinationNormalizer;
@@ -124,12 +126,22 @@ public class PersistenceConfiguration {
     }
 
     @Bean
+    public ExpiryPolicy expiryPolicy(Clock clock) {
+        return new ExpiryPolicy(clock);
+    }
+
+    @Bean
+    public ResolveLinkUseCase resolveLinkUseCase(ShortLinkRepository links, Clock clock) {
+        return new ResolveLinkUseCase(links, clock);
+    }
+
+    @Bean
     public LinkService linkService(ShortLinkRepository links, CreatorRepository creators,
                                   RedirectEventRepository events, IdempotencyRepository markers,
                                   CreateLinkUseCase createLink, IdempotencyResolver idempotency,
                                   DestinationNormalizer normalizer, UrlSyntaxValidator syntax,
-                                  AbuseGuard abuse, Clock clock) {
+                                  AbuseGuard abuse, ExpiryPolicy expiry, Clock clock) {
         return new LinkService(links, creators, events, markers, createLink, idempotency,
-                normalizer, syntax, abuse, clock);
+                normalizer, syntax, abuse, expiry, clock);
     }
 }

@@ -370,17 +370,17 @@ resolution, and expiry outcomes.
 
 ### Redirect resolution
 
-- [ ] T043 [US1] Resolution use case, temporary class — `src/main/java/agentic/shortener/application/ResolveLinkUseCase.java`
+- [x] T043 [US1] Resolution use case, temporary class — `src/main/java/agentic/shortener/application/ResolveLinkUseCase.java`
   - **Req**: **FR-URL-007** · **Scn**: DS-A · **ADR**: **ADR-014** · **Pre**: T026, T046
   - **Deps**: T026, T046 · **Par**: no (core read path) · **Artifact**: resolves code → exact stored destination; **temporary-class** redirect
   - **TDD**: RED-FIRST · **Validate**: round-trip byte-equality test; response asserted temporary-class · **Docs**: `contracts/openapi.yaml` 307 · **Trace**: matrix FR-URL-007, CR-003, CN-006
   - **Guard**: **permanent-class redirect is prohibited** — a cached permanent redirect defeats both analytics counting and expiry enforcement (CR-003). Target MUST come from storage, never from request input · **Done**: byte-equality and temporary-class both asserted · **Approval**: none
-- [ ] T044 [P] [US1] Public unauthenticated redirect path — `src/main/java/agentic/shortener/delivery/RedirectController.java`
+- [x] T044 [P] [US1] Public unauthenticated redirect path — `src/main/java/agentic/shortener/delivery/RedirectController.java`
   - **Req**: **FR-URL-018** · **Scn**: DS-A · **ADR**: **ADR-013** · **Pre**: T043, T052
   - **Deps**: T043, T052 · **Par**: yes (separate controller) · **Artifact**: `GET /{shortCode}` reachable with **no credential**; does not touch the auth filter
   - **TDD**: RED-FIRST · **Validate**: anonymous redirect test succeeds; auth filter asserted not invoked · **Docs**: `contracts/openapi.yaml` · **Trace**: matrix FR-URL-018
   - **Guard**: **a short link that requires login is not a short link.** The redirect path MUST NOT read, require, or be affected by credentials · **Done**: anonymous success; filter bypass asserted · **Approval**: none
-- [ ] T045 [P] [US1] Not-found and persistence-failure distinction — `src/main/java/agentic/shortener/delivery/`
+- [x] T045 [P] [US1] Not-found and persistence-failure distinction — `src/main/java/agentic/shortener/delivery/`
   - **Req**: **FR-URL-014**, FR-URL-008 · **Scn**: DS-B · **ADR**: ADR-002 · **Pre**: T043
   - **Deps**: T043 · **Par**: yes · **Artifact**: never-issued → `404`; expired → `410`; store unavailable for a known code → `503` — **three distinguishable outcomes**
   - **TDD**: RED-FIRST · **Validate**: fault-injection test covering EC-010, EC-011 · **Docs**: `contracts/openapi.yaml` · **Trace**: matrix FR-URL-014
@@ -388,12 +388,12 @@ resolution, and expiry outcomes.
 
 ### Expiration
 
-- [ ] T046 [P] [US1] Expiry semantics and validation — `src/main/java/agentic/shortener/domain/link/ExpiryPolicy.java`
+- [x] T046 [P] [US1] Expiry semantics and validation — `src/main/java/agentic/shortener/domain/link/ExpiryPolicy.java`
   - **Req**: **FR-URL-009** · **Scn**: DS-A · **ADR**: ADR-002 · **Pre**: T021
   - **Deps**: T021 · **Par**: yes · **Artifact**: caller-supplied or defaulted to **PVT-011 (30 days)**; **past expiry at creation is refused**; expiry instant treated consistently
   - **TDD**: RED-FIRST · **Validate**: `-Dtest=ExpiryPolicyTest` covering EC-014 and the boundary instant · **Docs**: `contracts/openapi.yaml` `expiresAt` · **Trace**: matrix FR-URL-009
   - **Guard**: a link MUST NOT be created already expired; injectable clock so the boundary is testable without sleeping · **Done**: EC-014 refused; boundary behaviour defined and asserted · **Approval**: none
-- [ ] T047 [P] [US1] Expired-link behaviour and cache-bypass proof — `src/test/java/agentic/shortener/link/ExpiredLinkIT.java`
+- [x] T047 [P] [US1] Expired-link behaviour and cache-bypass proof — `src/test/java/agentic/shortener/link/ExpiredLinkIT.java`
   - **Req**: **FR-URL-008** · **Scn**: DS-A · **ADR**: **ADR-014** · **Pre**: T046, T043
   - **Deps**: T043, T046 · **Par**: yes · **Artifact**: expired link never redirects; outcome distinguishable from never-issued
   - **TDD**: RED-FIRST · **Validate**: expiry-boundary test plus **EC-042** — a cached redirect cannot bypass expiry, because the temporary class forces every follow to the service · **Docs**: — · **Trace**: matrix FR-URL-008, EC-009, EC-042
