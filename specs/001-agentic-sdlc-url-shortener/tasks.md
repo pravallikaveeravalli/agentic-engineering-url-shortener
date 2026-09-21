@@ -660,7 +660,7 @@ from the response JSON. Each is `[P]` because each touches its own files and dep
   - **Deps**: T074 · **Par**: yes · **Artifact**: S7 per-task fan-out — children `S7.1..S7.n` with an explicit `S7.join` (`ALL`) gating S8; the S9∥S10 pair expressed as **two incoming `ALL` edges on S11, no join node**; S3→S4 conditional with `SKIPPED` as the not-taken state
   - **TDD**: RED-FIRST · **Validate**: **EC-018** — a join does not proceed while any required branch is incomplete or failed; overlap observable in run history · **Docs**: plan §3 topology · **Trace**: matrix FR-ORC-003, EC-018
   - **Guard**: a linear chain would satisfy none of this; the test asserts genuine overlap, not merely a graph that permits it · **Done**: two fan-out/join points and one conditional proven · **Approval**: none
-- [ ] T076a [P] [US3] Concurrent downstream-artifact write serialization — `src/main/java/agentic/shortener/orchestration/graph/ArtifactWriteGuard.java`
+- [x] T076a [P] [US3] Concurrent downstream-artifact write serialization — `src/main/java/agentic/shortener/orchestration/graph/ArtifactWriteGuard.java`
   - **Req**: **FR-ORC-003**, FR-ORC-005 · **Scn**: DS-A · **ADR**: **ADR-008** · **Pre**: T076, T080
   - **Deps**: T076, T080 · **Par**: yes · **Artifact**: two parallel nodes writing the same downstream artifact are **serialized or the second is rejected** — never both applied, never silently last-write-wins; the outcome is recorded with the losing node named
   - **TDD**: RED-FIRST · **Validate**: **EC-017** — two fan-out children scripted to write one artifact concurrently; exactly one write lands; the other is serialized behind it or refused with a recorded reason; `artifact_version` shows one content hash per logical artifact per write, never a lost update · **Docs**: plan §3, §6 · **Trace**: matrix FR-ORC-003, EC-017
@@ -691,7 +691,7 @@ from the response JSON. Each is `[P]` because each touches its own files and dep
 
 ### Context and decision lineage
 
-- [ ] T081 [P] [US3] Artifact provenance and versioning — `src/main/java/agentic/shortener/orchestration/lineage/ArtifactVersion.java`
+- [x] T081 [P] [US3] Artifact provenance and versioning — `src/main/java/agentic/shortener/orchestration/lineage/ArtifactVersion.java`
   - **Req**: **FR-ORC-005** · **Scn**: all · **ADR**: ADR-008, ADR-010 · **Pre**: T080
   - **Deps**: T080 · **Par**: yes · **Artifact**: content hash plus producing stage; for any artifact, which stage produced it, from which inputs, under which decisions
   - **TDD**: RED-FIRST · **Validate**: provenance query over a completed run returns a complete chain · **Docs**: `data-model.md` KE-11/artifact_version · **Trace**: matrix FR-ORC-005

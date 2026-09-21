@@ -391,12 +391,29 @@ public final class JdbcRunStore {
      * <p>{@code WHERE state = ?} makes this a compare-and-set: two writers racing the same node cannot
      * both succeed, and the loser sees zero rows updated rather than silently overwriting a state it
      * never observed.
+     *
+     * <p><strong>{@code exited_at} records leaving an execution, so only an entered node can have one.</strong>
+     * The first version stamped it for every disposition, and {@code RunStateDurabilityIT} hit
+     * {@code stage_node_exit_after_entry} on the ordinary S4 path: the clarification gate is SKIPPED
+     * straight from BLOCKED when there is no material ambiguity, so it never ran, and an exit timestamp
+     * for it would assert an execution window that does not exist. Two guards, both load-bearing:
+     *
+     * <ul>
+     *   <li>{@code entered_at IS NOT NULL} — a node disposed of without running (SKIPPED from BLOCKED,
+     *       INVALIDATED before it started) has no execution to have left. <em>When</em> it was skipped is
+     *       in {@code state_transition}, which is where that fact belongs.
+     *   <li>{@code exited_at IS NULL} — a node INVALIDATED after it succeeded keeps the time it actually
+     *       finished. Overwriting that with the invalidation time would relabel history, which is the
+     *       same objection {@link agentic.shortener.orchestration.state.TransitionRules} raises against
+     *       FAILED becoming SUCCEEDED.
+     * </ul>
      */
     private void updateNodeState(Connection c, UUID runId, String nodeKey, StageState from,
                                  StageState to, Instant now) throws SQLException {
         String sql = "UPDATE stage_node SET state = ?, "
                 + "entered_at = CASE WHEN ? = 'RUNNING' THEN ? ELSE entered_at END, "
                 + "exited_at = CASE WHEN ? IN ('SUCCEEDED','FAILED','INVALIDATED','SKIPPED') "
+                + "  AND entered_at IS NOT NULL AND exited_at IS NULL "
                 + "THEN ? ELSE exited_at END "
                 + "WHERE run_id = ? AND node_key = ? AND state = ?";
         try (PreparedStatement ps = c.prepareStatement(sql)) {
