@@ -2,9 +2,9 @@
 
 | Field | Value |
 |---|---|
-| Status | **PROPOSED** — 2026-09-21. **Not approved. This is T031, a `[GATE]`.** |
+| Status | **APPROVED at Gate 7** — 2026-09-21, Pravallika Veeravalli. **Classification corrected PATCH → MINOR at the gate**, on her decision. |
 | Raised by | Task **T031**, which requires a change-control record for the contract baseline before any contract-dependent implementation proceeds |
-| Approving authority | Pravallika Veeravalli (human owner) — **REQUIRED, pending** |
+| Approving authority | Pravallika Veeravalli (human owner) — **approved 2026-09-21**, Gate 7 (`docs/governance/gate-decisions/gate-07-contract-baseline.md`) |
 | Affected approved artifacts | `contracts/openapi.yaml` (18 response examples added), `contracts/README.md` (migration classification, deprecation procedure, lint-status correction) |
 | Governing constitution | v1.1.0 — **not amended**. `POL-CHG-001` |
 | Application order | Sole record. Applies to the state left by CR-021..CR-035. **Already applied to the working tree**; this record exists to have the change approved, per T031's Done condition |
@@ -32,7 +32,13 @@ decision is hers.
 
 ### 2. Version impact
 
-**PATCH for both files, and this is the one classification worth arguing with.**
+**MINOR for both files — corrected at the gate.**
+
+> **The gate corrected this field.** The record as drafted classified all three edits **PATCH**, and then argued against its own label in the paragraphs below. The owner read the argument and **adopted MINOR**: the response examples now carry binding governance rules, and the migration deprecation procedure is newly mandatory rather than advisory. Her words, verbatim: **"Yes to both."**
+>
+> The drafted reasoning is left standing below rather than rewritten, because the disagreement is the useful part of the record: a reader can see what was proposed, what was argued against it, and which way the owner went.
+
+**As drafted — PATCH, with the argument against it:**
 
 | Change | Classification | Why |
 |---|---|---|
@@ -40,9 +46,7 @@ decision is hers.
 | Migration classification table + deprecation procedure in `README.md` | **PATCH** | Documentation of rules that already bound. Nothing newly constrains a consumer. |
 | Lint-status correction in `README.md` | **PATCH** | A statement of fact about what was verified. |
 
-**Why a record exists anyway despite PATCH not requiring one.** Two of the three edits *do* shift a
-consumer-visible meaning, and pretending otherwise would be exactly the goalpost-moving the
-classification table exists to prevent:
+**Why a record exists anyway despite PATCH not requiring one — and why this argument carried.** Two of the three edits *do* shift a consumer-visible meaning, and pretending otherwise would be exactly the goalpost-moving the classification table exists to prevent. **The owner agreed and set MINOR:**
 
 - **The examples now state governance rules a consumer will act on.** The 403 example says
   `actorType` accepts only `human` *and* that actor identity is declared rather than verified. The 409
@@ -52,10 +56,7 @@ classification table exists to prevent:
   across two versions" before, which is advice; it is now a two-step procedure with a stated failure
   mode. That constrains the next person who wants to drop a column.
 
-So: **classified PATCH honestly, recorded anyway because the content is heavier than the
-classification.** If you think either belongs at MINOR, that is a reasonable reading and the record
-should say MINOR instead — the classification is yours, and I would rather be corrected here than have
-a future reviewer find a MINOR change filed as PATCH.
+**Resolved: MINOR.** The draft asked to be corrected rather than defended, on the ground that a future reviewer finding a MINOR change filed as PATCH is worse than being corrected at the gate. The owner corrected it. Under `contracts/README.md`’s table, MINOR requires a change-control record — which is this record — and no new path prefix, since neither document has been served.
 
 ### 3. Backward-compatibility impact
 

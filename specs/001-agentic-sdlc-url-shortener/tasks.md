@@ -288,7 +288,7 @@ register rather than improvised under pressure.
   - **Deps**: T011 · **Par**: yes · **Artifact**: at least one example per response code, including every error shape
   - **TDD**: TEST-WITH · **Validate**: contract test asserts each example validates against its own schema · **Docs**: `contracts/openapi.yaml` · **Trace**: — 
   - **Guard**: examples that do not validate against their schema are worse than none · **Done**: every response code has a validating example · **Approval**: none
-- [ ] T031 [GATE] Contract and schema change-control approval — `docs/governance/change-control/CR-036-slice-2-contract-baseline.md`
+- [x] T031 [GATE] Contract and schema change-control approval — `docs/governance/change-control/CR-036-slice-2-contract-baseline.md`
   - **Req**: **`POL-CHG-001`** · **Scn**: — · **ADR**: ADR-005 · **Pre**: T029, T030, T011
   - **Deps**: T011, T029, T030 · **Par**: no · **Artifact**: change-control record for the Slice-1 contract baseline with the eight impact fields
   - **TDD**: N/A-DOC · **Validate**: record names owner, version impact, compatibility impact, affected consumers, tests, docs, rollout, approval · **Docs**: change-control record · **Trace**: `POL-CHG-001`
