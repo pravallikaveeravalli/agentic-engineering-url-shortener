@@ -28,6 +28,18 @@ SECRET_PATTERNS=(
 # red-phase evidence may quote a planted one.
 EXCLUDE_RE='^(scripts/scan\.sh|docs/evidence/red-phase/|target/)'
 
+# Values that SELF-IDENTIFY as test fixtures. Deliberately matched on the VALUE, never on the path.
+#
+# The distinction matters. A path exclusion for `src/test/**` would hide a real credential committed
+# in a test file, which is a common way keys actually leak. A value allowance cannot do that: a real
+# 256-bit key will not contain the literal string TESTONLY or SELFTESTONLY, because those are chosen
+# by whoever writes the fixture and a real key is chosen by a CSPRNG.
+#
+# Why fixtures need the real `crk_` prefix at all: ADR-013 hashes the FULL presented string including
+# the prefix, and CreatorCredentialTest asserts that a different prefix yields a different hash. A
+# fixture using a fake prefix would not exercise the property being tested.
+FIXTURE_RE='(TESTONLY|SELFTESTONLY|WRONGWRONGWRONG)'
+
 scan() {
   local found=1   # 1 == nothing found, kept shell-conventional below
   for pattern in "${SECRET_PATTERNS[@]}"; do
@@ -36,7 +48,9 @@ scan() {
     # self-test plant is untracked — so the self-test reported "no match" and declared the
     # scanner broken. It also matters in real use: a secret staged but not yet committed is
     # exactly what this should catch before it lands.
-    hits="$(git grep -n -I --untracked -E "${pattern}" -- . 2>/dev/null | grep -Ev "${EXCLUDE_RE}" || true)"
+    hits="$(git grep -n -I --untracked -E "${pattern}" -- . 2>/dev/null \
+             | grep -Ev "${EXCLUDE_RE}" \
+             | grep -Ev "${FIXTURE_RE}" || true)"
     if [ -n "${hits}" ]; then
       echo "${hits}"
       echo "  ^^ matched secret pattern: ${pattern}" >&2
@@ -48,9 +62,14 @@ scan() {
 
 if [ "${1:-}" = "--self-test" ]; then
   PLANT="${ROOT}/scan-self-test-plant.txt"
-  # A synthetic value in the real format. Not a live credential: generated here, authorises nothing,
-  # deleted below. Placed at the repository root because the scan excludes target/.
-  printf 'creator_key=crk_%s\n' "SELFTESTONLY0000000000000000" > "${PLANT}"
+  # A synthetic value in the real format, deliberately WITHOUT a fixture marker.
+  #
+  # This matters. The FIXTURE_RE allowance above skips values containing TESTONLY, and when
+  # the plant carried that marker the self-test skipped its OWN plant and reported the
+  # scanner broken -- fail-closed working correctly, and a real defect in the plant. The
+  # plant needs no marker because it is transient: created here, scanned, and deleted before
+  # this branch returns, so it is never a value a reader could mistake for a committed key.
+  printf 'creator_key=crk_%s\n' "aQ7zR2mV9xL4bN6kD1sF8wT3yH5jC0pG" > "${PLANT}"
   echo "planted a synthetic creator key at scan-self-test-plant.txt"
 
   if scan >/dev/null 2>&1; then
