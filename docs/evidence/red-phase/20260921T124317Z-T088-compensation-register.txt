@@ -1,0 +1,151 @@
+# Red-phase evidence
+
+- **Label**: T088-compensation-register
+- **Captured (UTC)**: 20260921T124317Z
+- **Command**: `./mvnw -Dtest=CompensationRegisterTest -Dit.test=CompensationRegisterIT -Dfailsafe.failIfNoSpecifiedTests=false verify`
+- **Exit code**: 1
+- **Requirement**: NFR-TST-002 (red phase evidenced, not asserted); CN-004
+
+## Why this file exists
+
+This is the failing run captured BEFORE the implementation that makes it pass. It is stored
+so that the red phase is readable by a reviewer rather than claimed in a commit message.
+
+## Captured output
+
+```
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< agentic:shortener >--------------------------
+[INFO] Building agentic-sdlc-url-shortener 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ shortener ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 5 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ shortener ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 106 source files with javac [debug parameters release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ shortener ---
+[INFO] skip non existing resourceDirectory /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ shortener ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 79 source files with javac [debug parameters release 21] to target/test-classes
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java uses or overrides a deprecated API.
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.orchestration.reliability.CompensationRegisterTest
+[ERROR] Tests run: 7, Failures: 0, Errors: 7, Skipped: 0, Time elapsed: 0.019 s <<< FAILURE! -- in agentic.shortener.orchestration.reliability.CompensationRegisterTest
+[ERROR] agentic.shortener.orchestration.reliability.CompensationRegisterTest.unclassifiedIsCompensateOnly -- Time elapsed: 0.006 s <<< ERROR!
+java.lang.UnsupportedOperationException: T088 not implemented
+	at agentic.shortener.orchestration.reliability.CompensationRegister.resolve(CompensationRegister.java:31)
+	at agentic.shortener.orchestration.reliability.CompensationRegisterTest.unclassifiedIsCompensateOnly(CompensationRegisterTest.java:47)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.reliability.CompensationRegisterTest.rollbackOnImmutableStoreIsRefused -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T088 not implemented
+	at agentic.shortener.orchestration.reliability.CompensationRegister.requireRollbackPermitted(CompensationRegister.java:43)
+	at agentic.shortener.orchestration.reliability.CompensationRegisterTest.rollbackOnImmutableStoreIsRefused(CompensationRegisterTest.java:82)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.reliability.CompensationRegisterTest.shortLinkIsExpiredNotDeleted -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T088 not implemented
+	at agentic.shortener.orchestration.reliability.CompensationRegister.resolve(CompensationRegister.java:31)
+	at agentic.shortener.orchestration.reliability.CompensationRegisterTest.shortLinkIsExpiredNotDeleted(CompensationRegisterTest.java:100)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.reliability.CompensationRegisterTest.sevenRowsThreeKinds -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T088 not implemented
+	at agentic.shortener.orchestration.reliability.CompensationRegister.kindOf(CompensationRegister.java:39)
+	at agentic.shortener.orchestration.reliability.CompensationRegisterTest.lambda$sevenRowsThreeKinds$0(CompensationRegisterTest.java:60)
+	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:178)
+	at java.base/java.util.Iterator.forEachRemaining(Iterator.java:133)
+	at java.base/java.util.Spliterators$IteratorSpliterator.forEachRemaining(Spliterators.java:1939)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:575)
+	at java.base/java.util.stream.AbstractPipeline.evaluateToArrayNode(AbstractPipeline.java:260)
+	at java.base/java.util.stream.ReferencePipeline.toArray(ReferencePipeline.java:616)
+	at java.base/java.util.stream.ReferencePipeline.toArray(ReferencePipeline.java:622)
+	at java.base/java.util.stream.ReferencePipeline.toList(ReferencePipeline.java:627)
+	at agentic.shortener.orchestration.reliability.CompensationRegisterTest.sevenRowsThreeKinds(CompensationRegisterTest.java:60)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.reliability.CompensationRegisterTest.nothingToCompensateIsNotIgnorance -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T088 not implemented
+	at agentic.shortener.orchestration.reliability.CompensationRegister.resolve(CompensationRegister.java:31)
+	at agentic.shortener.orchestration.reliability.CompensationRegisterTest.nothingToCompensateIsNotIgnorance(CompensationRegisterTest.java:129)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.reliability.CompensationRegisterTest.classificationIsStructural -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T088 not implemented
+	at agentic.shortener.orchestration.reliability.CompensationRegister.resolve(CompensationRegister.java:31)
+	at agentic.shortener.orchestration.reliability.CompensationRegisterTest.classificationIsStructural(CompensationRegisterTest.java:31)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.reliability.CompensationRegisterTest.noKnownActionTouchesNothing -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T088 not implemented
+	at agentic.shortener.orchestration.reliability.CompensationRegister.resolveWithoutKnownAction(CompensationRegister.java:35)
+	at agentic.shortener.orchestration.reliability.CompensationRegisterTest.noKnownActionTouchesNothing(CompensationRegisterTest.java:113)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Errors: 
+[ERROR]   CompensationRegisterTest.classificationIsStructural:31 » UnsupportedOperation T088 not implemented
+[ERROR]   CompensationRegisterTest.noKnownActionTouchesNothing:113 » UnsupportedOperation T088 not implemented
+[ERROR]   CompensationRegisterTest.nothingToCompensateIsNotIgnorance:129 » UnsupportedOperation T088 not implemented
+[ERROR]   CompensationRegisterTest.rollbackOnImmutableStoreIsRefused:82 » UnsupportedOperation T088 not implemented
+[ERROR]   CompensationRegisterTest.sevenRowsThreeKinds:60->lambda$sevenRowsThreeKinds$0:60 » UnsupportedOperation T088 not implemented
+[ERROR]   CompensationRegisterTest.shortLinkIsExpiredNotDeleted:100 » UnsupportedOperation T088 not implemented
+[ERROR]   CompensationRegisterTest.unclassifiedIsCompensateOnly:47 » UnsupportedOperation T088 not implemented
+[INFO] 
+[ERROR] Tests run: 7, Failures: 0, Errors: 7, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  2.046 s
+[INFO] Finished at: 2026-09-21T07:43:19-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project shortener: 
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+```
