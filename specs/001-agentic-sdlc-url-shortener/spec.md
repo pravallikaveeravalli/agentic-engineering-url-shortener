@@ -1335,9 +1335,21 @@ requirement. None constrains implementation until approved.
 
 ## Validation Targets *(approved)*
 
-**All 15 values below were approved by Pravallika Veeravalli at the Gate 4 closing package, 2026-09-20**
-(`docs/governance/gate-decisions/gate-04-closing-package.md`, CR-005). They now **constrain implementation** and
-are acceptance thresholds, no longer proposals.
+**Sixteen targets, of which fifteen constrain implementation and one is retired.**
+
+- **PVT-001..PVT-009 and PVT-011..PVT-015** — fourteen values approved by Pravallika Veeravalli at the Gate 4
+  closing package, 2026-09-20 (`docs/governance/gate-decisions/gate-04-closing-package.md`, CR-005). They
+  **constrain implementation** and are acceptance thresholds, no longer proposals. **PVT-009** was subsequently
+  restated by **CR-010** — the same 0.5%, as an observable append-failure ceiling rather than a loss budget.
+- **PVT-016** — added by **CR-010** (per-node escalation thresholds). Binding in the same sense: every node must
+  have a threshold and breaching one must ask the human.
+- **PVT-010** — **retired as a binding target by the owner's explicit decision, 2026-09-20 (CR-017)**, and replaced
+  by a production recommendation. It is retained in the table as a recommendation, not deleted, so that a reader can
+  see what production would do and that the demonstration deliberately does not do it. **It is not measured and not
+  enforced.**
+
+Fifteen binding, one retired, sixteen rows. Any row's binding status is stated in its own Conditions cell, so the
+count above can be checked against the table rather than trusted.
 
 They originated as this specification's own proposals — the assignment supplied no numeric targets — and were
 held as non-binding until approval, per Constitution X and §Assessment Scope's demonstration-versus-production

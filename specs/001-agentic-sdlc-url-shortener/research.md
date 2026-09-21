@@ -44,15 +44,39 @@ Each candidate is a **proposal**, not a decision (CN-002). Full option tables in
   onto the two-vote retry ruling or the compensation register); Spring StateMachine (would help with
   stage states but not the graph, persistence, replanning, or gate semantics — most of the work).
 
-### AI provider (ADR-004)
+### AI provider (ADR-004) — **TRANSPORT AND FLAG SUPERSEDED 2026-09-20; the provider choice stands**
 
-- **Decision**: Anthropic Claude API behind a provider interface; latest available Claude model chosen
-  at implementation time; deterministic mode default — *recommended.*
-- **Rationale**: CL-003 requires real AI where work is creative, while CN-011 requires the
-  reviewer-default path to run with no key. An interface satisfies both and keeps providers swappable.
-- **Alternatives considered**: OpenAI (equivalent for this purpose; no differentiator); local model
-  (removes the key requirement but adds setup burden for a reviewer and weakens authoring quality);
-  deterministic-only (rejected by CL-003 as making the "agentic" claim hollow).
+**Superseded in two respects** by ADR-004 as accepted at Gate 4 and by its Amendment 01 (CR-008):
+
+1. **Transport.** The implemented adapter is a **subprocess invocation of the locally installed, authenticated
+   Claude Code CLI in headless mode**, not an API call. The owner's ground, recorded at ADR-004-A1: *"I already have
+   a Claude subscription; I do not have API credits and do not want to buy them when this alternative exists. The
+   provider interface exists precisely so this choice is a swap behind one seam."* The **Anthropic API/SDK adapter is
+   the recorded production alternative behind the same interface**, built only if time permits.
+2. **The flag.** "Deterministic mode default" is the vocabulary **CR-001 abolished**. The run-level flag is
+   **`ai: on | off`, default `off`**, named for the one thing it controls — whether AI executors participate — because
+   a keyless run can still contain a `HUMAN` execution at the stage-7 no-plan gate, so a run-level determinism label
+   would over-promise.
+
+**What stands unchanged**: the provider choice itself — Anthropic Claude, reached through **one interface owned by
+this codebase** — and the reason it is behind an interface. ADR-004 assessed the provider choice as **High
+reversibility** for exactly this reason, and Amendment 01 is that assessment being proved rather than a departure
+from it.
+
+Retained verbatim below for provenance, in the same idiom this file uses for its superseded deferred-findings
+positions:
+
+> - **Decision**: Anthropic Claude API behind a provider interface; latest available Claude model chosen
+>   at implementation time; deterministic mode default — *recommended.*
+> - **Rationale**: CL-003 requires real AI where work is creative, while CN-011 requires the
+>   reviewer-default path to run with no key. An interface satisfies both and keeps providers swappable.
+> - **Alternatives considered**: OpenAI (equivalent for this purpose; no differentiator); local model
+>   (removes the key requirement but adds setup burden for a reviewer and weakens authoring quality);
+>   deterministic-only (rejected by CL-003 as making the "agentic" claim hollow).
+
+The **Rationale** and **Alternatives** above remain sound and were not superseded — CL-003 still requires real AI
+where the work is creative, CN-011 still requires the keyless path, and the three rejected alternatives were rejected
+on grounds the transport change does not touch. Only the transport and the flag name moved.
 
 ### Contract validation (ADR-005)
 
