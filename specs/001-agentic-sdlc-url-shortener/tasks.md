@@ -805,47 +805,47 @@ names it.
 
 **Blocking**: T096. **Synchronization point**: T110.
 
-- [ ] T097 [US4] Policy model and version — `src/main/java/agentic/shortener/policy/PolicySet.java`
+- [x] T097 [US4] Policy model and version — `src/main/java/agentic/shortener/policy/PolicySet.java`
   - **Req**: **FR-ORC-022**, Constitution VI · **Scn**: all · **ADR**: **ADR-005** · **Pre**: T027
   - **Deps**: T027 · **Par**: no (consumed by T098–T105) · **Artifact**: `policy-set-1.1.0` as a versioned, loadable definition covering all seven domains
   - **TDD**: RED-FIRST · **Validate**: every run records the **policy version evaluated**; a run without it is invalid · **Docs**: plan §9 · **Trace**: matrix FR-ORC-022
   - **Guard**: **policy execution without a recorded policy version is a detection target** — the schema requires `policySetVersion` as a const · **Done**: version recorded per run; missing version rejected · **Approval**: none
-- [ ] T098 [P] [US4] Twelve policy definitions with mandatory/advisory split — `src/main/java/agentic/shortener/policy/definitions/`
+- [x] T098 [P] [US4] Twelve policy definitions with mandatory/advisory split — `src/main/java/agentic/shortener/policy/definitions/`
   - **Req**: FR-ORC-022 · **Scn**: all · **ADR**: ADR-005 · **Pre**: T097
   - **Deps**: T097 · **Par**: yes · **Artifact**: `POL-SEC-001..003`, `POL-PRIV-001`, `POL-AUD-001`, `POL-DEP-001`, `POL-LIC-001`, `POL-CHG-001..003`, `POL-TST-001`, `POL-TRC-001` — **twelve, all mandatory**. `POL-CHG-003` added (a MAJOR contract change carries a new major version, CR-013); `POL-AUD-002` **removed** because with no retention path it could never meaningfully evaluate (CR-017)
   - **TDD**: RED-FIRST · **Validate**: completeness test counting **twelve** against plan §9's table and asserting **no advisory instance exists**; each carries its domain and mandatory flag · **Docs**: plan §9 · **Trace**: matrix FR-ORC-022
   - **Guard**: a policy in the plan but absent from the definitions is a silent gap in compliance coverage · **Done**: twelve defined, all mandatory; split matches the plan · **Approval**: none
-- [ ] T099 [P] [US4] Policy-evaluation schema conformance — `src/test/java/agentic/shortener/policy/PolicyEvaluationSchemaTest.java`
+- [x] T099 [P] [US4] Policy-evaluation schema conformance — `src/test/java/agentic/shortener/policy/PolicyEvaluationSchemaTest.java`
   - **Req**: FR-ORC-022 · **Scn**: — · **ADR**: ADR-005 · **Pre**: T098
   - **Deps**: T098 · **Par**: yes · **Artifact**: output validated against `contracts/policy-evaluation.schema.json`
   - **TDD**: RED-FIRST · **Validate**: **exactly four** outcome values accepted; a fifth rejected · **Docs**: `contracts/` · **Trace**: matrix FR-ORC-022
   - **Guard**: there is no `UNKNOWN` or `SKIPPED` outcome; the schema is the enforcement · **Done**: four accepted, fifth rejected · **Approval**: none
-- [ ] T100 [US4] Compliance evaluation stage (S10) — `src/main/java/agentic/shortener/policy/PolicyEvaluationStage.java`
+- [x] T100 [US4] Compliance evaluation stage (S10) — `src/main/java/agentic/shortener/policy/PolicySetEvaluator.java` (implements the `PolicyEvaluator` port T071 already built for S10's `PolicyEvaluationEngine`; T123's traceability sweep found this line's original "PolicyEvaluationStage.java" name stale — the stage class itself predates this task, this task fills the port)
   - **Req**: **FR-ORC-022** · **Scn**: DS-B · **ADR**: **ADR-004** · **Pre**: T099, T069
   - **Deps**: T069, T099 · **Par**: no · **Artifact**: deterministic, **real** evaluation producing one outcome per applicable policy
   - **TDD**: RED-FIRST · **Validate**: repeatable verdicts across runs on identical input · **Docs**: plan §9 · **Trace**: matrix FR-ORC-022, KE-17
   - **Guard**: **verdicts must be repeatable**, which is why this stage is deterministic and never AI-capable · **Done**: identical input yields identical verdicts · **Approval**: none
-- [ ] T101 [P] [US4] Unevaluable check never defaults to PASS — `src/test/java/agentic/shortener/policy/UnevaluableCheckTest.java`
+- [x] T101 [P] [US4] Unevaluable check never defaults to PASS — `src/test/java/agentic/shortener/policy/UnevaluableCheckTest.java`
   - **Req**: FR-ORC-022 · **Scn**: — · **ADR**: — · **Pre**: T100
   - **Deps**: T100 · **Par**: yes · **Artifact**: a check that cannot be evaluated records `FAIL`, not `PASS`
   - **TDD**: EVIDENCE · **Validate**: **EC-025** · **Docs**: plan §9 · **Trace**: matrix FR-ORC-022, EC-025
   - **Guard**: this is the precedent the whole default-deny family rests on — retry classification and effect reversibility both cite it · **Done**: EC-025 proven · **Approval**: none
-- [ ] T102 [US4] Mandatory FAIL blocks downstream progression — `src/main/java/agentic/shortener/policy/BlockingEnforcer.java`
+- [x] T102 [US4] Mandatory FAIL blocks downstream progression — `src/main/java/agentic/shortener/policy/BlockingEnforcer.java`
   - **Req**: **FR-ORC-022** · **Scn**: DS-B · **ADR**: — · **Pre**: T101, T091
   - **Deps**: T091, T101 · **Par**: no · **Artifact**: a mandatory `FAIL` halts downstream stages and routes to safe-stop
   - **TDD**: EVIDENCE · **Validate**: seeded mandatory `FAIL` → downstream stage count zero; run suspended with the policy named · **Docs**: plan §9 · **Trace**: matrix FR-ORC-022
   - **Guard**: **a compliance failure that does not block is a detection target.** Reporting without blocking fails this task · **Done**: blocking proven; policy named in the reason · **Approval**: none
-- [ ] T103 [P] [US4] Policy exception workflow with seven fields — `src/main/java/agentic/shortener/policy/PolicyException.java`
+- [x] T103 [P] [US4] Policy exception workflow with seven fields — `src/main/java/agentic/shortener/policy/PolicyException.java`
   - **Req**: Constitution §Exception procedure · **Scn**: — · **ADR**: — · **Pre**: T100
   - **Deps**: T100 · **Par**: yes · **Artifact**: policy, **precise clause**, reason, scope, approving authority, **compensating control**, residual risk, approval timestamp, expiry or review condition — plus `repositoryRecordPath` under `docs/governance/exceptions/`
   - **TDD**: RED-FIRST · **Validate**: schema rejects an exception missing any field, especially the **compensating control** · **Docs**: `CLAUDE.md` exceptions location · **Trace**: matrix FR-ORC-022, KE-18
   - **Guard**: **a missing compensating control is a detection target**; the schema is the control · **Done**: all seven required; omission rejected · **Approval**: none
-- [ ] T104 [P] [US4] Unapproved exception treated as FAIL — `src/test/java/agentic/shortener/policy/UnapprovedExceptionTest.java`
+- [x] T104 [P] [US4] Unapproved exception treated as FAIL — `src/test/java/agentic/shortener/policy/UnapprovedExceptionTest.java`
   - **Req**: FR-ORC-022 · **Scn**: — · **ADR**: — · **Pre**: T103
   - **Deps**: T103 · **Par**: yes · **Artifact**: `EXCEPTION_REQUESTED` without recorded approval evaluates as `FAIL`
   - **TDD**: EVIDENCE · **Validate**: blocking behaviour asserted · **Docs**: plan §9 · **Trace**: matrix FR-ORC-022
   - **Guard**: an unapproved exception must not silently function as a waiver · **Done**: treated as `FAIL`; progression blocked · **Approval**: none
-- [ ] T105 [P] [US4] Expired exception treated as violation — `src/test/java/agentic/shortener/policy/ExpiredExceptionTest.java`
+- [x] T105 [P] [US4] Expired exception treated as violation — `src/test/java/agentic/shortener/policy/ExpiredExceptionTest.java`
   - **Req**: FR-ORC-022 · **Scn**: — · **ADR**: — · **Pre**: T103
   - **Deps**: T103 · **Par**: yes · **Artifact**: an approved exception passing its expiry mid-run blocks progression
   - **TDD**: EVIDENCE · **Validate**: **EC-027** with clock control · **Docs**: plan §9 · **Trace**: matrix FR-ORC-022, EC-027

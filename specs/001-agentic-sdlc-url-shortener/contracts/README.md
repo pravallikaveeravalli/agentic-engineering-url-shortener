@@ -14,7 +14,7 @@ rather than deriving them (ADR-005).
 | `workflow-state.schema.json` | **3.0.0** (CR-029) | Persisted run snapshots validated against it, including the terminal/suspended conditionals and the fan-out node model; node-key uniqueness and the join invariant are asserted by T074's test, which JSON Schema cannot express |
 | `approval.schema.json` | 1.0.0 | Gate decision records validated; `repositoryRecordPath` pattern enforces materialization |
 | `audit-event.schema.json` | 1.0.0 | Every audit record validated for all six mandatory fields (`POL-AUD-001`) |
-| `policy-evaluation.schema.json` | 1.0.0 | S10 output validated for exactly four outcome values and complete exception fields |
+| `policy-evaluation.schema.json` | 1.1.0 | S10 output validated for exactly four outcome values and complete exception fields (CR-043: twelve `policyId`s, `POL-CHG-003` added / `POL-AUD-002` removed, matching `policy-set-1.1.0`) |
 
 Persistence schema lives separately as Flyway migrations (`db/migration/V*.sql`), forward-only.
 

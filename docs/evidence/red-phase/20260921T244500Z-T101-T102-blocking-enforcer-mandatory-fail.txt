@@ -1,0 +1,24 @@
+Sabotage: BlockingEnforcer.blocksAlone — the FAIL case was changed from `case FAIL -> true;` to
+`case FAIL -> false;`, disabling the single most basic rule the whole policy engine rests on: a mandatory
+FAIL blocks.
+
+[INFO] Running agentic.shortener.policy.UnevaluableCheckTest
+[ERROR] Tests run: 2, Failures: 1, Errors: 0, Skipped: 0 <<< FAILURE!
+[ERROR] UnevaluableCheckTest.unevaluableRecordedAsFailBlocksTheSameAsAGenuineFailure -- FAILURE!
+org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+	at agentic.shortener.policy.UnevaluableCheckTest.unevaluableRecordedAsFailBlocksTheSameAsAGenuineFailure(UnevaluableCheckTest.java:53)
+
+[INFO] Running agentic.shortener.policy.BlockingEnforcerTest
+[ERROR] Tests run: 6, Failures: 3, Errors: 0, Skipped: 0 <<< FAILURE!
+[ERROR] BlockingEnforcerTest.mandatoryFailBlocks -- FAILURE!
+org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+[ERROR] BlockingEnforcerTest.unevaluableCheckRecordedAsFailBlocks -- FAILURE!
+org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+[ERROR] BlockingEnforcerTest.oneMandatoryFailAmongManyPassesBlocks -- FAILURE!
+org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+
+Fix: restored `case FAIL -> true;`. This is the load-bearing rule T102's own Guard clause names directly:
+"a compliance failure that does not block is a detection target." Four tests across two files caught it
+immediately, from two independent angles (BlockingEnforcerTest's direct proof, UnevaluableCheckTest's
+EC-025 equal-severity proof) — confirming the rule is genuinely exercised by more than one test, not a
+single fragile assertion.

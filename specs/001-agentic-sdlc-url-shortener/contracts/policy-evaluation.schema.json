@@ -2,14 +2,14 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://agentic-sdlc-url-shortener/contracts/policy-evaluation.schema.json",
   "title": "PolicyEvaluation",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Output of stage S10. Exactly four outcome values; an unevaluable check is never PASS (EC-025). A mandatory FAIL blocks downstream progression and release readiness.",
   "type": "object",
   "additionalProperties": false,
   "required": ["runId", "policySetVersion", "evaluatedAt", "results", "blocking"],
   "properties": {
     "runId": { "type": "string" },
-    "policySetVersion": { "type": "string", "const": "policy-set-1.0.0" },
+    "policySetVersion": { "type": "string", "const": "policy-set-1.1.0" },
     "evaluatedAt": { "type": "string", "format": "date-time" },
     "blocking": {
       "type": "boolean",
@@ -26,8 +26,8 @@
           "policyId": {
             "type": "string",
             "enum": ["POL-SEC-001", "POL-SEC-002", "POL-SEC-003", "POL-PRIV-001",
-                     "POL-AUD-001", "POL-AUD-002", "POL-DEP-001", "POL-LIC-001",
-                     "POL-CHG-001", "POL-CHG-002", "POL-TST-001", "POL-TRC-001"]
+                     "POL-AUD-001", "POL-DEP-001", "POL-LIC-001",
+                     "POL-CHG-001", "POL-CHG-002", "POL-CHG-003", "POL-TST-001", "POL-TRC-001"]
           },
           "domain": {
             "type": "string",
