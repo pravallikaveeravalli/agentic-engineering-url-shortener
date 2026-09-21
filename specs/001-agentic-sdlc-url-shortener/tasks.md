@@ -965,17 +965,17 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
   - **Deps**: T123 · **Par**: yes · **Artifact**: zero orphan requirements, tasks, implementations, and tests — in **both** directions
   - **TDD**: EVIDENCE · **Validate**: every delivered requirement reaches an executed test and evidence; every test traces back to a requirement · **Docs**: — · **Trace**: matrix, SC-010
   - **Guard**: **orphan detection must be a mechanism, not a prohibition.** This is that mechanism · **Done**: four orphan classes each asserted zero · **Approval**: none
-- [ ] T125 [P] [US5] Traceability gap blocks release readiness — `src/test/java/agentic/shortener/policy/TraceabilityBlockingTest.java`
+- [x] T125 [P] [US5] Traceability gap blocks release readiness — `src/test/java/agentic/shortener/policy/TraceabilityBlockingTest.java`
   - **Req**: `POL-TRC-001`, Constitution §Governance condition 6 · **Scn**: — · **ADR**: — · **Pre**: T124, T109
   - **Deps**: T109, T124 · **Par**: yes · **Artifact**: a seeded orphan makes readiness blocking
   - **TDD**: EVIDENCE · **Validate**: orphan seeded → readiness blocks and names condition 6 · **Docs**: — · **Trace**: `POL-TRC-001`
   - **Guard**: reporting an orphan without blocking would satisfy neither the policy nor the constitution · **Done**: blocking proven · **Approval**: none
-- [ ] T126 [P] [US5] Documentation updated with delivered behaviour — `README.md`, `docs/`
+- [x] T126 [P] [US5] Documentation updated with delivered behaviour — `README.md`, `docs/`
   - **Req**: Constitution X, NFR-SEC-003 · **Scn**: all · **ADR**: — · **Pre**: T057, T110
   - **Deps**: T057, T110 · **Par**: yes · **Artifact**: docs describing behaviour actually implemented; threat model including the **operator-script trust boundary** and the **noisy-neighbour throttling trade-off**
   - **TDD**: N/A-DOC · **Validate**: no documented behaviour absent from the system; none present but undocumented · **Docs**: this task · **Trace**: NFR-SEC-003
   - **Guard**: **documentation is updated in the same change as the behaviour it describes**, never retrofitted · **Done**: both named trade-offs documented; drift check clean · **Approval**: none
-- [ ] T127 [P] [US5] Quickstart verified end to end on a clean machine — `specs/001-agentic-sdlc-url-shortener/quickstart.md`
+- [x] T127 [P] [US5] Quickstart verified end to end on a clean machine — `specs/001-agentic-sdlc-url-shortener/quickstart.md`
   - **Req**: plan §14 · **Scn**: all · **ADR**: **ADR-012** · **Pre**: T110
   - **Deps**: T110 · **Par**: yes · **Artifact**: every command in the guide executed; both restart demonstrations performed
   - **TDD**: EVIDENCE · **Validate**: the **fast and integration tiers** run with no AI key and no network; the orchestration run requires an authenticated CLI, and the guide says so before any run instruction · **Docs**: `quickstart.md` corrections applied · **Trace**: FR-ORC-030
