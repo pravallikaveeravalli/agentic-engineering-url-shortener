@@ -83,8 +83,10 @@
           "toNodeKey": { "type": "string" },
           "joinSemantics": {
             "type": "string",
-            "enum": ["ALL", "ANY"],
-            "description": "ALL means the join does not proceed while any required branch is incomplete or failed (EC-018)."
+            "enum": [
+          "ALL"
+        ],
+            "description": "Always ALL, the only join semantic (CR-039): the join does not proceed while any required branch is incomplete or failed (EC-018). ANY was removed by owner ruling 2026-09-21 because it was storable and never honoured."
           }
         }
       }

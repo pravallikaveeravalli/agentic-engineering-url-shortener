@@ -87,7 +87,7 @@ effects. Same marker + differing fingerprint → conflict; mint nothing, change 
 | Entity | Fields |
 |---|---|
 | StageNode | `id`, `run_id`, `node_key` (string — `"S1".."S12"` for a singleton or fan-out-parent stage, `"S7.1".."S7.n"` for a fan-out child, `"S7.join"` for its join node; **unique per run**), `stage_number` (1–12 — the stage the node belongs to, no longer the node's identity), `node_role` (`SINGLETON` \| `FAN_OUT_PARENT` \| `FAN_OUT_CHILD` \| `JOIN`), `parent_node_key?` (set on a `FAN_OUT_CHILD` and a `JOIN`, null otherwise), `state`, `executor_class`, `executor_kind_used`, `attempts_used`, `entered_at`, `exited_at?`, `blocking_reason?` |
-| DependencyEdge | `id`, `run_id`, `from_node_key`, `to_node_key`, `join_semantics` (`ALL` \| `ANY`) — edges address **nodes**, never stage numbers, so each fan-out child's edges are individually declared and a replanned instance's topology stays queryable (FR-ORC-002, ADR-008) |
+| DependencyEdge | `id`, `run_id`, `from_node_key`, `to_node_key`, `join_semantics` (`ALL` — the only join semantic, CR-039) — edges address **nodes**, never stage numbers, so each fan-out child's edges are individually declared and a replanned instance's topology stays queryable (FR-ORC-002, ADR-008) |
 
 **Stage states**: `BLOCKED`, `READY`, `RUNNING`, `AWAITING_APPROVAL`, `RETRY_WAIT`, `FALLBACK`,
 `ROLLING_BACK`, `COMPENSATING`, `SUCCEEDED`, `FAILED`, `INVALIDATED`, `SKIPPED`. Allowed and

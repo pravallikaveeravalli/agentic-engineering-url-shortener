@@ -22,10 +22,13 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
  * and no Spring context. That matters because a red-green loop requiring Docker gets abandoned
  * (T017).
  *
- * <p>Three rule groups, from three different records:
+ * <p>Four rule groups, from four different records:
  * <ul>
  *   <li><strong>NFR-MNT-001 / NFR-MNT-002</strong> — the domain depends on nothing, and the
  *       application plane does not import the control plane.
+ *   <li><strong>CR-038</strong> — no control-plane controller sits in the application plane's
+ *       delivery package. T067, T067a and T082a were pathed there and would each have broken the
+ *       rule above; the owner ruled the paths were the defect, and this keeps them out.
  *   <li><strong>CR-021</strong> — no executor package references the gate-decision path. The
  *       control against an agent satisfying its own gate is that <em>the code path does not
  *       exist</em>; a field check would only test what a caller says.
@@ -82,6 +85,48 @@ class DependencyDirectionTest {
                         + "the orchestration engine switched off");
 
         rule.check(productionClasses());
+    }
+
+    @Test
+    @DisplayName("CR-038: no control-plane controller sits in the application plane's delivery package")
+    void controlPlaneControllersAreNotInTheApplicationPlane() {
+        // CR-038. T067, T067a and T082a were pathed into agentic.shortener.delivery and would each have
+        // failed applicationPlaneDoesNotImportControlPlane, because all three read orchestration state. The
+        // owner ruled that the paths were the defect and the rule stands; they now belong under
+        // orchestration/api.
+        //
+        // This assertion is what makes the ruling hold when they are built. The relocation is otherwise only
+        // a path in a task plan, and the three classes do not exist yet — so without this, the ruling depends
+        // on whoever builds them having read CR-038.
+        ArchRule rule = noClasses()
+                .that().resideInAPackage(ROOT + ".delivery..")
+                .should().haveSimpleNameStartingWith("Run")
+                .orShould().haveSimpleNameStartingWith("GateDecision")
+                .because("CR-038: run submission, run inspection and gate decisions are orchestrator "
+                        + "surfaces. In the application plane's delivery package they could only reach "
+                        + "orchestration state by breaking NFR-MNT-002's one-way dependency")
+                .allowEmptyShould(true);
+
+        rule.check(productionClasses());
+
+        // The rule above is armed before the classes it governs exist, so today it passes vacuously — and a
+        // vacuous pass is indistinguishable from a real one. The same rule pointed at a package that DOES
+        // hold a matching name must fail: orchestration.state has RunState. Without this, a typo in the name
+        // predicate would leave a rule that can never fire.
+        ArchRule sameRuleWhereItMustFire = noClasses()
+                .that().resideInAPackage(ROOT + ".orchestration.state..")
+                .should().haveSimpleNameStartingWith("Run")
+                .orShould().haveSimpleNameStartingWith("GateDecision")
+                .allowEmptyShould(true);
+
+        try {
+            sameRuleWhereItMustFire.check(productionClasses());
+            org.junit.jupiter.api.Assertions.fail(
+                    "the name predicate matched nothing even where RunState lives, so the rule above is "
+                            + "checking nothing");
+        } catch (AssertionError expected) {
+            // The rule fires. That is the whole point of running it here.
+        }
     }
 
     @Test

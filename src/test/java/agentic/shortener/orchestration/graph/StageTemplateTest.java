@@ -210,7 +210,7 @@ class StageTemplateTest {
         assertThrows(UnsupportedOperationException.class,
                 () -> template.nodes().add(StageNode.singleton("S1", 1, "spurious")));
         assertThrows(UnsupportedOperationException.class,
-                () -> template.edges().add(new DependencyEdge("S1", "S12", JoinSemantics.ANY)));
+                () -> template.edges().add(new DependencyEdge("S1", "S12", JoinSemantics.ALL)));
     }
 
     @Test
