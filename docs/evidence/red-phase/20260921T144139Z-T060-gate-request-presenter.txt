@@ -1,0 +1,122 @@
+# Red-phase evidence
+
+- **Label**: T060-gate-request-presenter
+- **Captured (UTC)**: 20260921T144139Z
+- **Command**: `./mvnw -Dtest=GateRequestPresenterTest test`
+- **Exit code**: 1
+- **Requirement**: NFR-TST-002 (red phase evidenced, not asserted); CN-004
+
+## Why this file exists
+
+This is the failing run captured BEFORE the implementation that makes it pass. It is stored
+so that the red phase is readable by a reviewer rather than claimed in a commit message.
+
+## Captured output
+
+```
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< agentic:shortener >--------------------------
+[INFO] Building agentic-sdlc-url-shortener 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ shortener ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 8 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ shortener ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 137 source files with javac [debug parameters release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ shortener ---
+[INFO] skip non existing resourceDirectory /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ shortener ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 93 source files with javac [debug parameters release 21] to target/test-classes
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java uses or overrides a deprecated API.
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.orchestration.gates.GateRequestPresenterTest
+[ERROR] Tests run: 5, Failures: 0, Errors: 5, Skipped: 0, Time elapsed: 0.028 s <<< FAILURE! -- in agentic.shortener.orchestration.gates.GateRequestPresenterTest
+[ERROR] agentic.shortener.orchestration.gates.GateRequestPresenterTest.autoAbandonComputedFromRequestMoment -- Time elapsed: 0.016 s <<< ERROR!
+java.lang.UnsupportedOperationException: T060 not implemented
+	at agentic.shortener.orchestration.gates.GateRequestPresenter.request(GateRequestPresenter.java:19)
+	at agentic.shortener.orchestration.gates.GateRequestPresenterTest.autoAbandonComputedFromRequestMoment(GateRequestPresenterTest.java:44)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.gates.GateRequestPresenterTest.waitDeadlineIsPvt006FromNow -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T060 not implemented
+	at agentic.shortener.orchestration.gates.GateRequestPresenter.request(GateRequestPresenter.java:19)
+	at agentic.shortener.orchestration.gates.GateRequestPresenterTest.waitDeadlineIsPvt006FromNow(GateRequestPresenterTest.java:34)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.gates.GateRequestPresenterTest.compressedWaitIsHonoured -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T060 not implemented
+	at agentic.shortener.orchestration.gates.GateRequestPresenter.request(GateRequestPresenter.java:19)
+	at agentic.shortener.orchestration.gates.GateRequestPresenterTest.compressedWaitIsHonoured(GateRequestPresenterTest.java:72)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.gates.GateRequestPresenterTest.gateIdEqualsNodeKeyForAStageLevelGate -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T060 not implemented
+	at agentic.shortener.orchestration.gates.GateRequestPresenter.request(GateRequestPresenter.java:19)
+	at agentic.shortener.orchestration.gates.GateRequestPresenterTest.gateIdEqualsNodeKeyForAStageLevelGate(GateRequestPresenterTest.java:81)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.gates.GateRequestPresenterTest.bothDeadlinesInTheSameAsk -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T060 not implemented
+	at agentic.shortener.orchestration.gates.GateRequestPresenter.request(GateRequestPresenter.java:19)
+	at agentic.shortener.orchestration.gates.GateRequestPresenterTest.bothDeadlinesInTheSameAsk(GateRequestPresenterTest.java:55)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Errors: 
+[ERROR]   GateRequestPresenterTest.autoAbandonComputedFromRequestMoment:44 » UnsupportedOperation T060 not implemented
+[ERROR]   GateRequestPresenterTest.bothDeadlinesInTheSameAsk:55 » UnsupportedOperation T060 not implemented
+[ERROR]   GateRequestPresenterTest.compressedWaitIsHonoured:72 » UnsupportedOperation T060 not implemented
+[ERROR]   GateRequestPresenterTest.gateIdEqualsNodeKeyForAStageLevelGate:81 » UnsupportedOperation T060 not implemented
+[ERROR]   GateRequestPresenterTest.waitDeadlineIsPvt006FromNow:34 » UnsupportedOperation T060 not implemented
+[INFO] 
+[ERROR] Tests run: 5, Failures: 0, Errors: 5, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  2.329 s
+[INFO] Finished at: 2026-09-21T09:41:42-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project shortener: 
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+```

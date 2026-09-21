@@ -483,17 +483,17 @@ outcome, including deliberate silence.
   - **Deps**: T058 · **Par**: no · **Artifact**: `APPROVED` → stage succeeds; `REJECTED` → run terminates; `CHANGES_REQUESTED` → return to owning stage with changes enumerated and downstream **invalidated**; `ESCALATED` → records what exceeds authority; `TIMED_OUT` → suspension
   - **TDD**: RED-FIRST · **Validate**: one test per outcome · **Docs**: plan §5 · **Trace**: matrix FR-ORC-013
   - **Guard**: **there is no sixth value and none meaning "no response, proceed."** `CHANGES_REQUESTED` with an empty change list is invalid · **Done**: five outcome tests pass · **Approval**: none
-- [ ] T060 [US2] Deadline disclosure in the gate request — `src/main/java/agentic/shortener/orchestration/gates/GateRequestPresenter.java`
+- [x] T060 [US2] Deadline disclosure in the gate request — `src/main/java/agentic/shortener/orchestration/gates/GateRequestPresenter.java`
   - **Req**: FR-ORC-013, FR-ORC-011 · **Scn**: DS-C · **ADR**: ADR-008 · **Pre**: T059, T092
   - **Deps**: T059, T092 · **Par**: no · **Artifact**: request states the **gate-wait deadline** at which the run suspends **and** the computed `auto-abandon-at`
   - **TDD**: RED-FIRST · **Validate**: request payload asserted to carry both deadlines · **Docs**: `contracts/openapi.yaml` `pendingGate` · **Trace**: matrix FR-ORC-013, CL-005 addendum
   - **Guard**: **the person being asked must see the deadline in the ask**, not discover it by inspecting the run. This is additive to the inspectable field, not a substitute · **Done**: both deadlines present in every gate request · **Approval**: none
-- [ ] T061 [US2] Silence produces suspension — `src/test/java/agentic/shortener/orchestration/gates/SilenceTest.java`
+- [x] T061 [US2] Silence produces suspension — `src/test/java/agentic/shortener/orchestration/gates/SilenceTest.java`
   - **Req**: **FR-ORC-013**, **NFR-AUT-002**, SC-005 · **Scn**: DS-C · **ADR**: ADR-008 · **Pre**: T059, T091
   - **Deps**: T059, T091 · **Par**: no · **Artifact**: no decision within the wait → `SAFE_STOP`, state preserved, **no downstream stage executed**
   - **TDD**: EVIDENCE · **Validate**: clock-controlled test; asserts zero downstream executions · **Docs**: — · **Trace**: matrix FR-ORC-013, SC-005
   - **Guard**: **this is the single most important negative test in the suite.** If it passes because the run advanced, the governance claim is void · **Done**: suspension asserted; downstream execution count is zero · **Approval**: none
-- [ ] T061a [US2] Silence-test falsifiability proof — `src/test/java/agentic/shortener/orchestration/gates/SilenceTestFalsifiabilityTest.java`
+- [x] T061a [US2] Silence-test falsifiability proof — `src/test/java/agentic/shortener/orchestration/gates/SilenceTestFalsifiabilityTest.java`
   - **Req**: **FR-ORC-013**, **NFR-AUT-002**, SC-005 · **Scn**: DS-C · **ADR**: ADR-008 · **Pre**: T061
   - **Deps**: T061 · **Par**: no (fixture must run against T061's assertion) · **Artifact**: proof that T061 **fails** when a gate advances on silence — a fixture in which the gate handler is deliberately made to treat deadline expiry as `APPROVED`, against which T061's assertion must report a failure
   - **TDD**: EVIDENCE · **Validate**: with the fixture active, T061 **fails** and names the advanced stage; with the fixture removed, T061 passes; and the captured failure output is stored as red-phase evidence (T020) so the proof is readable rather than asserted

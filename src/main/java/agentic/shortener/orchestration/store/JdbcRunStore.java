@@ -175,9 +175,22 @@ public final class JdbcRunStore {
         Objects.requireNonNull(runId, "runId");
         Objects.requireNonNull(nodeKey, "nodeKey");
 
+        // The run's ACTUAL current state, read before the rules check. TransitionRules' rule 6/7 — "a
+        // run in SAFE_STOP is left only by a human decision or by retention expiry" — is written to
+        // refuse EVERY transition while runState() == SAFE_STOP, checked first specifically so nothing
+        // legitimate-looking can slip through while the run is suspended (its own comment says so). The
+        // first version of this method built its TransitionRequest with TransitionRequest.of(from, to),
+        // which hardcodes runState = RUNNING unconditionally — so that rule, though written to cover
+        // node transitions too, never actually saw a SAFE_STOP run and could not have refused one.
+        // Caught while investigating T061 (silence produces suspension): nothing structurally stopped a
+        // node from being advanced after suspension, only the absence of any caller that tried.
+        RunState currentRunState = run(runId)
+                .orElseThrow(() -> new IllegalStateException("no such run: " + runId))
+                .state();
+
         // The rules first. A refused transition must not reach the store, because a rolled-back write
         // still consumes a transaction id and, on a busy run, still contends.
-        rules.requirePermitted(artifactAwareRequest(from, to));
+        rules.requirePermitted(artifactAwareRequest(from, to, currentRunState));
 
         Instant now = clock.instant();
         try (Connection c = connections.get()) {
@@ -207,9 +220,17 @@ public final class JdbcRunStore {
      * decisions. Those come from the caller that has them, so a completion transition arrives here only
      * after whoever counted the artifacts has already been asked. Defaulting them to "satisfied" here
      * would make {@link TransitionRules} advisory.
+     *
+     * <p>{@code currentRunState} is the one fact that is NOT defaulted, because defaulting it to RUNNING
+     * — as the first version of this method did via {@link TransitionRequest#of} — is exactly what let a
+     * node transition slip through while the run was actually suspended (see the caller's comment).
+     * {@code humanDecision} and {@code retentionExpiry} stay false unconditionally: a node transition is
+     * never itself the act of leaving SAFE_STOP — only {@code SafeStopHandler}'s own dedicated path is,
+     * and it does not call this method.
      */
-    private static TransitionRequest artifactAwareRequest(StageState from, StageState to) {
-        TransitionRequest request = TransitionRequest.of(from, to);
+    private static TransitionRequest artifactAwareRequest(StageState from, StageState to,
+                                                           RunState currentRunState) {
+        TransitionRequest request = TransitionRequest.of(from, to).withRunState(currentRunState);
         return to == StageState.SUCCEEDED ? request.withArtifactCount(1).withRecordedGateDecision(true)
                 : request;
     }
