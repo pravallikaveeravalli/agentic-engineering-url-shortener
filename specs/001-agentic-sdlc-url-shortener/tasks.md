@@ -1005,7 +1005,7 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
 **Blocking**: T115 (`failure_event` must exist or there is no MTTR population) and T110.
 **Synchronization point**: T142.
 
-- [ ] T131 [US3] DS-A greenfield run design — `docs/evidence/ds-a/design.md`
+- [x] T131 [US3] DS-A greenfield run design — `docs/evidence/ds-a/design.md`
   - **Req**: **DS-A**, FR-ORC-010 · **Scn**: **DS-A** · **ADR**: ADR-004 · **Pre**: T110, T115
   - **Deps**: T110, T115 · **Par**: no · **Artifact**: input *"Expose the remaining time-to-expiry for a short link to its owning creator"* — complete, consistent, testable, within policy and architecture bounds
   - **TDD**: N/A-DOC · **Validate**: input verified against the four well-formedness criteria before the run · **Docs**: new file · **Trace**: DS-A
