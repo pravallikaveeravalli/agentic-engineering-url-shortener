@@ -19,100 +19,86 @@ validation design, not a record of results.
 |---|---|
 | Docker | The store must be a restartable process (ADR-002, CL-009) |
 | JDK 21 *(pending ADR-001)* | Build and run |
-| **Nothing AI-related** | Deliberate. The reviewer-default path runs fully without an API key, without an authenticated CLI, and without a network (CN-011, SC-014). AI mode is optional — see below |
-| No network access needed | The reliability suite must pass offline (NFR-AUT-004) |
+| **An authenticated Claude Code CLI** | **Required to run the orchestrator.** Orchestration always uses AI (ADR-004-A2) — there is no keyless mode. **You do not need it to review this submission**: the committed scenario evidence is complete and readable end to end with no AI setup |
+| Nothing AI-related, for the shortener and the tests | **The URL shortener and the entire test suite need nothing** — no key, no CLI, no network. Reliability proofs use injected fakes (FR-ORC-030), so tests never call a live provider |
 
 ---
 
-## What each mode demonstrates — read this before running anything
+## What you need, and what you do not — read this before running anything
+
+**A fresh orchestration run requires an authenticated Claude Code CLI on the machine.** There is no keyless mode
+(ADR-004 Amendment 02; the former `ai: on | off` flag has been removed entirely).
+
+**You do not need it to review this submission.** The committed scenario evidence is complete and readable end to end
+with no AI setup: run exports, per-node executor-kind labels, the pinned model id, gate decisions, retry rulings,
+replan events and test results are all in the repository.
+
+**The URL shortener and the entire test suite run with no AI and no network.** Orchestration reliability proofs use
+injected fakes (FR-ORC-030), so the test suite never calls a live provider.
+
+---
+
+## What a run demonstrates
 
 **You are not limited to the three prepared scenarios. Submit any requirement you like.** The system is
 required to process arbitrary requirements without any change to its executors (FR-ORC-028, SC-016), and the
 committed evidence includes a run over a requirement outside DS-A/B/C precisely so that claim is verifiable
 rather than asserted. If it only worked on three blessed inputs, it would be a rigged demonstration.
 
-One flag controls this: **`ai: on | off`**, defaulting to **`off`**. **With AI off — the keyless default — the
-governance machine runs on any input you give it. Turning AI on adds the creative intelligence.** Both are
-real; they differ in what the stages *produce*, not in whether the lifecycle actually runs.
-
-The flag is named for the one thing it controls: whether AI executors participate. It deliberately does **not**
-claim the run is "deterministic", because a keyless run can legitimately contain a `HUMAN` execution at the
-stage-7 gate described below.
-
-### With AI off — the reviewer default, no key, no network
-
 Submit a requirement of your own invention and you get **the complete governed lifecycle, for real**:
 
 - **Normalization** — your requirement is parsed into identified, typed, testable requirement records.
-- **Ambiguity detection** — genuine. Submit something vague or self-contradictory and the run **actually
-  suspends and asks you**. It does not pretend to detect ambiguity; the affected path stops.
+- **Ambiguity detection** — genuine, and **semantic rather than pattern-matching**. Submit something vague or
+  self-contradictory and the run **actually suspends and asks you**. Detection is AI-backed, so it can recognise a
+  conflict between different concepts rather than only contradictory bounds on one field — and it is
+  **non-deterministic**, which is safe here because the output feeds a human gate. When nothing is found, the **reason
+  no clarification was required** is recorded, which is what makes a non-detection inspectable rather than silent.
 - **Decomposition** — tasks derived from your requirement, dependency-ordered, each tracing to a requirement.
 - **Gates awaiting *your* approval** — you are the reviewer. Approve, reject, request changes, escalate, or
   say nothing and watch the run suspend rather than advance.
-- **Bounded retries, fallback, compensation, safe-stop, resumption, replanning** — all genuine, all
-  deterministic, all provable by injected fault scenarios.
+- **Authored code at stage 7** — genuine creative output, which the engine applies on a branch and the **real** test
+  suite judges. A failing AI-authored change routed back to be reworked is the governance visibly working, not a broken
+  demonstration.
+- **Bounded retries, compensation, safe-stop, resumption, replanning** — all genuine, all
+  deterministic, all provable by injected fault scenarios. **Fallback is not among them** and the assignment names it:
+  see `docs/LIMITATIONS.md`. Bounded retry then safe suspension is the whole degradation story (FR-ORC-015 retired,
+  Decision K).
 - **Audit trail and terminal outcome** — reconstructable from the database alone.
 
-What it does **not** produce: genuinely authored code, or creative artifacts beyond template grade.
-Documentation and design outputs are structural rather than written. **Every stage execution is labeled
-`DETERMINISTIC`** in the run evidence (FR-ORC-029), so you never have to guess which you are looking at.
+**Every stage execution is labelled with its executor kind** — `DETERMINISTIC`, `AI` or `HUMAN` — in the run evidence
+(FR-ORC-029), with the pinned model id on every `AI` execution, so you never have to guess which you are looking at.
+Five stages are genuinely deterministic and say so: ingestion, testing, security and policy, release-readiness
+evaluation, and summary assembly. **There is no counterpart engine behind any AI-capable stage**, so a label is the
+only thing distinguishing what ran, and it is required on every execution.
 
-#### And at stage 7 it stops and asks you
+#### And at stage 7 it can stop and ask you
 
-This is the part worth watching for, because it is where the system refuses to pretend. Stage 7's deterministic
-executor **applies a change plan** — and for a requirement you just invented, no plan exists. Rather than
-recording a no-op and flowing onward, **the run suspends at a gate and asks you to decide**, stating its expiry
-consequences up front like every other gate. You get exactly three options:
+This is the part worth watching for, because it is where the system refuses to pretend. Where **no change plan exists**
+for the requirement, stage 7 does not record a no-op and flow onward: **the run suspends at a gate and asks you to
+decide**, stating its expiry consequences up front like every other gate. You get exactly three options:
 
 | Option | What happens |
 |---|---|
 | **Proceed as a governance-only run** | Downstream stages continue. Your decision is recorded, and the evidence labels implementation as **intentionally skipped by human decision** — not as done |
-| **Implement it yourself** | Make the change in the working tree, or supply the change content with your decision, and the run continues into **real testing that judges your change**. That execution is recorded with executor kind **`HUMAN`** |
+| **Implement it yourself** | Make the change in the working tree, or supply the change content with your decision, and the run continues into **real testing that judges your change**. That execution is recorded with executor kind `HUMAN` |
 | **Abandon the run** | Terminal outcome `ABANDONED`, reason recorded |
 
 A labelled no-op flowing onward would be quiet pretending: proceeding with nothing implemented is a material
 fact you should consciously accept, not discover in a label afterwards. The same principle governs every gate
 here — nothing material advances on inference or silence.
 
-Two consequences worth knowing. The **prepared scenarios never hit this gate**, because their change plans
-exist. And the executor model has three kinds, not two: **AI, deterministic, and human** — the third completed
-by option 2 above, and every stage execution records which one ran it.
+**With no deterministic counterpart at stage 7 (Decision J), this gate is the *sole* guard** against an unimplemented
+change advancing. It is the one place in the design where removing the counterparts made an existing control carry more
+weight rather than less.
 
-### With `ai: on` — one flag plus one AI credential of your own, entirely optional
-
-**What AI mode needs**: **either** an authenticated **Claude Code CLI** on the machine (the implemented adapter —
-it shells out to the CLI in headless mode), **or** an API key if the SDK adapter has been built. **Entirely
-optional, never required for anything graded.**
-
-Setting `ai: on` turns the AI-capable stages on, and the same lifecycle then produces
-**genuine creative output — including authored code at stage 7**, which the engine applies on a branch and the
-**real** test suite judges. A failing AI-authored change routed back to be reworked is the governance visibly
-working, not a broken demonstration.
-
-`ai: on` is **never a prerequisite for anything graded**. The full test suite, all reliability proofs, and the
-release-readiness checks run keyless and offline by design.
+The executor model has three kinds, not two: **AI, deterministic, and human** — the third completed by option 2 above,
+and every stage execution records which one ran it.
 
 ### The committed scenario evidence
 
-The recorded DS-A, DS-B and DS-C runs in the evidence bundle were executed by the candidate with **`ai: on`**,
-labeled per stage with the **pinned model id** so any figure or artifact is attributable to a specific model
-version. Alongside them sits the out-of-scenario run described above. You can re-run any scenario yourself with
-the flag either way.
-
-### Summary
-
-| | `ai: off` (keyless default) | `ai: on` |
-|---|---|---|
-| Any requirement you invent | Yes | Yes |
-| Governed lifecycle, gates, your own approvals | Yes, genuine | Yes, genuine |
-| Ambiguity genuinely detected and suspended | Yes | Yes |
-| Retries, compensation, safe-stop, resumption, replanning | Yes, genuine | Yes, genuine |
-| Audit trail and reconstruction | Yes | Yes |
-| Creative artifacts | Template grade | Genuine |
-| Authored code at stage 7 | No — suspends and asks you instead | Yes |
-| Executor kinds you may see | `DETERMINISTIC`, or `HUMAN` if you implement it yourself | `AI`, `DETERMINISTIC`, `HUMAN` |
-| Requires an AI credential or network | **No** — neither a key nor an authenticated CLI | Yes — an authenticated Claude Code CLI, or an API key if the SDK adapter is built |
-| Required for anything graded | — | **No** |
+The recorded DS-A, DS-B and DS-C runs in the evidence bundle were executed by the candidate, labelled per node with the
+executor kind and the **pinned model id**, so any figure or artifact is attributable to a specific model version.
+Alongside them sits the out-of-scenario run described above. **You can read all of it without running anything.**
 
 ---
 
@@ -127,7 +113,7 @@ docker compose up -d        # PostgreSQL only
 persistence, integration, orchestration-transition, approval, retry, timeout, fallback,
 rollback/compensation, safe-stop, resumption, replanning, concurrency, security, and end-to-end.
 
-**This is the single most important check**: if it needs a key or a network, CN-011 is violated.
+**This is the single most important check**: if the **test suite** needs a key or a network, FR-ORC-030 is violated — reliability proofs are driven by injected fakes and must never reach a live provider. *(The check previously cited CN-011, which Decision J retired; the surviving obligation is FR-ORC-030’s and it is the one that matters for the tests.)*
 
 ---
 
@@ -259,7 +245,7 @@ policy is `FAIL` or an exception is unapproved or expired.
 | **DS-C** | Ambiguity detected before implementation; only the affected path suspends; a replan event lists invalidated stages and **voided approvals**; the run resumes and terminates. |
 
 Each emits an evidence bundle carrying a per-node **executor-kind label** — `DETERMINISTIC`, `AI` or `HUMAN`
-(FR-ORC-029; "kind", not "mode", since **CR-001/CR-005**). Deterministic executions are labelled as such and never
+(FR-ORC-029; "kind", not "mode", since **CR-001/CR-005** — and since **CR-028** there is no run-level mode at all). Deterministic executions are labelled as such and never
 presented as AI work.
 
 ### Now run one of your own

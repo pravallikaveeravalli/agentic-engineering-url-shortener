@@ -78,7 +78,6 @@ effects. Same marker + differing fingerprint → conflict; mint nothing, change 
 | `policy_set_version` | string | Required; the version evaluated |
 | `last_activity_at` | timestamp | Drives the idle clock — **never** creation time |
 | `auto_abandon_at` | timestamp? | Computed; exposed via inspection when suspended |
-| `ai` | enum | `on` \| `off`, **default `off`** — whether AI executors participate. Named for the one thing it controls: a run with `ai: off` may still contain a `HUMAN` execution at the stage-7 no-plan gate, so a run-level determinism claim would over-promise (FR-ORC-029, renamed by **CR-001**) |
 | `suspension_reason` | text? | Required when `SAFE_STOP` |
 
 **Terminal set is exactly** `COMPLETED`, `REJECTED`, `ABANDONED` (CL-005).

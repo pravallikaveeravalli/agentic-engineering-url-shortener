@@ -53,7 +53,7 @@ Each candidate is a **proposal**, not a decision (CN-002). Full option tables in
    a Claude subscription; I do not have API credits and do not want to buy them when this alternative exists. The
    provider interface exists precisely so this choice is a swap behind one seam."* The **Anthropic API/SDK adapter is
    the recorded production alternative behind the same interface**, built only if time permits.
-2. **The flag.** "Deterministic mode default" is the vocabulary **CR-001 abolished**. The run-level flag is
+2. **The flag — since REMOVED ENTIRELY by Decision J (ADR-004-A2, CR-028); recorded as it stood.** "Deterministic mode default" is the vocabulary **CR-001 abolished**. The run-level flag was
    **`ai: on | off`, default `off`**, named for the one thing it controls — whether AI executors participate — because
    a keyless run can still contain a `HUMAN` execution at the stage-7 no-plan gate, so a run-level determinism label
    would over-promise.
@@ -75,7 +75,7 @@ positions:
 >   deterministic-only (rejected by CL-003 as making the "agentic" claim hollow).
 
 The **Rationale** and **Alternatives** above remain sound and were not superseded — CL-003 still requires real AI
-where the work is creative, CN-011 still requires the keyless path, and the three rejected alternatives were rejected
+where the work is creative, CN-011 required the keyless path and was **retired by Decision J** (CR-028) — the transport and provider reasoning here is unaffected by that retirement — and the three rejected alternatives were rejected
 on grounds the transport change does not touch. Only the transport and the flag name moved.
 
 ### Contract validation (ADR-005)
