@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Every production executor is held to {@link StageExecutorContract}. Task T069. FR-ORC-028.
@@ -18,10 +19,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * does not extend is a rule nobody broke and nobody followed, so this closes that route: a production
  * {@link StageExecutor} with no contract test is a failure here.
  *
- * <p><strong>Deliberately armed before the executors exist.</strong> Both sets are empty today and the
- * assertion passes vacuously. That is the same choice T014 made for the
- * {@code noExecutorReferencesTheGateDecisionPath} rule and for the same reason — a check added after the
- * code it governs is a check somebody had to remember, and this one bites the moment T071's engines land.
+ * <p><strong>Armed before the executors existed</strong>, which is the same choice T014 made for the
+ * {@code noExecutorReferencesTheGateDecisionPath} rule and for the same reason: a check added after the code
+ * it governs is a check somebody had to remember. While the package was empty the assertion passed
+ * vacuously — and because a vacuous pass and a real one are indistinguishable from the outside,
+ * {@link #discoveryFindsBothSides()} pins that the scan is finding something on both sides.
  */
 @DisplayName("T069 — no executor escapes the contract")
 class EveryExecutorHasAContractTest {
@@ -62,6 +64,35 @@ class EveryExecutorHasAContractTest {
                 "these executors are not held to StageExecutorContract, so nothing asserts they return "
                         + "failures instead of throwing them, or that success carries an artifact: "
                         + uncovered);
+    }
+
+    @Test
+    @DisplayName("the discovery is falsifiable — it really finds the executors and the contract tests")
+    void discoveryFindsBothSides() {
+        // Without this, everyExecutorHasAContractTest passes when the scan finds nothing — which is exactly
+        // what it looked like while the package was empty, and would look the same again if a classpath
+        // change stopped ArchUnit importing production classes. An uncovered-list of zero has two very
+        // different causes and the assertion cannot tell them apart; this can.
+        JavaClasses production = new ClassFileImporter()
+                .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                .importPackages(ROOT);
+        JavaClasses tests = new ClassFileImporter()
+                .withImportOption(ImportOption.Predefined.ONLY_INCLUDE_TESTS)
+                .importPackages(ROOT);
+
+        long executorsFound = production.stream()
+                .filter(c -> c.isAssignableTo(StageExecutor.class))
+                .filter(c -> !c.isInterface())
+                .count();
+        long contractTestsFound = tests.stream()
+                .filter(c -> c.isAssignableTo(StageExecutorContract.class))
+                .count();
+
+        assertTrue(executorsFound >= 5,
+                "T071's five deterministic engines exist, so the scan must see at least five production "
+                        + "executors; it saw " + executorsFound);
+        assertTrue(contractTestsFound >= 5,
+                "and at least five contract tests; it saw " + contractTestsFound);
     }
 
     /** A nested contract test is named after its enclosing class, so look there too. */

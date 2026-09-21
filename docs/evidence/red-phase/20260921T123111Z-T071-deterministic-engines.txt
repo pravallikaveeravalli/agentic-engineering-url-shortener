@@ -1,0 +1,564 @@
+# Red-phase evidence
+
+- **Label**: T071-deterministic-engines
+- **Captured (UTC)**: 20260921T123111Z
+- **Command**: `./mvnw -Dtest=DeterministicEnginesTest,EngineBehaviourTest test`
+- **Exit code**: 1
+- **Requirement**: NFR-TST-002 (red phase evidenced, not asserted); CN-004
+
+## Why this file exists
+
+This is the failing run captured BEFORE the implementation that makes it pass. It is stored
+so that the red phase is readable by a reviewer rather than claimed in a commit message.
+
+## Captured output
+
+```
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< agentic:shortener >--------------------------
+[INFO] Building agentic-sdlc-url-shortener 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ shortener ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 5 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ shortener ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 96 source files with javac [debug parameters release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ shortener ---
+[INFO] skip non existing resourceDirectory /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ shortener ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 74 source files with javac [debug parameters release 21] to target/test-classes
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java uses or overrides a deprecated API.
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.orchestration.executor.deterministic.DeterministicEnginesTest
+07:31:13.979 [main] INFO com.tngtech.archunit.core.PluginLoader -- Detected Java version 21.0.8
+[ERROR] Tests run: 4, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 0.389 s <<< FAILURE! -- in agentic.shortener.orchestration.executor.deterministic.DeterministicEnginesTest
+[ERROR] agentic.shortener.orchestration.executor.deterministic.DeterministicEnginesTest.everyEngineRecordsItsKind -- Time elapsed: 0.002 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.DeterministicEngines.stageNumbers(DeterministicEngines.java:14)
+	at agentic.shortener.orchestration.executor.deterministic.DeterministicEnginesTest.everyEngineRecordsItsKind(DeterministicEnginesTest.java:74)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.DeterministicEnginesTest.fiveEnginesForFiveStages -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.DeterministicEngines.stageNumbers(DeterministicEngines.java:14)
+	at agentic.shortener.orchestration.executor.deterministic.DeterministicEnginesTest.fiveEnginesForFiveStages(DeterministicEnginesTest.java:62)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest
+[INFO] Running agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$SummaryEngineTest
+[ERROR] Tests run: 10, Failures: 2, Errors: 7, Skipped: 0, Time elapsed: 0.007 s <<< FAILURE! -- in agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$SummaryEngineTest
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$SummaryEngineTest.executorNeverClaimsToBeHuman -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.SummaryEngine.execute(SummaryEngine.java:12)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.executorNeverClaimsToBeHuman(StageExecutorContract.java:92)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$SummaryEngineTest.succeededOutcomeCarriesAnArtifact -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.SummaryEngine.execute(SummaryEngine.java:12)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.succeededOutcomeCarriesAnArtifact(StageExecutorContract.java:82)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$SummaryEngineTest.executorDoesNotRequireItsOwnStageNumber -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.StageExecutorContract.executorDoesNotRequireItsOwnStageNumber(StageExecutorContract.java:118)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.SummaryEngine.execute(SummaryEngine.java:12)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.lambda$executorDoesNotRequireItsOwnStageNumber$2(StageExecutorContract.java:118)
+	... 5 more
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$SummaryEngineTest.aFailureIsReturnedNeverThrown -- Time elapsed: 0 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: an exception escaping an executor arrives at the orchestrator with no category, and an unclassifiable failure is ruled permanent — so throwing silently reclassifies a retryable failure (FR-ORC-014, T084) ==> Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.StageExecutorContract.aFailureIsReturnedNeverThrown(StageExecutorContract.java:66)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.SummaryEngine.execute(SummaryEngine.java:12)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.lambda$aFailureIsReturnedNeverThrown$0(StageExecutorContract.java:66)
+	... 5 more
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$SummaryEngineTest.executeReturnsAnOutcome -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.SummaryEngine.execute(SummaryEngine.java:12)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.executeReturnsAnOutcome(StageExecutorContract.java:59)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$SummaryEngineTest.deterministic -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.SummaryEngine.execute(SummaryEngine.java:12)
+	at agentic.shortener.orchestration.executor.deterministic.DeterministicEnginesTest.assertDeterministic(DeterministicEnginesTest.java:49)
+	at agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$SummaryEngineTest.deterministic(EngineBehaviourTest.java:325)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$SummaryEngineTest.everyClaimTraceable -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.SummaryEngine.execute(SummaryEngine.java:12)
+	at agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$SummaryEngineTest.everyClaimTraceable(EngineBehaviourTest.java:273)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$SummaryEngineTest.missingEvidenceIsPermanent -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.SummaryEngine.execute(SummaryEngine.java:12)
+	at agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$SummaryEngineTest.missingEvidenceIsPermanent(EngineBehaviourTest.java:296)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$SummaryEngineTest.summaryIsOrderIndependent -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.SummaryEngine.execute(SummaryEngine.java:12)
+	at agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$SummaryEngineTest.summaryIsOrderIndependent(EngineBehaviourTest.java:318)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$ReleaseReadinessEngineTest
+[ERROR] Tests run: 9, Failures: 2, Errors: 6, Skipped: 0, Time elapsed: 0.006 s <<< FAILURE! -- in agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$ReleaseReadinessEngineTest
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$ReleaseReadinessEngineTest.executorNeverClaimsToBeHuman -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.ReleaseReadinessEngine.execute(ReleaseReadinessEngine.java:15)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.executorNeverClaimsToBeHuman(StageExecutorContract.java:92)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$ReleaseReadinessEngineTest.succeededOutcomeCarriesAnArtifact -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.ReleaseReadinessEngine.execute(ReleaseReadinessEngine.java:15)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.succeededOutcomeCarriesAnArtifact(StageExecutorContract.java:82)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$ReleaseReadinessEngineTest.executorDoesNotRequireItsOwnStageNumber -- Time elapsed: 0 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.StageExecutorContract.executorDoesNotRequireItsOwnStageNumber(StageExecutorContract.java:118)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.ReleaseReadinessEngine.execute(ReleaseReadinessEngine.java:15)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.lambda$executorDoesNotRequireItsOwnStageNumber$2(StageExecutorContract.java:118)
+	... 5 more
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$ReleaseReadinessEngineTest.aFailureIsReturnedNeverThrown -- Time elapsed: 0 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: an exception escaping an executor arrives at the orchestrator with no category, and an unclassifiable failure is ruled permanent — so throwing silently reclassifies a retryable failure (FR-ORC-014, T084) ==> Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.StageExecutorContract.aFailureIsReturnedNeverThrown(StageExecutorContract.java:66)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.ReleaseReadinessEngine.execute(ReleaseReadinessEngine.java:15)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.lambda$aFailureIsReturnedNeverThrown$0(StageExecutorContract.java:66)
+	... 5 more
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$ReleaseReadinessEngineTest.executeReturnsAnOutcome -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.ReleaseReadinessEngine.execute(ReleaseReadinessEngine.java:15)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.executeReturnsAnOutcome(StageExecutorContract.java:59)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$ReleaseReadinessEngineTest.deterministic -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.ReleaseReadinessEngine.execute(ReleaseReadinessEngine.java:15)
+	at agentic.shortener.orchestration.executor.deterministic.DeterministicEnginesTest.assertDeterministic(DeterministicEnginesTest.java:49)
+	at agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$ReleaseReadinessEngineTest.deterministic(EngineBehaviourTest.java:246)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$ReleaseReadinessEngineTest.unmetConditionFails -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.ReleaseReadinessEngine.execute(ReleaseReadinessEngine.java:15)
+	at agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$ReleaseReadinessEngineTest.unmetConditionFails(EngineBehaviourTest.java:238)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$ReleaseReadinessEngineTest.evaluationProducesAReportNotADecision -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.ReleaseReadinessEngine.execute(ReleaseReadinessEngine.java:15)
+	at agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$ReleaseReadinessEngineTest.evaluationProducesAReportNotADecision(EngineBehaviourTest.java:223)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$PolicyEvaluationEngineTest
+[ERROR] Tests run: 9, Failures: 2, Errors: 6, Skipped: 0, Time elapsed: 0.005 s <<< FAILURE! -- in agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$PolicyEvaluationEngineTest
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$PolicyEvaluationEngineTest.executorNeverClaimsToBeHuman -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.PolicyEvaluationEngine.execute(PolicyEvaluationEngine.java:15)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.executorNeverClaimsToBeHuman(StageExecutorContract.java:92)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$PolicyEvaluationEngineTest.succeededOutcomeCarriesAnArtifact -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.PolicyEvaluationEngine.execute(PolicyEvaluationEngine.java:15)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.succeededOutcomeCarriesAnArtifact(StageExecutorContract.java:82)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$PolicyEvaluationEngineTest.executorDoesNotRequireItsOwnStageNumber -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.StageExecutorContract.executorDoesNotRequireItsOwnStageNumber(StageExecutorContract.java:118)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.PolicyEvaluationEngine.execute(PolicyEvaluationEngine.java:15)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.lambda$executorDoesNotRequireItsOwnStageNumber$2(StageExecutorContract.java:118)
+	... 5 more
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$PolicyEvaluationEngineTest.aFailureIsReturnedNeverThrown -- Time elapsed: 0 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: an exception escaping an executor arrives at the orchestrator with no category, and an unclassifiable failure is ruled permanent — so throwing silently reclassifies a retryable failure (FR-ORC-014, T084) ==> Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.StageExecutorContract.aFailureIsReturnedNeverThrown(StageExecutorContract.java:66)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.PolicyEvaluationEngine.execute(PolicyEvaluationEngine.java:15)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.lambda$aFailureIsReturnedNeverThrown$0(StageExecutorContract.java:66)
+	... 5 more
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$PolicyEvaluationEngineTest.executeReturnsAnOutcome -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.PolicyEvaluationEngine.execute(PolicyEvaluationEngine.java:15)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.executeReturnsAnOutcome(StageExecutorContract.java:59)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$PolicyEvaluationEngineTest.blockingVerdictFailsTheStageAndKeepsTheRecord -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.PolicyEvaluationEngine.execute(PolicyEvaluationEngine.java:15)
+	at agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$PolicyEvaluationEngineTest.blockingVerdictFailsTheStageAndKeepsTheRecord(EngineBehaviourTest.java:184)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$PolicyEvaluationEngineTest.cleanEvaluation -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.PolicyEvaluationEngine.execute(PolicyEvaluationEngine.java:15)
+	at agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$PolicyEvaluationEngineTest.cleanEvaluation(EngineBehaviourTest.java:175)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$PolicyEvaluationEngineTest.deterministic -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.PolicyEvaluationEngine.execute(PolicyEvaluationEngine.java:15)
+	at agentic.shortener.orchestration.executor.deterministic.DeterministicEnginesTest.assertDeterministic(DeterministicEnginesTest.java:49)
+	at agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$PolicyEvaluationEngineTest.deterministic(EngineBehaviourTest.java:197)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$TestingEngineTest
+[ERROR] Tests run: 10, Failures: 2, Errors: 7, Skipped: 0, Time elapsed: 0.006 s <<< FAILURE! -- in agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$TestingEngineTest
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$TestingEngineTest.executorNeverClaimsToBeHuman -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.TestingEngine.execute(TestingEngine.java:15)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.executorNeverClaimsToBeHuman(StageExecutorContract.java:92)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$TestingEngineTest.succeededOutcomeCarriesAnArtifact -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.TestingEngine.execute(TestingEngine.java:15)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.succeededOutcomeCarriesAnArtifact(StageExecutorContract.java:82)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$TestingEngineTest.executorDoesNotRequireItsOwnStageNumber -- Time elapsed: 0 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.StageExecutorContract.executorDoesNotRequireItsOwnStageNumber(StageExecutorContract.java:118)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.TestingEngine.execute(TestingEngine.java:15)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.lambda$executorDoesNotRequireItsOwnStageNumber$2(StageExecutorContract.java:118)
+	... 5 more
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$TestingEngineTest.aFailureIsReturnedNeverThrown -- Time elapsed: 0 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: an exception escaping an executor arrives at the orchestrator with no category, and an unclassifiable failure is ruled permanent — so throwing silently reclassifies a retryable failure (FR-ORC-014, T084) ==> Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.StageExecutorContract.aFailureIsReturnedNeverThrown(StageExecutorContract.java:66)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.TestingEngine.execute(TestingEngine.java:15)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.lambda$aFailureIsReturnedNeverThrown$0(StageExecutorContract.java:66)
+	... 5 more
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$TestingEngineTest.executeReturnsAnOutcome -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.TestingEngine.execute(TestingEngine.java:15)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.executeReturnsAnOutcome(StageExecutorContract.java:59)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$TestingEngineTest.deterministic -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.TestingEngine.execute(TestingEngine.java:15)
+	at agentic.shortener.orchestration.executor.deterministic.DeterministicEnginesTest.assertDeterministic(DeterministicEnginesTest.java:49)
+	at agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$TestingEngineTest.deterministic(EngineBehaviourTest.java:149)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$TestingEngineTest.failingSuiteFailsTheStage -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.TestingEngine.execute(TestingEngine.java:15)
+	at agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$TestingEngineTest.failingSuiteFailsTheStage(EngineBehaviourTest.java:118)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$TestingEngineTest.passingSuite -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.TestingEngine.execute(TestingEngine.java:15)
+	at agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$TestingEngineTest.passingSuite(EngineBehaviourTest.java:108)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$TestingEngineTest.unavailableRunnerIsRetryable -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.TestingEngine.execute(TestingEngine.java:15)
+	at agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$TestingEngineTest.unavailableRunnerIsRetryable(EngineBehaviourTest.java:138)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$IngestionEngineTest
+[ERROR] Tests run: 9, Failures: 2, Errors: 6, Skipped: 0, Time elapsed: 0.004 s <<< FAILURE! -- in agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$IngestionEngineTest
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$IngestionEngineTest.executorNeverClaimsToBeHuman -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.IngestionEngine.execute(IngestionEngine.java:12)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.executorNeverClaimsToBeHuman(StageExecutorContract.java:92)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$IngestionEngineTest.succeededOutcomeCarriesAnArtifact -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.IngestionEngine.execute(IngestionEngine.java:12)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.succeededOutcomeCarriesAnArtifact(StageExecutorContract.java:82)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$IngestionEngineTest.executorDoesNotRequireItsOwnStageNumber -- Time elapsed: 0 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.StageExecutorContract.executorDoesNotRequireItsOwnStageNumber(StageExecutorContract.java:118)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.IngestionEngine.execute(IngestionEngine.java:12)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.lambda$executorDoesNotRequireItsOwnStageNumber$2(StageExecutorContract.java:118)
+	... 5 more
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$IngestionEngineTest.aFailureIsReturnedNeverThrown -- Time elapsed: 0 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: an exception escaping an executor arrives at the orchestrator with no category, and an unclassifiable failure is ruled permanent — so throwing silently reclassifies a retryable failure (FR-ORC-014, T084) ==> Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.StageExecutorContract.aFailureIsReturnedNeverThrown(StageExecutorContract.java:66)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.IngestionEngine.execute(IngestionEngine.java:12)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.lambda$aFailureIsReturnedNeverThrown$0(StageExecutorContract.java:66)
+	... 5 more
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$IngestionEngineTest.executeReturnsAnOutcome -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.IngestionEngine.execute(IngestionEngine.java:12)
+	at agentic.shortener.orchestration.executor.StageExecutorContract.executeReturnsAnOutcome(StageExecutorContract.java:59)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$IngestionEngineTest.blankInputIsPermanent -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.IngestionEngine.execute(IngestionEngine.java:12)
+	at agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$IngestionEngineTest.blankInputIsPermanent(EngineBehaviourTest.java:71)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$IngestionEngineTest.deterministic -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.IngestionEngine.execute(IngestionEngine.java:12)
+	at agentic.shortener.orchestration.executor.deterministic.DeterministicEnginesTest.assertDeterministic(DeterministicEnginesTest.java:49)
+	at agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$IngestionEngineTest.deterministic(EngineBehaviourTest.java:83)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$IngestionEngineTest.admitsAndNormalizes -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T071 not implemented
+	at agentic.shortener.orchestration.executor.deterministic.IngestionEngine.execute(IngestionEngine.java:12)
+	at agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest$IngestionEngineTest.admitsAndNormalizes(EngineBehaviourTest.java:53)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.035 s -- in agentic.shortener.orchestration.executor.deterministic.EngineBehaviourTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   EngineBehaviourTest$IngestionEngineTest>StageExecutorContract.aFailureIsReturnedNeverThrown:66 an exception escaping an executor arrives at the orchestrator with no category, and an unclassifiable failure is ruled permanent — so throwing silently reclassifies a retryable failure (FR-ORC-014, T084) ==> Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+[ERROR]   EngineBehaviourTest$IngestionEngineTest>StageExecutorContract.executorDoesNotRequireItsOwnStageNumber:118 Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+[ERROR]   EngineBehaviourTest$PolicyEvaluationEngineTest>StageExecutorContract.aFailureIsReturnedNeverThrown:66 an exception escaping an executor arrives at the orchestrator with no category, and an unclassifiable failure is ruled permanent — so throwing silently reclassifies a retryable failure (FR-ORC-014, T084) ==> Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+[ERROR]   EngineBehaviourTest$PolicyEvaluationEngineTest>StageExecutorContract.executorDoesNotRequireItsOwnStageNumber:118 Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+[ERROR]   EngineBehaviourTest$ReleaseReadinessEngineTest>StageExecutorContract.aFailureIsReturnedNeverThrown:66 an exception escaping an executor arrives at the orchestrator with no category, and an unclassifiable failure is ruled permanent — so throwing silently reclassifies a retryable failure (FR-ORC-014, T084) ==> Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+[ERROR]   EngineBehaviourTest$ReleaseReadinessEngineTest>StageExecutorContract.executorDoesNotRequireItsOwnStageNumber:118 Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+[ERROR]   EngineBehaviourTest$SummaryEngineTest>StageExecutorContract.aFailureIsReturnedNeverThrown:66 an exception escaping an executor arrives at the orchestrator with no category, and an unclassifiable failure is ruled permanent — so throwing silently reclassifies a retryable failure (FR-ORC-014, T084) ==> Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+[ERROR]   EngineBehaviourTest$SummaryEngineTest>StageExecutorContract.executorDoesNotRequireItsOwnStageNumber:118 Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+[ERROR]   EngineBehaviourTest$TestingEngineTest>StageExecutorContract.aFailureIsReturnedNeverThrown:66 an exception escaping an executor arrives at the orchestrator with no category, and an unclassifiable failure is ruled permanent — so throwing silently reclassifies a retryable failure (FR-ORC-014, T084) ==> Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+[ERROR]   EngineBehaviourTest$TestingEngineTest>StageExecutorContract.executorDoesNotRequireItsOwnStageNumber:118 Unexpected exception thrown: java.lang.UnsupportedOperationException: T071 not implemented
+[ERROR] Errors: 
+[ERROR]   DeterministicEnginesTest.everyEngineRecordsItsKind:74 » UnsupportedOperation T071 not implemented
+[ERROR]   DeterministicEnginesTest.fiveEnginesForFiveStages:62 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$IngestionEngineTest.admitsAndNormalizes:53 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$IngestionEngineTest.blankInputIsPermanent:71 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$IngestionEngineTest.deterministic:83 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$IngestionEngineTest>StageExecutorContract.executeReturnsAnOutcome:59 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$IngestionEngineTest>StageExecutorContract.executorNeverClaimsToBeHuman:92 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$IngestionEngineTest>StageExecutorContract.succeededOutcomeCarriesAnArtifact:82 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$PolicyEvaluationEngineTest.blockingVerdictFailsTheStageAndKeepsTheRecord:184 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$PolicyEvaluationEngineTest.cleanEvaluation:175 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$PolicyEvaluationEngineTest.deterministic:197 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$PolicyEvaluationEngineTest>StageExecutorContract.executeReturnsAnOutcome:59 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$PolicyEvaluationEngineTest>StageExecutorContract.executorNeverClaimsToBeHuman:92 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$PolicyEvaluationEngineTest>StageExecutorContract.succeededOutcomeCarriesAnArtifact:82 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$ReleaseReadinessEngineTest.deterministic:246 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$ReleaseReadinessEngineTest.evaluationProducesAReportNotADecision:223 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$ReleaseReadinessEngineTest>StageExecutorContract.executeReturnsAnOutcome:59 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$ReleaseReadinessEngineTest>StageExecutorContract.executorNeverClaimsToBeHuman:92 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$ReleaseReadinessEngineTest>StageExecutorContract.succeededOutcomeCarriesAnArtifact:82 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$ReleaseReadinessEngineTest.unmetConditionFails:238 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$SummaryEngineTest.deterministic:325 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$SummaryEngineTest.everyClaimTraceable:273 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$SummaryEngineTest>StageExecutorContract.executeReturnsAnOutcome:59 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$SummaryEngineTest>StageExecutorContract.executorNeverClaimsToBeHuman:92 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$SummaryEngineTest.missingEvidenceIsPermanent:296 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$SummaryEngineTest>StageExecutorContract.succeededOutcomeCarriesAnArtifact:82 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$SummaryEngineTest.summaryIsOrderIndependent:318 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$TestingEngineTest.deterministic:149 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$TestingEngineTest>StageExecutorContract.executeReturnsAnOutcome:59 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$TestingEngineTest>StageExecutorContract.executorNeverClaimsToBeHuman:92 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$TestingEngineTest.failingSuiteFailsTheStage:118 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$TestingEngineTest.passingSuite:108 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$TestingEngineTest>StageExecutorContract.succeededOutcomeCarriesAnArtifact:82 » UnsupportedOperation T071 not implemented
+[ERROR]   EngineBehaviourTest$TestingEngineTest.unavailableRunnerIsRetryable:138 » UnsupportedOperation T071 not implemented
+[INFO] 
+[ERROR] Tests run: 51, Failures: 10, Errors: 34, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  2.386 s
+[INFO] Finished at: 2026-09-21T07:31:14-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project shortener: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+```

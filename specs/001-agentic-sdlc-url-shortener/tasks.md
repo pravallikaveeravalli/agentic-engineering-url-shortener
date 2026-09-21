@@ -570,12 +570,12 @@ and replan records, driven entirely by **injected scriptable executors** — no 
   - **Deps**: T069 · **Par**: yes · **Artifact**: per stage — `retryable_categories`, `effect_idempotent` (**design-time, never executor self-certified**), `effect_reversibility`, `compensating_action?`
   - **TDD**: RED-FIRST · **Validate**: **registration fails to load** a stage declaring `IRREVERSIBLE` without a named compensating action (EC-034); and the loaded contract for each of the twelve nodes matches **plan §3’s `Declared retryable set` column exactly** — asserted from the plan’s table so a drifted declaration fails a test rather than silently narrowing what retries · **Docs**: `data-model.md` KE-29 · **Trace**: matrix FR-ORC-014, EC-034
   - **Guard**: a declaration contradicting the structural reversibility rule is **flagged for human review, never silently trusted** (EC-035) · **Done**: EC-034 load-failure and EC-035 review-flag both proven · **Approval**: none
-- [ ] T071 [P] [US3] Deterministic stage engines (five) — `src/main/java/agentic/shortener/orchestration/executor/deterministic/`
+- [x] T071 [P] [US3] Deterministic stage engines (five) — `src/main/java/agentic/shortener/orchestration/executor/deterministic/`
   - **Req**: FR-ORC-029 · **Scn**: all · **ADR**: **ADR-004**, **ADR-004-A2** · **Pre**: T069
   - **Deps**: T069 · **Par**: yes · **Artifact**: **five** deterministic stage engines — S1 ingestion, S8 testing, S10 security and policy, S11 release-readiness evaluation, S12 summary assembly — the genuinely deterministic stages. **No counterpart engine exists for any AI-capable stage** (ADR-004-A2)
   - **TDD**: RED-FIRST · **Validate**: each of the five engines produces its declared output deterministically — identical input, identical output, asserted per engine. **Completion of a run is not evidence that an engine is correct**, which is the gap the pre-implementation review found in this task's previous validation · **Docs**: spec §Stage Executor Model · **Trace**: matrix FR-ORC-029
   - **Guard**: **these five are not fallbacks and never were** — they are the real executors for stages whose value is repeatability (CL-003) · **Done**: five engines, each asserted deterministic on identical input · **Approval**: none
-- [ ] T072 [P] [US3] Scriptable fake executors — `src/test/java/agentic/shortener/orchestration/fakes/ScriptedExecutor.java`
+- [x] T072 [P] [US3] Scriptable fake executors — `src/test/java/agentic/shortener/orchestration/fakes/ScriptedExecutor.java`
   - **Req**: **FR-ORC-030** · **Scn**: DS-B, DS-C · **ADR**: **ADR-011** · **Pre**: T069
   - **Deps**: T069 · **Par**: yes · **Artifact**: scripts including `fail twice then succeed`, `timeout`, `return malformed envelope`, `propose transient for an undeclared category`
   - **TDD**: N/A-DOC · **Validate**: each script produces its scripted outcome deterministically · **Docs**: ADR-011 · **Trace**: matrix FR-ORC-030
