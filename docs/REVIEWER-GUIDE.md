@@ -56,9 +56,12 @@ a dedicated test (`RateLimiterTest.theAggregateTierIsNotPartiallyPresent`), not 
 
 **Which run closes it, and where that run's evidence is — stated honestly, not implied**: the closing task
 is `T136a`, in the brownfield demonstration scenario (DS-B). As of this guide, Phase 8's demonstration
-scenarios have not yet been executed as live, submitted runs (see the next section) — a public HTTP endpoint
-to submit a fresh orchestration run now exists (`POST /v1/runs`, `RunSubmissionController`, T082a), but no
-scenario run has been submitted through it yet. `baseline-omissions.md`'s own status field says `open` for
+scenarios have not yet completed as live, submitted runs (see the next section) — a public HTTP endpoint to
+submit a fresh orchestration run now exists (`POST /v1/runs`, `RunSubmissionController`, T082a). One attempt
+at the greenfield scenario (DS-A, not DS-B) has been made through the underlying driver: it reached S3
+(ambiguity detection) before a real, external Gemini API quota exhaustion suspended the run —
+`docs/evidence/ds-a/run-snapshot-ATTEMPT-1-BLOCKED-gemini-quota-exhausted.md`, kept and labelled as a blocked
+attempt, not claimed as completed evidence. `baseline-omissions.md`'s own status field says `open` for
 exactly this reason. When DS-B runs, its evidence will land under `docs/evidence/` alongside the six
 AI-stage demos already there, and this guide's own claim here should be checked against that evidence rather
 than trusted on the word of this sentence.

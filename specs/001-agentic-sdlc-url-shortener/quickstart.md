@@ -4,16 +4,23 @@
 
 **Status**: **T127 executed this guide, 2026-09-21.** Sections 1-2 and the retention/restart claims in
 section 3 were run for real on the verification machine; corrections below are the result. Two findings
-disclosed rather than smoothed over: (1) `psql` was not installed on the verification machine — the
-provisioning script's own `--emit-sql` fallback is documented as the corrected path; (2) **there is
-currently no public HTTP endpoint to create or submit a fresh orchestration run** — `RunInspectionController`
-(`GET /v1/runs/{runId}`) and `GateDecisionController` (`POST .../gates/{gateId}/decision`) are the only two
-orchestration endpoints that exist. Section 4's scenario-running and section 5's reconstruction commands are
-corrected to what is actually reachable today; running the three demonstration scenarios as live, submitted
-runs is Phase 8 work, not yet executed as of this guide's own correction pass. The six AI-capable stages
-have each been individually proven with a real, live model call (`docs/evidence/ai-demos/`), and the full
-deterministic reliability/policy/readiness machinery is proven by the automated test suite — what remains
-unverified by a literal command in this guide is an end-to-end, HTTP-submitted DS-A/B/C run.
+disclosed rather than smoothed over at that time: (1) `psql` was not installed on the verification machine —
+the provisioning script's own `--emit-sql` fallback is documented as the corrected path; (2) at that time,
+there was no public HTTP endpoint to create or submit a fresh orchestration run. **Corrected forward,
+2026-09-21 (T082a, CR-045)**: `POST /v1/runs` (`RunSubmissionController`) now exists alongside
+`RunInspectionController` (`GET /v1/runs/{runId}`) and `GateDecisionController`
+(`POST .../gates/{gateId}/decision`) — a requirement can genuinely be submitted over HTTP. Its own response
+returns before the run is fully driven (a fast, bounded reply; the pipeline advances on a background thread
+afterward — poll `GET /v1/runs/{runId}` to watch it progress), and the run-orchestration driver behind it
+(`Conductor`, T131a) is itself proven by `ConductorIT` (parallel fan-out and join, gate-pause-and-resume,
+terminal outcome) rather than by a live demonstration scenario. Running the three demonstration scenarios as
+live, submitted runs is Phase 8 work; as of this correction, one attempt at the greenfield scenario (DS-A)
+reached S3 before a real, external Gemini API quota exhaustion suspended it —
+`docs/evidence/ds-a/run-snapshot-ATTEMPT-1-BLOCKED-gemini-quota-exhausted.md` — not yet a completed
+scenario run. The six AI-capable stages have each been individually proven with a real, live model call
+(`docs/evidence/ai-demos/`), and the full deterministic reliability/policy/readiness machinery is proven by
+the automated test suite — what remains unverified by a literal command in this guide is a completed,
+end-to-end, HTTP-submitted DS-A/B/C run reaching its terminal outcome.
 
 ---
 
@@ -44,11 +51,12 @@ injected fakes (FR-ORC-030), so the test suite never calls a live provider.
 
 ## What a run demonstrates
 
-**Design intent, verified at the mechanism level — see the Status note above.** Everything below is real
-and tested (retry, gates, rollback, compensation, stage 7's own suspend-and-ask behavior, the executor-kind
-labelling), proven by the automated suite and, for the AI-capable stages, by real live model calls. What is
-not yet true is the FIRST sentence below taken literally: there is no HTTP surface yet to hand this system
-an arbitrary requirement of your own and watch it flow — see sections 4 and 5's own correction notes.
+**Design intent, verified at the mechanism level, and — as of T082a/CR-045 — genuinely reachable over HTTP**
+(see the Status note above). Everything below is real and tested (retry, gates, rollback, compensation,
+stage 7's own suspend-and-ask behavior, the executor-kind labelling), proven by the automated suite and, for
+the AI-capable stages, by real live model calls. The FIRST sentence below is no longer aspirational: `POST
+/v1/runs` exists and admits an arbitrary requirement of your own — see sections 4 and 5's own correction
+notes for exactly what is and is not yet demonstrated by a completed live run.
 
 **You are not limited to the three prepared scenarios. Submit any requirement you like.** The system is
 required to process arbitrary requirements without any change to its executors (FR-ORC-028, SC-016), and the
@@ -293,11 +301,14 @@ policy is `FAIL` or an exception is unapproved or expired.
 
 ## 4. Run the three scenarios
 
-**Corrected 2026-09-21**: there is currently no public HTTP endpoint to create or submit a fresh
-orchestration run — only `GET /v1/runs/{runId}` (inspect) and `POST .../gates/{gateId}/decision` (decide a
-gate) exist. A `<run> scenario DS-A` CLI, as originally drafted here, does not exist and this guide will
-not pretend otherwise. Running the three demonstration scenarios as live, end-to-end submitted runs is
-Phase 8 work, scheduled after this guide's own correction pass, not yet executed.
+**Corrected 2026-09-21, corrected forward again same day (T082a/CR-045)**: `POST /v1/runs`
+(`RunSubmissionController`) now exists and genuinely admits a requirement — the original finding that no
+submission endpoint existed at all is no longer true. A `<run> scenario DS-A` CLI, as originally drafted
+here, still does not exist and this guide will not pretend otherwise; submitting a scenario means a real
+`POST /v1/runs` call with that scenario's requirement text as the body. Running the three demonstration
+scenarios as live, end-to-end submitted runs is Phase 8 work: one attempt at DS-A has been made and reached
+S3 before a real, external Gemini API quota exhaustion suspended it
+(`docs/evidence/ds-a/run-snapshot-ATTEMPT-1-BLOCKED-gemini-quota-exhausted.md`) — not yet a completed run.
 
 **What IS executed and verifiable today**, in place of the above: each of the six AI-capable stages
 (normalization, ambiguity detection, decomposition, design, implementation, documentation) has its own
@@ -328,14 +339,16 @@ presented as AI work.
 
 ### Now run one of your own
 
-**Corrected 2026-09-21**: as with section 4 above, there is no `<run> submit` command — no HTTP surface
-currently accepts a fresh requirement. The underlying claim this section is about (an arbitrary requirement
-completes the same governed lifecycle with no executor changes, FR-ORC-028/SC-016) is proven at the
-executor level today: every `StageExecutor` implementation is structurally unable to see which scenario or
-demonstration produced its input (`StageInput` carries no scenario label, `StageExecutorContractTest`
-asserts the closed field list), so no executor CAN branch on recognizing a blessed input even if a
-submission surface existed. What is not yet demonstrated is an actual end-to-end run over reviewer-chosen
-input, because there is nowhere to submit one yet — a real gap, disclosed rather than routed around.
+**Corrected 2026-09-21, corrected forward again same day (T082a/CR-045)**: a real submission surface now
+exists — `POST /v1/runs`, body `{"requirement": "<your text>"}`. The underlying claim this section is about
+(an arbitrary requirement completes the same governed lifecycle with no executor changes, FR-ORC-028/SC-016)
+is proven at the executor level: every `StageExecutor` implementation is structurally unable to see which
+scenario or demonstration produced its input (`StageInput` carries no scenario label,
+`StageExecutorContractTest` asserts the closed field list), so no executor CAN branch on recognizing a
+blessed input — and that structural guarantee now applies to a real, literal HTTP submission, not only to
+the mechanism-level argument. What is not yet demonstrated is a *completed* end-to-end run over
+reviewer-chosen input reaching a terminal outcome — real live AI-stage calls take real time, and this
+guide's own correction pass does not claim more than what has actually been run.
 
 ---
 
@@ -351,9 +364,18 @@ session that produced them.
 5. Which figures were measured, under what conditions, and which are proposed targets?
 6. What did the baseline deliberately omit, which run implemented it, and where is that run's evidence?
 
-**Corrected 2026-09-21**: no standalone reporting CLI exists yet (`T129`'s `SummaryAssembler` is the task
-that would produce one deterministic, evidence-only document; not yet built). What exists today and is
-directly runnable:
+**Corrected 2026-09-21, corrected forward again same day (T129)**: a standalone, deterministic,
+evidence-only reporting mechanism now exists — `SummaryAssembler`, generating `docs/ENGINEERING-SUMMARY.md`.
+It reads only recorded evidence (a done task's own artifact path, an ADR's own Status line and rejected
+options, a test report's own summary line) and asserts every claim traces to a real file — proven by
+`SummaryAssemblerTest`/`SummaryAssemblerIT`. Regenerate it directly:
+
+```
+./scripts/build.sh -q compile
+java -cp target/classes agentic.shortener.orchestration.summary.SummaryAssemblerMain
+```
+
+What else exists today and is directly runnable:
 
 ```
 # Evidence: query the governance tables directly — audit_record, state_transition, gate_decision,
