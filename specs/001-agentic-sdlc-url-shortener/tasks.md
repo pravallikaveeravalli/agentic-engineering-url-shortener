@@ -268,12 +268,12 @@ register rather than improvised under pressure.
   - **Deps**: T025 · **Par**: no (shared migration file) · **Artifact**: implementations plus tables with a **unique index on `short_code`**
   - **TDD**: RED-FIRST · **Validate**: `./mvnw -q -Dtest=*RepositoryIT verify` against Testcontainers · **Docs**: `contracts/README.md` · **Trace**: matrix FR-URL-006
   - **Guard**: uniqueness is guaranteed by the **database constraint**, never by application check-then-insert · **Done**: round-trips pass; unique index present in the migration · **Approval**: none
-- [ ] T027 Governance tables and append-only privilege grants — `V3__governance.sql`
+- [x] T027 Governance tables and append-only privilege grants — `V3__governance.sql`
   - **Req**: **NFR-AUD-001**, FR-ORC-023 · **Scn**: all · **ADR**: **ADR-010** · **Pre**: T026
   - **Deps**: T026 · **Par**: no (schema) · **Artifact**: `audit_record`, `failure_event`, `gate_decision`, `state_transition`, `policy_check_result`, `compensation_record`; app role granted **INSERT and SELECT only**, UPDATE and DELETE **denied**
   - **TDD**: TEST-WITH · **Validate**: migration applies; grants present · **Docs**: `data-model.md` governance section · **Trace**: NFR-AUD-001
   - **Guard**: `redirect_event` keeps append-only privilege but is **domain analytics, not audit** (ADR-010 scoping) — its failure semantics come from ADR-014 · **Done**: six governance tables plus grants · **Approval**: none
-- [ ] T028 Audit-immutability failing-UPDATE test — `src/test/java/agentic/shortener/audit/AuditImmutabilityIT.java`
+- [x] T028 Audit-immutability failing-UPDATE test — `src/test/java/agentic/shortener/audit/AuditImmutabilityIT.java`
   - **Req**: **NFR-AUD-001** · **Scn**: — · **ADR**: **ADR-010** · **Pre**: T027
   - **Deps**: T027 · **Par**: no · **Artifact**: test asserting an UPDATE against `audit_record` is **rejected by the store**
   - **TDD**: EVIDENCE · **Validate**: `./mvnw -q -Dtest=AuditImmutabilityIT verify` · **Docs**: ADR-010 §Validation · **Trace**: NFR-AUD-001
