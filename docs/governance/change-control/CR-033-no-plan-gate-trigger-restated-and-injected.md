@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **APPROVED** — 2026-09-21, Pravallika Veeravalli. |
+| Status | **APPLIED** — 2026-09-21. Approved by Pravallika Veeravalli; applied and verified the same day. **All 20 rows HOLD on first execution** — no expectation corrected, no edit wrong. The first record in this project to do so, which is attributable to its size rather than to anything new: six edits against text read immediately beforehand. |
 | Raised by | `/speckit-analyze` re-run, 2026-09-21, finding **M1** — the only finding the CR-021..CR-032 package introduced |
 | Approving authority | Pravallika Veeravalli (human owner) — **approved 2026-09-21** |
 | Source decision | Owner decision, 2026-09-21, **option (a)** of three presented with costs |

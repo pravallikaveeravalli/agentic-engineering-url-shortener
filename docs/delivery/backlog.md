@@ -55,9 +55,12 @@ to do, and nobody does.
 **All six AI-capable stages are wired from the outset** (`tasks.md` T073a–T073f). The owner **overruled an earlier
 pre-emptive reduction**, on the ground that its estimate priced AI-authored work at human authoring speed.
 
-Reduction re-enters **only by a recorded checkpoint order** (CR-009). It is the **first option offered** at the End
-Day 2 AM checkpoint — offered, never applied by default, and never written into this file in advance. Writing it here at
-the outset would be the pre-emptive reduction the owner already rejected, arriving through a side door.
+**As of the Gate 6 condition (CR-034), no checkpoint offers it either.** The End-Day-2-AM option that once carried
+that route is **struck**: Decision J removed the deterministic counterparts, so its true meaning became *leave stages
+with no executor*. Any reduction would now require a **fresh owner decision on the record, with what it costs
+stated** — not the selection of a pre-drawn menu item. Writing it into this file in advance would be the pre-emptive
+reduction the owner already rejected, arriving through a side door; so would leaving a checkpoint option that read as
+cheaper than it was.
 
 **Since Decision J (ADR-004 Amendment 02) there is no keyless mode and no deterministic counterpart for any AI-capable
 stage.** That raises the stakes on this rule rather than lowering them: a reduction ordered at a checkpoint would now

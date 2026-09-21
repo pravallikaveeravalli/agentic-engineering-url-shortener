@@ -17,7 +17,8 @@ written before any code exists — so that the procedure is fixed while nobody i
 
 1. **Compare** the actual position to the milestone in `milestones.md`.
 2. **Record** what is done and what is not, with no rounding in either direction.
-3. If behind: **escalate to the owner with the options below**, drawn from `backlog.md`.
+3. If behind: **escalate to the owner**, with the options named for that checkpoint below, drawn from
+   `backlog.md`. **One checkpoint — End Day 2 AM — has no option** and escalates without one (CR-034).
 4. **Wait.** The owner decides. **Silence is not approval** and does not authorise a reduction (Constitution III).
 5. If she orders a reduction, **record it** — what was cut, on whose order, at which checkpoint.
 6. If she does not, **continue**. Being behind is not itself a reason to change anything; completeness takes priority
@@ -45,19 +46,35 @@ failing**, and it is not a licence to cut.
 | | |
 |---|---|
 | **Observes** | Slice 4, the orchestration state model, against the Day 2 AM milestone. **Stop condition 3 also fires here if Slice 4 is incomplete at end of Day 2** |
-| **First option offered** | **Reduce AI-capable stages from six toward two** — S2 normalization and S7 implementation retained |
+| **Option escalated if behind** | **None. The former AI-reduction option is STRUCK** — Gate 6 condition, 2026-09-21 (CR-034) |
 | **May never cut** | The orchestration model itself. It is the graded artifact; the options offered exclude abandoning it |
 
-**This option costs more than it did when the plan was written, and the owner must be told so.** The plan's wording was
-*"the rest running deterministic"* — that is **no longer possible**. Owner **Decision J** (ADR-004 Amendment 02) removed
-every deterministic counterpart for an AI-capable stage. A reduction now means a stage with **no executor at all**, not
-a stage falling back to a deterministic engine.
+**This checkpoint escalates without a pre-drawn option.** It observes Slice 4 against its milestone, records the
+position honestly, and asks. That is deliberately harder to answer than an escalation with a menu, and it is the right
+trade for the reason below.
 
-So the escalation must state, in the ask: **which stages would be left unimplemented**, and that per-node executor-kind
-labelling makes the reduction **honest and visible rather than hidden** — which is the property that made this option
-acceptable in the first place. **Offered, never applied by default.** The owner already overruled one pre-emptive
-reduction of AI wiring, on the ground that its estimate priced AI-authored work at human authoring speed; this option
-may not arrive through a side door.
+**What was struck, and why.** The option read *"reduce AI-capable stages from six toward two (S2 normalization, S7
+implementation), the rest running deterministic."* Three things were wrong with it by the time this register was
+written:
+
+1. **Its stated mechanism no longer exists.** Decision J (ADR-004 Amendment 02) removed every deterministic counterpart
+   for an AI-capable stage. *"The rest running deterministic"* is not available. The option's true meaning became
+   **leave stages with no executor at all — parts of the orchestrator unbuilt**, which is not a scope reduction but
+   **shipping an incomplete graded artifact**.
+2. **The owner had already rejected the same trade.** At Gate 5 she overruled a pre-emptive AI-wiring reduction — *"AI
+   is the one writing the code"* — on the ground that its estimate priced AI-authored work at human authoring speed.
+   Leaving the option here let a rejected decision return through a side door, and it contradicted `backlog.md`, which
+   already forbids AI wiring from being treated as deferrable.
+3. **The pressure it existed to serve is gone.** CR-009 removed the external deadline. It was a schedule-relief valve
+   for a schedule that does not need relieving.
+
+**It is struck rather than annotated** because an option that reads as cheaper than it is will be chosen under pressure
+*precisely because it reads cheap*, and a warning attached to it would be read last, if at all. **A misleading menu item
+is removed, not footnoted.**
+
+**If Slice 4 is late**, stop condition 3 applies unchanged: the position is reported and the owner directs, and **the
+options offered exclude abandoning the orchestration model**. Any AI-wiring reduction would now need a fresh decision
+from her, on the record, with its true cost stated — not the selection of a pre-drawn menu item.
 
 ### End Day 2 PM
 
@@ -103,5 +120,7 @@ Stated absolutely, because this is the clause that makes the rest safe:
 **`backlog.md`, and nowhere else.** An option not already recorded as deferrable is not an option a checkpoint may
 offer; inventing one under time pressure is the improvisation this whole register set exists to prevent.
 
-The nine slices in `scope-register.md` are **not** a source of options, with the four exceptions named per-checkpoint
-above — each of which is a **reduction in fidelity within a retained slice**, never the removal of a slice.
+The nine slices in `scope-register.md` are **not** a source of options, with the **three** exceptions named
+per-checkpoint above — each a **reduction in fidelity within a retained slice**, never the removal of a slice. **Three,
+not four, since the Gate 6 condition struck End Day 2 AM’s** (CR-034): that checkpoint now escalates with no pre-drawn
+option at all.

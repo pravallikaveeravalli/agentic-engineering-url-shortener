@@ -887,7 +887,7 @@ anyone.
 | Checkpoint | Option escalated if behind |
 |---|---|
 | End Day 1 | Reduce Slice 3 to the FR-URL requirements DS-B needs; defer rate-limit tier sophistication |
-| End Day 2 AM | **First option offered**: reduce AI-capable stages from six toward two (S2 normalization, S7 implementation), the rest running deterministic. Mode labelling makes any such reduction honest and visible, not hidden. Offered, never applied by default |
+| End Day 2 AM | **No reduction option is offered. The former AI-reduction option is STRUCK** — Gate 6 condition, 2026-09-21 (CR-034). It read *"reduce AI-capable stages from six toward two, the rest running deterministic"*, and **Decision J removed every deterministic counterpart** (ADR-004-A2), so its true meaning became *leave stages with no executor at all — parts of the orchestrator unbuilt*. That is not a scope reduction; it is **shipping an incomplete graded artifact**. The owner’s Gate 5 overrule had already rejected the same trade. This checkpoint **observes Slice 4 against its milestone, records the position, and escalates without a pre-drawn option**; stop condition 3’s rule stands — the **options offered exclude abandoning the orchestration model** |
 | End Day 2 PM | Cut DS-B's injected compensation case to a unit-level proof; keep the scenario |
 | End Day 3 AM | Reduce MTTR population to the reliability suite only, and say so in the declared population |
 
@@ -906,7 +906,10 @@ deferred scope (NFR-AUD-003, CR-017).
 
 **AI wiring for all six AI-capable stages is in scope from the outset** (`tasks.md` T073a–T073f). It is *not* a
 backlog item. The owner overruled an earlier pre-emptive reduction on the ground that its estimate priced
-AI-authored work at human authoring speed; reduction re-enters only by a recorded checkpoint order (CR-009).
+AI-authored work at human authoring speed. **As of the Gate 6 condition (CR-034) there is no checkpoint option to
+reduce it either**: the End-Day-2-AM option that once carried that route is struck, because Decision J made its true
+meaning *leave stages with no executor*. Any reduction would now require a fresh owner decision on the record, with
+what it costs stated — not the selection of a pre-drawn menu item.
 
 **Stop conditions** — classified by what the trigger does, per the Gate 5 time-attitude amendment (CR-009). Two
 are correctness controls that **halt**; two are time-based and **escalate for the owner's direction**, because time
