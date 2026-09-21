@@ -65,6 +65,10 @@ public final class ProviderFailureTranslator {
             // Its own type, not IllegalStateException — see MalformedProviderOutputException for what the
             // generic version cost.
             new Rule(MalformedProviderOutputException.class, failure -> FailureCategory.INTERNAL),
+            // A provider that recognized and reported its own rate limit or quota exhaustion. T131d, found
+            // live: a response can be well-formed and still arrive alongside a 429/RESOURCE_EXHAUSTED
+            // signal, which is not the same fact as a response the provider could not even parse.
+            new Rule(ProviderRateLimitedException.class, failure -> FailureCategory.RATE_LIMITED),
             // A missing or unexecutable binary. UNAVAILABLE rather than INTERNAL: the provider is not
             // there, which is a deployment fact, and T073 requires it to route to bounded retry and then
             // suspension — there is no fallback (ADR-004-A2).

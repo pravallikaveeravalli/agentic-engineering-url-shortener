@@ -101,6 +101,11 @@ class FailureEnvelopeTest {
         assertEquals(FailureCategory.INTERNAL,
                 translator.translate(new MalformedProviderOutputException("output was not JSON")).category(),
                 "non-JSON output is INTERNAL and permanent — T073 assertion 4");
+        assertEquals(FailureCategory.RATE_LIMITED,
+                translator.translate(new ProviderRateLimitedException("RESOURCE_EXHAUSTED (code 429)"))
+                        .category(),
+                "a provider that recognized and reported its own rate limit/quota exhaustion is exactly "
+                        + "what RATE_LIMITED exists to classify — T131d");
         assertEquals(FailureCategory.UNKNOWN,
                 translator.translate(new Throwable("no idea")).category(),
                 "an error the plugin does not recognise must arrive as UNKNOWN, which rules permanent — "

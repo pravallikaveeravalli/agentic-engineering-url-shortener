@@ -3,6 +3,7 @@ package agentic.shortener.orchestration.executor.ai;
 import agentic.shortener.orchestration.reliability.FailureCategory;
 import agentic.shortener.orchestration.reliability.MalformedProviderOutputException;
 import agentic.shortener.orchestration.reliability.ProviderFailureTranslator;
+import agentic.shortener.orchestration.reliability.ProviderRateLimitedException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -133,6 +134,44 @@ class GeminiCliStageAiProviderTest {
         GeminiCliStageAiProvider provider = new GeminiCliStageAiProvider(script.toString(), PINNED_MODEL);
 
         assertThrows(MalformedProviderOutputException.class, () -> provider.invoke("a prompt"));
+    }
+
+    @Test
+    @DisplayName("8: a RESOURCE_EXHAUSTED/429 error field is rate-limited, not malformed — a real captured "
+            + "shape (T131d), quota exhaustion alongside an otherwise well-formed response")
+    void resourceExhaustedErrorFieldIsRateLimited() throws Exception {
+        // Matches a real captured agy response, verbatim in shape: status=ERROR, a fully-formed response
+        // string, AND an "error" field naming RESOURCE_EXHAUSTED / 429. Found live during T132's DS-A run.
+        Path script = stub("echo '{\"conversation_id\":\"2ddce12a-7930-4c41-b14a-924b4fa9415b\","
+                + "\"status\":\"ERROR\",\"response\":\"[{\\\"ambiguityClass\\\":\\\"MISSING_ACCEPTANCE_CRITERIA\\\"}]\","
+                + "\"error\":\"API error (attempt 1): RESOURCE_EXHAUSTED (code 429): Individual quota "
+                + "reached. Please upgrade your subscription to increase your limits. Resets in 1h10m0s.\"}'");
+        GeminiCliStageAiProvider provider = new GeminiCliStageAiProvider(script.toString(), PINNED_MODEL);
+
+        ProviderRateLimitedException thrown =
+                assertThrows(ProviderRateLimitedException.class, () -> provider.invoke("a prompt"));
+        assertTrue(thrown.getMessage().contains("RESOURCE_EXHAUSTED") || thrown.getMessage().contains("429"),
+                "the exception's own message should carry the real signal it recognized: " + thrown.getMessage());
+
+        var envelope = ProviderFailureTranslator.forSubprocessProvider().translate(thrown);
+        assertEquals(FailureCategory.RATE_LIMITED, envelope.category());
+        assertTrue(envelope.executorProposesRetryable(),
+                "a rate-limit signal is exactly the shape RATE_LIMITED exists to classify as retryable — "
+                        + "whether the orchestrator's own declared-set intersection actually retries it is "
+                        + "T084's separate ruling, not this adapter's concern");
+    }
+
+    @Test
+    @DisplayName("9: an ERROR status with no error field, or one that does not name a rate limit, stays "
+            + "malformed — the fix must not swallow every non-SUCCESS status into RATE_LIMITED")
+    void errorFieldNotNamingARateLimitStaysMalformed() throws Exception {
+        Path script = stub("echo '{\"status\":\"ERROR\",\"response\":\"partial\","
+                + "\"error\":\"internal server error, please try again later\"}'");
+        GeminiCliStageAiProvider provider = new GeminiCliStageAiProvider(script.toString(), PINNED_MODEL);
+
+        assertThrows(MalformedProviderOutputException.class, () -> provider.invoke("a prompt"),
+                "an error field that does NOT name a recognizable rate-limit/quota signal must still fall "
+                        + "through to the existing malformed-response path, not be guessed into RATE_LIMITED");
     }
 
     @Test

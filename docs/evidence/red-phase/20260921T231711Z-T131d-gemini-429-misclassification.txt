@@ -1,0 +1,51 @@
+Task T131d — GeminiCliStageAiProvider 429/RESOURCE_EXHAUSTED misclassification. RED-FIRST, genuine.
+
+Found live, during T132's actual DS-A run: agy returned status=ERROR carrying BOTH a fully-formed,
+substantive response AND an "error" field naming a real Gemini API quota exhaustion. Reproduced directly,
+outside the pipeline, with an isolated agy call (not guessed):
+
+  {"conversation_id":"2ddce12a-...","status":"ERROR","response":"[...six well-formed ambiguities...]",
+   "error":"API error (attempt 1): RESOURCE_EXHAUSTED (code 429): Individual quota reached. Please
+   upgrade your subscription to increase your limits. Resets in 1h10m0s.","duration_seconds":21.75,...}
+
+GeminiCliStageAiProvider.parse() throws MalformedProviderOutputException for ANY non-SUCCESS status,
+regardless of the "error" field's content. ProviderFailureTranslator.SUBPROCESS_RULES maps that
+unconditionally to FailureCategory.INTERNAL (permanent, never retried) -- even though a 429/RESOURCE_EXHAUSTED
+signal is exactly the shape FailureCategory.RATE_LIMITED exists to classify (S3's own declared retryable
+set is {TIMEOUT, UNAVAILABLE, RATE_LIMITED}).
+
+ProviderRateLimitedException.java was written first (the new type both the provider and the translator
+need), then two tests naming it before parse() or the translator recognized it:
+
+Command:
+  ./scripts/build.sh -q -Dtest=GeminiCliStageAiProviderTest,FailureEnvelopeTest test
+
+Result: Tests run: 20, Failures: 2.
+
+  [ERROR] GeminiCliStageAiProviderTest.resourceExhaustedErrorFieldIsRateLimited
+  Unexpected exception type thrown, expected: <ProviderRateLimitedException> but was:
+  <MalformedProviderOutputException>
+
+  [ERROR] FailureEnvelopeTest.subprocessProviderErrorsTranslate
+  a provider that recognized and reported its own rate limit/quota exhaustion is exactly what RATE_LIMITED
+  exists to classify -- T131d ==> expected: <RATE_LIMITED> but was: <UNKNOWN>
+
+Every other test in both files (9/11, 8/9) already passed -- confirming this is a targeted, real gap, not a
+broken fixture.
+
+Fix: GeminiCliStageAiProvider.parse() now checks the "error" field, when present alongside a non-SUCCESS
+status, for a recognizable rate-limit/quota signal (RESOURCE_EXHAUSTED or a 429 code, both directly observed
+in the real response, not guessed) and throws ProviderRateLimitedException instead of
+MalformedProviderOutputException in exactly that case -- every other non-SUCCESS shape (no error field, or
+one that does not name a rate limit) still falls through to the existing MalformedProviderOutputException
+path unchanged (proven by a dedicated negative test, #9). ProviderFailureTranslator.SUBPROCESS_RULES gained
+one new rule: ProviderRateLimitedException -> FailureCategory.RATE_LIMITED. This keeps the "which exception
+TYPE maps to which FailureCategory" decision exactly where T083's own architecture requires it (the
+translator, the only class FailureEnvelopeTest permits to hold both FailureCategory and a provider exception
+type) -- the provider only decides WHICH TYPE to throw, recognizing agy's own wire shape, which is the same
+kind of vendor-specific parsing it already does for the "status"/"response" fields.
+
+Re-run:
+  ./scripts/build.sh -q -Dtest=GeminiCliStageAiProviderTest,FailureEnvelopeTest test
+
+Result: all green (see commit for exact counts).

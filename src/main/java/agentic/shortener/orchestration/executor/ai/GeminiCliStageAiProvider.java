@@ -1,6 +1,7 @@
 package agentic.shortener.orchestration.executor.ai;
 
 import agentic.shortener.orchestration.reliability.MalformedProviderOutputException;
+import agentic.shortener.orchestration.reliability.ProviderRateLimitedException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -9,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -147,6 +149,19 @@ public final class GeminiCliStageAiProvider implements StageAiProvider {
 
         JsonNode statusNode = root.get("status");
         if (statusNode == null || !statusNode.isTextual() || !"SUCCESS".equals(statusNode.asText())) {
+            String errorText = errorFieldOf(root);
+            if (isRateLimitSignal(errorText)) {
+                // T131d, found live during a real DS-A run: agy can answer status=ERROR carrying a fully
+                // formed, substantive response ALONGSIDE an "error" field naming a genuine Gemini API
+                // quota exhaustion (RESOURCE_EXHAUSTED / HTTP 429). That is not a malformed response —
+                // it is the provider correctly reporting it is rate-limited, and RATE_LIMITED is exactly
+                // the category S3's own declared retryable set names for it. The response content itself
+                // is still discarded: this remains a failure, not a partial success, matching the
+                // no-partial-credit shape every other branch here already uses.
+                throw new ProviderRateLimitedException(
+                        "the Gemini CLI reported a rate limit / quota exhaustion (exit " + exitCode
+                                + "): " + truncate(errorText));
+            }
             throw new MalformedProviderOutputException(
                     "the Gemini CLI's response status was not SUCCESS (exit " + exitCode + ", status="
                             + (statusNode == null ? "<absent>" : statusNode.asText()) + "). stdout: "
@@ -168,5 +183,26 @@ public final class GeminiCliStageAiProvider implements StageAiProvider {
     private static String truncate(String text) {
         String oneLine = text.strip().replace('\n', ' ');
         return oneLine.length() <= 500 ? oneLine : oneLine.substring(0, 500) + "...(truncated)";
+    }
+
+    /** {@code ""} rather than {@code null} when absent — every caller of this method treats blank and
+     * absent identically, and a non-null return keeps them from having to. */
+    private static String errorFieldOf(JsonNode root) {
+        JsonNode errorNode = root.get("error");
+        return errorNode != null && errorNode.isTextual() ? errorNode.asText() : "";
+    }
+
+    /**
+     * Recognizes agy's own rate-limit/quota-exhaustion wording, verified against a real captured response
+     * rather than guessed: {@code "RESOURCE_EXHAUSTED"} and an HTTP {@code 429} code both appear together
+     * in the one instance this adapter has actually observed. Either alone is accepted, since a future
+     * response naming only one is still describing the same condition.
+     */
+    private static boolean isRateLimitSignal(String errorText) {
+        if (errorText.isBlank()) {
+            return false;
+        }
+        String upper = errorText.toUpperCase(Locale.ROOT);
+        return upper.contains("RESOURCE_EXHAUSTED") || upper.contains("429");
     }
 }
