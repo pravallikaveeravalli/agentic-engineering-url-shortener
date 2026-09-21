@@ -719,17 +719,17 @@ from the response JSON. Each is `[P]` because each touches its own files and dep
   - **Deps**: T069 · **Par**: no (consumed by T084–T087) · **Artifact**: closed category set `TIMEOUT` | `UNAVAILABLE` | `RATE_LIMITED` | `INVALID_INPUT` | `INTERNAL` | `UNKNOWN`, plus the executor's **proposed** classification and detail
   - **TDD**: RED-FIRST · **Validate**: executors translate provider errors into the envelope; a stage's declared retryable set is expressed over **standard categories only** · **Docs**: plan §6 · **Trace**: matrix FR-ORC-014, KE-26
   - **Guard**: provider knowledge stays in the plugin; the core never learns a vendor taxonomy (this is why the repaired static-list option was rejected) · **Done**: six categories; translation tested for at least two provider error shapes · **Approval**: none
-- [ ] T084 [US3] Two-vote retry ruling — `src/main/java/agentic/shortener/orchestration/reliability/RetryRuling.java`
+- [x] T084 [US3] Two-vote retry ruling — `src/main/java/agentic/shortener/orchestration/reliability/RetryRuling.java`
   - **Req**: **FR-ORC-014** (CL-006), NFR-REL-002 · **Scn**: DS-B · **ADR**: **ADR-003** · **Pre**: T083, T070
   - **Deps**: T070, T083 · **Par**: no · **Artifact**: `retries = declared retryable set ∩ executor proposal`; **executor holds veto, never grant**; every ruling recorded with **both signatures**
   - **TDD**: RED-FIRST · **Validate**: four-case matrix — both yes → retry; declared-only → no retry; executor-only → no retry; `UNKNOWN` or malformed → **permanent** (EC-031, EC-032) · **Docs**: plan §6 · **Trace**: matrix FR-ORC-014, KE-27
   - **Guard**: **default-deny.** An unrecognized failure never defaults to retryable, mirroring EC-025's rule for policy checks. The executor diagnoses; the orchestrator rules, because only it holds attempts consumed, compensation already issued, replan invalidation, and blocking state · **Done**: four cases pass; two-signature record present · **Approval**: none
-- [ ] T085 [P] [US3] Bounded retry with backoff — `src/main/java/agentic/shortener/orchestration/reliability/RetryPolicy.java`
+- [x] T085 [P] [US3] Bounded retry with backoff — `src/main/java/agentic/shortener/orchestration/reliability/RetryPolicy.java`
   - **Req**: FR-ORC-014 · **Scn**: DS-B · **ADR**: ADR-003 · **Pre**: T084, T072
   - **Deps**: T072, T084 · **Par**: yes · **Artifact**: **PVT-007 — 3 attempts, exponential from 1 s**; each attempt individually recorded
   - **TDD**: EVIDENCE · **Validate**: `fail twice then succeed` script → two recorded attempts then success; bound exhaustion → **failure, never success** · **Docs**: plan §6 · **Trace**: matrix FR-ORC-014, KE-15
   - **Guard**: **retries MUST NOT be unbounded**; a run-level circuit breaker is deferred to backlog, so per-stage bounds plus run-level blocks are the in-scope controls · **Done**: bounded retry and exhaustion behaviour proven · **Approval**: none
-- [ ] T086 [P] [US3] Timeout gating on idempotency — `src/main/java/agentic/shortener/orchestration/reliability/TimeoutPolicy.java`
+- [x] T086 [P] [US3] Timeout gating on idempotency — `src/main/java/agentic/shortener/orchestration/reliability/TimeoutPolicy.java`
   - **Req**: FR-ORC-014 rule 4, FR-ORC-018 · **Scn**: DS-B · **ADR**: ADR-003 · **Pre**: T084, T070
   - **Deps**: T070, T084 · **Par**: yes · **Artifact**: per-node **escalation thresholds** are PVT-016's schedule, and `TIMEOUT` is retryable **only** where the stage's design-time contract declares the effect idempotent or repeat-safe. **Timeout gating on idempotency is unchanged**: this task keeps deciding retry *eligibility*, and **T086a** decides what a threshold breach *does*. The two are separate because duration and eligibility are separate decisions
   - **TDD**: EVIDENCE · **Validate**: **EC-033** — timeout on S7 (non-idempotent git effect) is **not** retried; timeout on an idempotent stage is; and each node's configured threshold matches **PVT-016**, asserted from configuration so a drifted value fails a test rather than changing behaviour silently · **Docs**: plan §6 · **Trace**: matrix FR-ORC-014, EC-033

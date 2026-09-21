@@ -1,0 +1,213 @@
+# Red-phase evidence
+
+- **Label**: T085-T086-retry-and-timeout
+- **Captured (UTC)**: 20260921T123835Z
+- **Command**: `./mvnw -Dtest=RetryPolicyTest,TimeoutPolicyTest test`
+- **Exit code**: 1
+- **Requirement**: NFR-TST-002 (red phase evidenced, not asserted); CN-004
+
+## Why this file exists
+
+This is the failing run captured BEFORE the implementation that makes it pass. It is stored
+so that the red phase is readable by a reviewer rather than claimed in a commit message.
+
+## Captured output
+
+```
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< agentic:shortener >--------------------------
+[INFO] Building agentic-sdlc-url-shortener 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ shortener ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 5 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ shortener ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ shortener ---
+[INFO] skip non existing resourceDirectory /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ shortener ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 77 source files with javac [debug parameters release 21] to target/test-classes
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java uses or overrides a deprecated API.
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.orchestration.reliability.RetryPolicyTest
+[ERROR] Tests run: 9, Failures: 0, Errors: 9, Skipped: 0, Time elapsed: 0.031 s <<< FAILURE! -- in agentic.shortener.orchestration.reliability.RetryPolicyTest
+[ERROR] agentic.shortener.orchestration.reliability.RetryPolicyTest.attemptNumberIsPropagated -- Time elapsed: 0.007 s <<< ERROR!
+java.lang.UnsupportedOperationException: T085 not implemented
+	at agentic.shortener.orchestration.reliability.RetryPolicy.execute(RetryPolicy.java:15)
+	at agentic.shortener.orchestration.reliability.RetryPolicyTest.attemptNumberIsPropagated(RetryPolicyTest.java:164)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.reliability.RetryPolicyTest.permanentFailureStopsAtOnce -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T085 not implemented
+	at agentic.shortener.orchestration.reliability.RetryPolicy.execute(RetryPolicy.java:15)
+	at agentic.shortener.orchestration.reliability.RetryPolicyTest.permanentFailureStopsAtOnce(RetryPolicyTest.java:112)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.reliability.RetryPolicyTest.failTwiceThenSucceed -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T085 not implemented
+	at agentic.shortener.orchestration.reliability.RetryPolicy.execute(RetryPolicy.java:15)
+	at agentic.shortener.orchestration.reliability.RetryPolicyTest.failTwiceThenSucceed(RetryPolicyTest.java:56)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.reliability.RetryPolicyTest.thrownFailureIsPermanent -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T085 not implemented
+	at agentic.shortener.orchestration.reliability.RetryPolicy.execute(RetryPolicy.java:15)
+	at agentic.shortener.orchestration.reliability.RetryPolicyTest.thrownFailureIsPermanent(RetryPolicyTest.java:127)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.reliability.RetryPolicyTest.nullOutcomeIsPermanent -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T085 not implemented
+	at agentic.shortener.orchestration.reliability.RetryPolicy.execute(RetryPolicy.java:15)
+	at agentic.shortener.orchestration.reliability.RetryPolicyTest.nullOutcomeIsPermanent(RetryPolicyTest.java:140)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.reliability.RetryPolicyTest.everyAttemptCarriesItsRuling -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T085 not implemented
+	at agentic.shortener.orchestration.reliability.RetryPolicy.execute(RetryPolicy.java:15)
+	at agentic.shortener.orchestration.reliability.RetryPolicyTest.everyAttemptCarriesItsRuling(RetryPolicyTest.java:151)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.reliability.RetryPolicyTest.backoffIsExponentialFromOneSecond -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T085 not implemented
+	at agentic.shortener.orchestration.reliability.RetryPolicy.execute(RetryPolicy.java:15)
+	at agentic.shortener.orchestration.reliability.RetryPolicyTest.backoffIsExponentialFromOneSecond(RetryPolicyTest.java:78)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.reliability.RetryPolicyTest.exhaustionFails -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T085 not implemented
+	at agentic.shortener.orchestration.reliability.RetryPolicy.execute(RetryPolicy.java:15)
+	at agentic.shortener.orchestration.reliability.RetryPolicyTest.exhaustionFails(RetryPolicyTest.java:89)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.reliability.RetryPolicyTest.emptyDeclaredSetNeverRetries -- Time elapsed: 0.010 s <<< ERROR!
+java.lang.UnsupportedOperationException: T085 not implemented
+	at agentic.shortener.orchestration.reliability.RetryPolicy.execute(RetryPolicy.java:15)
+	at agentic.shortener.orchestration.reliability.RetryPolicyTest.emptyDeclaredSetNeverRetries(RetryPolicyTest.java:176)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running agentic.shortener.orchestration.reliability.TimeoutPolicyTest
+[ERROR] Tests run: 7, Failures: 1, Errors: 4, Skipped: 0, Time elapsed: 0.012 s <<< FAILURE! -- in agentic.shortener.orchestration.reliability.TimeoutPolicyTest
+[ERROR] agentic.shortener.orchestration.reliability.TimeoutPolicyTest.stageFourHasNoExecutionThreshold -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.UnsupportedOperationException>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:67)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3115)
+	at agentic.shortener.orchestration.reliability.TimeoutPolicyTest.stageFourHasNoExecutionThreshold(TimeoutPolicyTest.java:83)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T086 not implemented
+	at agentic.shortener.orchestration.reliability.TimeoutPolicy.thresholdFor(TimeoutPolicy.java:12)
+	at agentic.shortener.orchestration.reliability.TimeoutPolicyTest.lambda$stageFourHasNoExecutionThreshold$0(TimeoutPolicyTest.java:83)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:53)
+	... 6 more
+
+[ERROR] agentic.shortener.orchestration.reliability.TimeoutPolicyTest.thresholdsMatchThePlan -- Time elapsed: 0.004 s <<< ERROR!
+java.lang.UnsupportedOperationException: T086 not implemented
+	at agentic.shortener.orchestration.reliability.TimeoutPolicy.thresholdFor(TimeoutPolicy.java:12)
+	at agentic.shortener.orchestration.reliability.TimeoutPolicyTest.thresholdsMatchThePlan(TimeoutPolicyTest.java:52)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.reliability.TimeoutPolicyTest.timeoutOnAnIdempotentStageIsRetried -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T086 not implemented
+	at agentic.shortener.orchestration.reliability.TimeoutPolicy.timeoutIsRetryable(TimeoutPolicy.java:20)
+	at agentic.shortener.orchestration.reliability.TimeoutPolicyTest.timeoutOnAnIdempotentStageIsRetried(TimeoutPolicyTest.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.reliability.TimeoutPolicyTest.timeoutOnSevenIsNotRetried -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T086 not implemented
+	at agentic.shortener.orchestration.reliability.TimeoutPolicy.timeoutIsRetryable(TimeoutPolicy.java:20)
+	at agentic.shortener.orchestration.reliability.TimeoutPolicyTest.timeoutOnSevenIsNotRetried(TimeoutPolicyTest.java:91)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.reliability.TimeoutPolicyTest.eligibilityComesFromTheContract -- Time elapsed: 0.002 s <<< ERROR!
+java.lang.UnsupportedOperationException: T086 not implemented
+	at agentic.shortener.orchestration.reliability.TimeoutPolicy.timeoutIsRetryable(TimeoutPolicy.java:20)
+	at agentic.shortener.orchestration.reliability.TimeoutPolicyTest.eligibilityComesFromTheContract(TimeoutPolicyTest.java:118)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   TimeoutPolicyTest.stageFourHasNoExecutionThreshold:83 Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.UnsupportedOperationException>
+[ERROR] Errors: 
+[ERROR]   RetryPolicyTest.attemptNumberIsPropagated:164 » UnsupportedOperation T085 not implemented
+[ERROR]   RetryPolicyTest.backoffIsExponentialFromOneSecond:78 » UnsupportedOperation T085 not implemented
+[ERROR]   RetryPolicyTest.emptyDeclaredSetNeverRetries:176 » UnsupportedOperation T085 not implemented
+[ERROR]   RetryPolicyTest.everyAttemptCarriesItsRuling:151 » UnsupportedOperation T085 not implemented
+[ERROR]   RetryPolicyTest.exhaustionFails:89 » UnsupportedOperation T085 not implemented
+[ERROR]   RetryPolicyTest.failTwiceThenSucceed:56 » UnsupportedOperation T085 not implemented
+[ERROR]   RetryPolicyTest.nullOutcomeIsPermanent:140 » UnsupportedOperation T085 not implemented
+[ERROR]   RetryPolicyTest.permanentFailureStopsAtOnce:112 » UnsupportedOperation T085 not implemented
+[ERROR]   RetryPolicyTest.thrownFailureIsPermanent:127 » UnsupportedOperation T085 not implemented
+[ERROR]   TimeoutPolicyTest.eligibilityComesFromTheContract:118 » UnsupportedOperation T086 not implemented
+[ERROR]   TimeoutPolicyTest.thresholdsMatchThePlan:52 » UnsupportedOperation T086 not implemented
+[ERROR]   TimeoutPolicyTest.timeoutOnAnIdempotentStageIsRetried:103 » UnsupportedOperation T086 not implemented
+[ERROR]   TimeoutPolicyTest.timeoutOnSevenIsNotRetried:91 » UnsupportedOperation T086 not implemented
+[INFO] 
+[ERROR] Tests run: 16, Failures: 1, Errors: 13, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.789 s
+[INFO] Finished at: 2026-09-21T07:38:37-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project shortener: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+```
