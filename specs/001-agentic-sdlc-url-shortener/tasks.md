@@ -751,12 +751,12 @@ from the response JSON. Each is `[P]` because each touches its own files and dep
   - **Deps**: T027, T070 · **Par**: no (consumed by T089–T090) · **Artifact**: the seven confirmed effect classes — working-tree writes and local un-pushed commits **erasable**; gate decisions, audit records, short links, redirect events **compensate-only**; AI invocations **nothing to compensate**
   - **TDD**: RED-FIRST · **Validate**: structural default derived from where the effect lands; unclassified → **compensate-only**; `ROLLING_BACK` on an immutable-store effect refused · **Docs**: spec §Compensation Register · **Trace**: matrix FR-ORC-016, KE-28
   - **Guard**: **an unwanted short link is corrected by setting it to expired, never deleted** — links are never deleted (T-13, EX-003). Where no compensating action is known: touch nothing and suspend · **Done**: seven rows encoded; unclassified default proven · **Approval**: none
-- [ ] T089 [P] [US3] Rollback of erasable effects — `src/main/java/agentic/shortener/orchestration/reliability/RollbackHandler.java`
+- [x] T089 [P] [US3] Rollback of erasable effects — `src/main/java/agentic/shortener/orchestration/reliability/RollbackHandler.java`
   - **Req**: FR-ORC-016 · **Scn**: DS-B · **ADR**: ADR-003 · **Pre**: T088
   - **Deps**: T088 · **Par**: yes · **Artifact**: working-tree discard and local branch reset, labelled **`ROLLBACK`**
   - **TDD**: EVIDENCE · **Validate**: rollback run history labelled rollback, distinct from compensation · **Docs**: plan §6 · **Trace**: matrix FR-ORC-016, CL-004, CN-009
   - **Guard**: **local un-pushed work is the only erasable class.** Rollback on anything else is an invalid rollback claim · **Done**: rollback applied and labelled; immutable-store attempt refused · **Approval**: none
-- [ ] T090 [P] [US3] Compensation of irreversible effects — `src/main/java/agentic/shortener/orchestration/reliability/CompensationHandler.java`
+- [x] T090 [P] [US3] Compensation of irreversible effects — `src/main/java/agentic/shortener/orchestration/reliability/CompensationHandler.java`
   - **Req**: FR-ORC-016 · **Scn**: DS-B · **ADR**: ADR-003 · **Pre**: T088
   - **Deps**: T088 · **Par**: yes · **Artifact**: superseding gate record, appended audit correction, link set to expired — each labelled **`COMPENSATION`**
   - **TDD**: EVIDENCE · **Validate**: **EC-022** — at most one correction per effect, **even when a later retry succeeds** · **Docs**: plan §6 · **Trace**: matrix FR-ORC-016, KE-16, EC-022

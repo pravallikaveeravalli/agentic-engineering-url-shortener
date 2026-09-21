@@ -199,6 +199,39 @@ public final class CompensationRegister {
      */
     public void recordApplied(UUID runId, String nodeKey, String effectKey, RecoveryKind kind,
                               String action, String reason) {
+        try (Connection c = requireConnections().get()) {
+            recordApplied(c, runId, nodeKey, effectKey, kind, action, reason);
+        } catch (SQLException e) {
+            throw translateRecordFailure(e, effectKey, runId);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                    "failed to record a " + kind + " for effect '" + effectKey + "'", e);
+        }
+    }
+
+    /**
+     * The same write, against a caller-supplied connection.
+     *
+     * <p>{@link CompensationHandler} needs this: reserving the {@code compensation_record} row and performing
+     * the correction it authorises must be <strong>one transaction</strong>, or a second caller for the same
+     * effect can slip its correction in between this class checking the constraint and the caller finding out.
+     * The single-connection {@link #recordApplied(UUID, String, String, RecoveryKind, String, String)} above
+     * commits on its own and cannot offer that — it exists for callers with nothing else to coordinate with it,
+     * which is what {@code CompensationRegisterIT} exercises directly.
+     *
+     * <p>Does not manage the transaction: no commit, no rollback, no {@code setAutoCommit}. The caller owns
+     * those, because the caller is the one who knows what else belongs in the same unit of work.
+     *
+     * @throws SQLException if the insert fails for any reason, including a unique violation. Thrown raw,
+     *                       deliberately, rather than translated to {@link CompensationAlreadyAppliedException}
+     *                       here — a caller inside its own transaction needs to roll back before deciding what
+     *                       the failure means, and translating too early would make that decision for it
+     */
+    void recordApplied(Connection c, UUID runId, String nodeKey, String effectKey, RecoveryKind kind,
+                       String action, String reason) throws SQLException {
+        Objects.requireNonNull(c, "c");
         Objects.requireNonNull(runId, "runId");
         Objects.requireNonNull(nodeKey, "nodeKey");
         Objects.requireNonNull(effectKey, "effectKey");
@@ -208,14 +241,10 @@ public final class CompensationRegister {
                     "NONE_KNOWN is not a recovery that was applied; a row for it would read as a correction "
                             + "that happened. Suspend instead (FR-ORC-017)");
         }
-        if (connections == null) {
-            throw new IllegalStateException(
-                    "this register was constructed for resolution only and has no store to record into");
-        }
 
         String sql = "INSERT INTO compensation_record (run_id, node_key, effect_key, "
                 + "compensating_action, applied_at, reason) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection c = connections.get(); PreparedStatement ps = c.prepareStatement(sql)) {
+        try (PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setObject(1, runId);
             ps.setString(2, nodeKey);
             ps.setString(3, effectKey);
@@ -223,14 +252,24 @@ public final class CompensationRegister {
             ps.setTimestamp(5, Timestamp.from(clock.instant()));
             ps.setString(6, reason);
             ps.executeUpdate();
-        } catch (Exception e) {
-            if (e instanceof SQLException sql23505 && "23505".equals(sql23505.getSQLState())) {
-                throw new CompensationAlreadyAppliedException(
-                        "effect '" + effectKey + "' in run " + runId + " is already compensated; a second "
-                                + "correction is refused by compensation_once_per_effect (EC-022)", e);
-            }
-            throw new IllegalStateException(
-                    "failed to record a " + kind + " for effect '" + effectKey + "'", e);
         }
+    }
+
+    /** Translates a raw {@link SQLException} from {@link #recordApplied(Connection, ...)} for a caller's own catch. */
+    static RuntimeException translateRecordFailure(SQLException e, String effectKey, UUID runId) {
+        if ("23505".equals(e.getSQLState())) {
+            return new CompensationAlreadyAppliedException(
+                    "effect '" + effectKey + "' in run " + runId + " is already compensated; a second "
+                            + "correction is refused by compensation_once_per_effect (EC-022)", e);
+        }
+        return new IllegalStateException("failed to record a compensation for effect '" + effectKey + "'", e);
+    }
+
+    private ConnectionSource requireConnections() {
+        if (connections == null) {
+            throw new IllegalStateException(
+                    "this register was constructed for resolution only and has no store to record into");
+        }
+        return connections;
     }
 }
