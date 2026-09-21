@@ -1,0 +1,51 @@
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[ERROR] Tests run: 8, Failures: 0, Errors: 3, Skipped: 0, Time elapsed: 0.650 s <<< FAILURE! -- in agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest
+[ERROR] agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest.canonicalModelAbsentFallsBackToTheKey -- Time elapsed: 0.088 s <<< ERROR!
+agentic.shortener.orchestration.reliability.MalformedProviderOutputException: the Claude Code CLI's response has no usable 'modelUsage' object (exit 0). FR-ORC-029 requires the model id read FROM the response; a missing field cannot be guessed. stdout: {"modelUsage":{"claude-key-only-a15d5bd9-90c0-47a4-af2c-13153598d081":{}},"result":"an answer"}
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProvider.modelIdFrom(ClaudeCodeCliStageAiProvider.java:180)
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProvider.parse(ClaudeCodeCliStageAiProvider.java:157)
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProvider.invoke(ClaudeCodeCliStageAiProvider.java:119)
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest.canonicalModelAbsentFallsBackToTheKey(ClaudeCodeCliStageAiProviderTest.java:192)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest.modelIdReadFromResponseNotFromConfiguration -- Time elapsed: 0.087 s <<< ERROR!
+agentic.shortener.orchestration.reliability.MalformedProviderOutputException: the Claude Code CLI's response has no usable 'modelUsage' object (exit 0). FR-ORC-029 requires the model id read FROM the response; a missing field cannot be guessed. stdout: {"modelUsage":{"claude-actually-used-e985a504-e943-4f4c-a325-84c17b8eeda2":{"canonicalModel":"claude-actually-used-e985a504-e943-4f4c-a325-84c17b8eeda2"}},"result":"the answer"}
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProvider.modelIdFrom(ClaudeCodeCliStageAiProvider.java:180)
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProvider.parse(ClaudeCodeCliStageAiProvider.java:157)
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProvider.invoke(ClaudeCodeCliStageAiProvider.java:119)
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest.modelIdReadFromResponseNotFromConfiguration(ClaudeCodeCliStageAiProviderTest.java:112)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest.promptPassesThroughVerbatimUninterpreted -- Time elapsed: 0.084 s <<< ERROR!
+agentic.shortener.orchestration.reliability.MalformedProviderOutputException: the Claude Code CLI's response has no usable 'modelUsage' object (exit 0). FR-ORC-029 requires the model id read FROM the response; a missing field cannot be guessed. stdout: {"modelUsage":{"claude-test-pin":{"canonicalModel":"claude-test-pin"}},"result":"ok"}
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProvider.modelIdFrom(ClaudeCodeCliStageAiProvider.java:180)
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProvider.parse(ClaudeCodeCliStageAiProvider.java:157)
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProvider.invoke(ClaudeCodeCliStageAiProvider.java:119)
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest.promptPassesThroughVerbatimUninterpreted(ClaudeCodeCliStageAiProviderTest.java:82)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] Errors: 
+[ERROR]   ClaudeCodeCliStageAiProviderTest.canonicalModelAbsentFallsBackToTheKey:192 » MalformedProviderOutput the Claude Code CLI's response has no usable 'modelUsage' object (exit 0). FR-ORC-029 requires the model id read FROM the response; a missing field cannot be guessed. stdout: {"modelUsage":{"claude-key-only-a15d5bd9-90c0-47a4-af2c-13153598d081":{}},"result":"an answer"}
+[ERROR]   ClaudeCodeCliStageAiProviderTest.modelIdReadFromResponseNotFromConfiguration:112 » MalformedProviderOutput the Claude Code CLI's response has no usable 'modelUsage' object (exit 0). FR-ORC-029 requires the model id read FROM the response; a missing field cannot be guessed. stdout: {"modelUsage":{"claude-actually-used-e985a504-e943-4f4c-a325-84c17b8eeda2":{"canonicalModel":"claude-actually-used-e985a504-e943-4f4c-a325-84c17b8eeda2"}},"result":"the answer"}
+[ERROR]   ClaudeCodeCliStageAiProviderTest.promptPassesThroughVerbatimUninterpreted:82 » MalformedProviderOutput the Claude Code CLI's response has no usable 'modelUsage' object (exit 0). FR-ORC-029 requires the model id read FROM the response; a missing field cannot be guessed. stdout: {"modelUsage":{"claude-test-pin":{"canonicalModel":"claude-test-pin"}},"result":"ok"}
+[ERROR] Tests run: 8, Failures: 0, Errors: 3, Skipped: 0
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project shortener: 
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

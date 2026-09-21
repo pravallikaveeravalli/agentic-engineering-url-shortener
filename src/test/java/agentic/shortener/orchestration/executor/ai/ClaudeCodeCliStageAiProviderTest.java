@@ -74,7 +74,8 @@ class ClaudeCodeCliStageAiProviderTest {
                 + "` && rm -rf / ; echo pwned | cat";
 
         Path script = stub("printf '%s\\n' \"$@\" > " + argvCapture + "\n"
-                + "echo '{\"model\":\"" + PINNED_MODEL + "\",\"result\":\"ok\"}'\n");
+                + "echo '{\"modelUsage\":{\"" + PINNED_MODEL + "\":{\"canonicalModel\":\""
+                + PINNED_MODEL + "\"}},\"result\":\"ok\"}'\n");
 
         ClaudeCodeCliStageAiProvider provider =
                 new ClaudeCodeCliStageAiProvider(script.toString(), PINNED_MODEL);
@@ -104,7 +105,8 @@ class ClaudeCodeCliStageAiProviderTest {
         // reason — using a distinct id is what makes the assertion mean what it claims (ADR-004-A1: "the
         // record reflects what ran, which is stronger than recording the pin alone").
         String actuallyUsedModel = "claude-actually-used-" + UUID.randomUUID();
-        Path script = stub("echo '{\"model\":\"" + actuallyUsedModel + "\",\"result\":\"the answer\"}'");
+        Path script = stub("echo '{\"modelUsage\":{\"" + actuallyUsedModel + "\":{\"canonicalModel\":\""
+                + actuallyUsedModel + "\"}},\"result\":\"the answer\"}'");
 
         AiResponse response = new ClaudeCodeCliStageAiProvider(script.toString(), PINNED_MODEL)
                 .invoke("a normal prompt");
@@ -156,15 +158,40 @@ class ClaudeCodeCliStageAiProviderTest {
     }
 
     @Test
-    @DisplayName("4b: valid JSON missing the model field is ALSO malformed — a guess is not a reading")
-    void jsonMissingModelFieldIsMalformed() throws Exception {
+    @DisplayName("4b: valid JSON missing modelUsage is ALSO malformed — a guess is not a reading")
+    void jsonMissingModelUsageIsMalformed() throws Exception {
         // Syntactically valid JSON that simply lacks what the adapter needs. Coercing this into "unknown
         // model" would silently corrupt FR-ORC-029's evidence trail; refusing it is the honest answer.
-        Path script = stub("echo '{\"result\":\"an answer with no model field\"}'");
+        Path script = stub("echo '{\"result\":\"an answer with no modelUsage field\"}'");
         ClaudeCodeCliStageAiProvider provider =
                 new ClaudeCodeCliStageAiProvider(script.toString(), PINNED_MODEL);
 
         assertThrows(MalformedProviderOutputException.class, () -> provider.invoke("a prompt"));
+    }
+
+    @Test
+    @DisplayName("4c: modelUsage naming TWO models is refused — picking one would be a guess")
+    void modelUsageWithTwoModelsIsRefused() throws Exception {
+        Path script = stub("echo '{\"modelUsage\":{\"claude-sonnet-5\":{\"canonicalModel\":"
+                + "\"claude-sonnet-5\"},\"claude-haiku-5\":{\"canonicalModel\":\"claude-haiku-5\"}},"
+                + "\"result\":\"an answer\"}'");
+        ClaudeCodeCliStageAiProvider provider =
+                new ClaudeCodeCliStageAiProvider(script.toString(), PINNED_MODEL);
+
+        assertThrows(MalformedProviderOutputException.class, () -> provider.invoke("a prompt"));
+    }
+
+    @Test
+    @DisplayName("4d: canonicalModel absent falls back to the modelUsage KEY — still a reading, not a guess")
+    void canonicalModelAbsentFallsBackToTheKey() throws Exception {
+        String modelKey = "claude-key-only-" + UUID.randomUUID();
+        Path script = stub("echo '{\"modelUsage\":{\"" + modelKey + "\":{}},\"result\":\"an answer\"}'");
+        ClaudeCodeCliStageAiProvider provider =
+                new ClaudeCodeCliStageAiProvider(script.toString(), PINNED_MODEL);
+
+        AiResponse response = provider.invoke("a prompt");
+
+        assertEquals(modelKey, response.modelId());
     }
 
     // ==============================================================================================

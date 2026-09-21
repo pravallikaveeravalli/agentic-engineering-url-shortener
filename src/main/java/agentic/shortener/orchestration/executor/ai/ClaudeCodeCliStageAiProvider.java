@@ -30,24 +30,24 @@ import java.util.concurrent.TimeoutException;
  * checking that the substitution's side effect never happened — the only proof that actually tests the
  * property, rather than reading the source and trusting it.
  *
- * <h2>Two disclosed assumptions about the CLI's own JSON shape</h2>
+ * <h2>The CLI's own JSON shape, verified against a real installed CLI (2026-09-21)</h2>
  *
- * <p>Nothing in this repository documents the exact field names the installed {@code claude} CLI emits
- * under {@code --output-format json}, and reliability proofs never call the live provider (FR-ORC-030), so
- * that shape cannot be verified from within this codebase. Two choices follow from that, made explicit
- * here rather than left implicit:
+ * <p>This class's own javadoc originally disclosed an UNVERIFIED assumption — a top-level {@code "model"}
+ * field — and asked a reviewer running against a real CLI to check it first. That check has now happened,
+ * against the real Claude Code CLI: there is no top-level {@code "model"} field at all. The model that
+ * actually answered is named under {@code "modelUsage"}, an object keyed by model id, each entry carrying
+ * its own {@code "canonicalModel"} string that restates the same id as a field rather than a key — this
+ * class reads {@code canonicalModel} rather than the key itself, since parsing a JSON key as data is more
+ * fragile than reading a named field. <strong>Exactly one entry is required</strong>: a response naming
+ * zero or more than one model in {@code modelUsage} is refused rather than guessed at, matching FR-ORC-029's
+ * "read from the response, never assumed" rule — picking the first of several would be exactly the guess
+ * that rule forbids. The answer text is read from a top-level {@code "result"} string field, which the
+ * original assumption got right.
  *
- * <ul>
- *   <li>The model id is read from a top-level {@code "model"} string field, and the answer text from a
- *       top-level {@code "result"} string field. If the installed CLI's real response uses different field
- *       names, every response will be classified {@code INTERNAL}/permanent (never silently misread as
- *       success) — which is the safe failure direction, but a reviewer running this against a real CLI
- *       should verify these two field names first.
- *   <li>A response is treated as successful whenever it parses as JSON and carries a non-blank
- *       {@code "model"} and {@code "result"}, <strong>regardless of the process's exit code</strong>. T073's
- *       five named assertions say nothing about a distinct exit-code-based failure path, and inventing one
- *       untested would be scope the task did not ask for.
- * </ul>
+ * <p>A response is treated as successful whenever it parses as JSON and carries a resolvable model id and a
+ * non-blank {@code "result"}, <strong>regardless of the process's exit code</strong>. T073's five named
+ * assertions say nothing about a distinct exit-code-based failure path, and inventing one untested would be
+ * scope the task did not ask for.
  *
  * <h2>Stdout and stderr are drained concurrently</h2>
  *
@@ -136,7 +136,7 @@ public final class ClaudeCodeCliStageAiProvider implements StageAiProvider {
     /**
      * Turns the process's raw output into a response, or refuses it.
      *
-     * <p>Deliberately independent of exit code — see the class javadoc's second disclosed assumption.
+     * <p>Deliberately independent of exit code — see the class javadoc.
      */
     private AiResponse parse(String stdout, String stderr, int exitCode) {
         JsonNode root;
@@ -154,21 +154,47 @@ public final class ClaudeCodeCliStageAiProvider implements StageAiProvider {
                             + "). stdout: " + truncate(stdout));
         }
 
-        JsonNode modelNode = root.get("model");
+        String modelId = modelIdFrom(root, exitCode, stdout);
+
         JsonNode resultNode = root.get("result");
-        if (modelNode == null || !modelNode.isTextual() || modelNode.asText().isBlank()) {
-            throw new MalformedProviderOutputException(
-                    "the Claude Code CLI's response has no usable 'model' field (exit " + exitCode
-                            + "). FR-ORC-029 requires the model id read FROM the response; a missing field "
-                            + "cannot be guessed. stdout: " + truncate(stdout));
-        }
         if (resultNode == null || !resultNode.isTextual()) {
             throw new MalformedProviderOutputException(
                     "the Claude Code CLI's response has no usable 'result' field (exit " + exitCode
                             + "). stdout: " + truncate(stdout));
         }
 
-        return new AiResponse(modelNode.asText(), resultNode.asText());
+        return new AiResponse(modelId, resultNode.asText());
+    }
+
+    /**
+     * Reads the actually-used model id from {@code modelUsage}, an object keyed by model id (verified
+     * against a real installed CLI — see the class javadoc). Exactly one entry is required; zero or several
+     * is refused rather than guessed at (FR-ORC-029).
+     */
+    private static String modelIdFrom(JsonNode root, int exitCode, String stdout) {
+        JsonNode modelUsage = root.get("modelUsage");
+        if (modelUsage == null || !modelUsage.isObject() || modelUsage.isEmpty()) {
+            throw new MalformedProviderOutputException(
+                    "the Claude Code CLI's response has no usable 'modelUsage' object (exit " + exitCode
+                            + "). FR-ORC-029 requires the model id read FROM the response; a missing field "
+                            + "cannot be guessed. stdout: " + truncate(stdout));
+        }
+        if (modelUsage.size() > 1) {
+            throw new MalformedProviderOutputException(
+                    "the Claude Code CLI's response names " + modelUsage.size() + " models in "
+                            + "'modelUsage' (exit " + exitCode + ") — this adapter sent one prompt and "
+                            + "expects one answering model; picking one of several would be exactly the "
+                            + "guess FR-ORC-029 forbids. stdout: " + truncate(stdout));
+        }
+
+        java.util.Map.Entry<String, JsonNode> entry = modelUsage.fields().next();
+        JsonNode canonical = entry.getValue().get("canonicalModel");
+        if (canonical != null && canonical.isTextual() && !canonical.asText().isBlank()) {
+            return canonical.asText();
+        }
+        // canonicalModel absent or unusable: the modelUsage KEY is itself the model id, still a reading
+        // of the response rather than a guess.
+        return entry.getKey();
     }
 
     /** Keeps a malformed-output detail readable rather than dumping an unbounded response into it. */
