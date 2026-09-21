@@ -1865,6 +1865,22 @@ rather than as clarifications. Append-only.
   the uniform deadline before the run parks itself. Record:
   `docs/governance/change-control/CR-023-overrun-escalation-deadline.md`.
 
+- **CR-033** | approved and applied 2026-09-21 | Pravallika Veeravalli | *EC-040's trigger restated for an always-AI
+  system; the no-plan gate demonstrated by injection.* **EC-040's obligation is verbatim unchanged** — a no-op may not
+  advance, the gate offers its three options, and after CR-028 it is the **sole** guard at stage 7. Only its stated
+  *trigger* is corrected: it named *"a reviewer submitting their own requirement with the AI disabled"*, a route
+  Decision J removed. The condition now arises when stage 6 produced no usable design output, or when authoring yields
+  nothing applicable — neither reviewer-reachable on demand, so **T141 reaches the gate by injecting the
+  empty-change-plan condition** and the evidence must say so where it presents the suspension. **AS-007's labelling rule
+  is extended** to cover injected conditions generally (T136's transient fault, T141's empty plan, T061a's gate
+  advance), with the ground stated: an induced demonstration presented as an encountered one is an evidence-integrity
+  violation under Principle X. `quickstart.md` states the trade rather than implying a route that no longer exists.
+  T065's unit tests remain the structural proof. **Two pre-existing LOW findings closed with it**: the task-plan
+  header's policy set corrected to `policy-set-1.1.0`, and the gate-discharge row above annotated as a record of what
+  was checked at that gate. Owner's decision: **option (a)** of three presented with costs — *"Let's go with ur
+  recommendation."* Record:
+  `docs/governance/change-control/CR-033-no-plan-gate-trigger-restated-and-injected.md`.
+
 ### CL-004 — Branch strategy | 2026-09-18 | Pravallika Veeravalli
 
 **Decision**: stay on `main`. A single linear history is easiest for reviewers to follow and matches
