@@ -1,0 +1,52 @@
+Task T129 — Final engineering summary assembler. RED-FIRST, genuine, not staged after the fact.
+
+SummaryAssemblerTest.java was written first, naming SummaryAssembler and EngineeringSummary before
+either class existed under src/main/java/agentic/shortener/orchestration/summary/. Command and
+output captured below, verbatim, before SummaryAssembler.java or EngineeringSummary.java were
+written (only EvidencedClaim.java existed at this point).
+
+Command:
+  ./scripts/build.sh -q -Dtest=SummaryAssemblerTest test-compile
+
+Output:
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[ERROR] COMPILATION ERROR :
+[ERROR] .../SummaryAssemblerTest.java:[42,9] cannot find symbol
+  symbol:   class EngineeringSummary
+  location: class agentic.shortener.orchestration.summary.SummaryAssemblerTest
+[ERROR] .../SummaryAssemblerTest.java:[42,42] cannot find symbol
+  symbol:   class SummaryAssembler
+  location: class agentic.shortener.orchestration.summary.SummaryAssemblerTest
+... (repeats for every method referencing SummaryAssembler/EngineeringSummary: lines 58, 68, 78, 91,
+    102, 113, 123, 133)
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.13.0:testCompile
+(default-testCompile) on project shortener: Compilation failure
+
+Fix: wrote EvidencedClaim.java (already present), EngineeringSummary.java, and
+SummaryAssembler.java. Re-ran the same command as a full test run:
+
+  ./scripts/build.sh -q -Dtest=SummaryAssemblerTest test
+
+Result (target/surefire-reports/agentic.shortener.orchestration.summary.SummaryAssemblerTest.txt):
+  Tests run: 9, Failures: 0, Errors: 0, Skipped: 0
+
+What the nine tests actually assert, and why each is real rather than tautological:
+- every claim the assembler produces has an evidencePath that resolves to a real file under the
+  fixture root (the direct enforcement of T129's Validate clause: "a claim without a trace fails
+  the build")
+- a done task (T900) whose title-line artifact genuinely exists on disk becomes a "what was built"
+  claim
+- a done task (T901) whose title-line artifact does NOT exist on disk produces NO claim at all —
+  proven separately from the first assertion, because a naive implementation could satisfy
+  "every claim traces" by simply never looking at T901, without actually checking existence
+- an ADR's Status line and its rejected Option B (against chosen Option A) are both extracted
+  mechanically, not invented
+- a real test-report summary line becomes a validation claim with the actual numbers from the file
+- the ABSENCE of a target/failsafe-reports directory produces no integration-tier claim (proving
+  the assembler does not assume a tier ran just because the fast tier did)
+- named residual-risk files and an ai-demo file become claims citing themselves
+- toMarkdown() renders every claim's own text; the rendered document has exactly five `##` sections,
+  matching T129's Artifact clause's five named categories
