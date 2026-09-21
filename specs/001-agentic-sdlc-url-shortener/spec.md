@@ -273,7 +273,7 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
 - **EC-021**: An ambiguity is detected after implementation has begun on the affected path. Only
   the affected path suspends (DS-A).
 - **EC-022**: A retry succeeds after a compensation for the same attempt has already been issued.
-- **EC-023**: A stage's declared fallback itself fails.
+- **EC-023**: *(RETIRED by owner Decision K, 2026-09-20 — CR-032.)* A stage's declared fallback itself fails. **Unreachable by construction** once FR-ORC-015 is retired: there is no fallback to fail. The failure it guarded against — looping on a degraded path instead of stopping — is covered by PVT-007's bounded attempts and safe suspension on exhaustion.
 - **EC-024**: A gate receives a decision from an actor with no recorded authority for it.
 - **EC-025**: A policy check cannot be evaluated at all — neither pass, fail, nor
   not-applicable. Must not default to pass.
@@ -744,11 +744,20 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   records for both choices, and a silence case proving suspension rather than kill. *Bounds: PVT-007. Thresholds:
   PVT-016.*
 
-- **FR-ORC-015** — *Fallback.* **[Confirmed]** Stages that can degrade MUST declare fallback
-  behavior, and the orchestrator MUST apply it when the primary path is exhausted.
-  **Accept**: the fallback executes and is recorded as a fallback, not as primary success.
-  **Reject (negative)**: a failing fallback MUST NOT loop indefinitely and MUST escalate to
-  safe-stop (EC-023).
+- **FR-ORC-015** — *Fallback.* **[RETIRED by owner Decision K, 2026-09-20 — CR-032.]** This requirement obliged
+  stages that can degrade to declare a fallback, activated when the primary path was exhausted and recorded as fallback
+  rather than as primary success. **It is retired because its only implementation was removed by Decision J** (ADR-004
+  Amendment 02): the six deterministic counterparts that constituted every declared fallback in the system existed to
+  serve a keyless mode, and when the mode went, the column emptied.
+  **What the system does instead, and it is not nothing**: a failing stage is classified into the closed envelope,
+  retried only where the **declared retryable set intersects the executor's proposal** (FR-ORC-014, CR-022), bounded by
+  PVT-007, gated on declared idempotency, and on exhaustion the run **suspends safely** — non-terminal, resumable,
+  reason recorded (FR-ORC-017). **Bounded retry then safe suspension is the entire degradation story.**
+  **Disclosed, not buried**: the assignment names fallback among its reliability controls, so `docs/LIMITATIONS.md`
+  carries this retirement as a named absence with its reason (T147). The owner chose a **documented honest absence over
+  a ceremonial presence** — a single counterpart kept only to make the behaviour claimable would be the
+  exists-mainly-to-be-claimed defect FR-ORC-028 and CN-010 exist to prevent.
+  Retired in place rather than deleted: a numbering gap is a question a reviewer cannot answer from the artifact.
   **Evidence**: fallback activation records.
 
 - **FR-ORC-016** — *Rollback and compensation, structural default with declared overrides.*
@@ -851,9 +860,18 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
 - **FR-ORC-021** — *Bounded autonomy.* **[Confirmed]** Agent autonomy MUST be bounded by declared
   limits, and every autonomous action MUST be observable and attributable after the fact.
   **Accept**: declared limits exist per stage; an action outside them is refused and recorded.
-  **Reject (negative)**: an agent MUST NOT take a human-owned action (Constitution III) under any
-  autonomy setting.
-  **Evidence**: autonomy limit definitions; refusal records.
+  **Reject (negative)**: **no step in the workflow may submit, satisfy, or advance a human-owned decision** — no
+  stage executor, deterministic or AI, has a code path that records a gate outcome, and an executor acting outside
+  its provided effect channels is refused and recorded as an autonomy violation (FR-ORC-016).
+  **Declared limitation — actor identity is asserted, not verified.** The `actorType` on a submitted gate decision is
+  **declared by the caller and not authenticated**: governance surfaces carry no credential by design (CN-012), so
+  enforcement rests on the **machine-access trust boundary** — the ability to reach the process. Anything that can
+  reach the port can submit a decision asserting it is human. **Verified actor identity is out of scope for this
+  demonstration** (owner decision, 2026-09-20; an operator-issued per-decision token was considered and declined).
+  What this requirement therefore delivers is that **the system never approves its own gates**, not that an
+  impersonating caller is detectable.
+  **Evidence**: autonomy limit definitions; refusal records; an architecture assertion that **no executor package
+  references the gate-decision path**; the limitation disclosed in `docs/LIMITATIONS.md`.
 
 - **FR-ORC-022** — *Policy check outcomes.* **[Derived — Constitution VI]** Every applicable policy
   check MUST produce exactly one of `PASS`, `FAIL`, `EXCEPTION-REQUESTED`, `NOT-APPLICABLE`, and
@@ -922,26 +940,18 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   **Evidence**: a run over a requirement outside DS-A/B/C, completing without executor changes;
   code inspection for input-specific branching.
 
-- **FR-ORC-029** — *Executor kind recorded per execution; AI participation flagged per run.*
-  **[Confirmed — AQ-003; amended by CR-001, approved 2026-09-20]** Each stage MUST declare its executor
-  class per the approved executor map (see §Stage Executor Model). A run-level flag **`ai`**, taking
-  **`on` or `off` and defaulting to `off`**, MUST control whether AI executors participate, and every
-  run's evidence MUST record the **executor kind** for each stage execution, drawn from
+- **FR-ORC-029** — *Executor kind recorded per execution.* **[Confirmed — AQ-003; amended by CR-001; flag removed
+  by CR-028]** Each stage MUST declare its executor class per the approved executor map (see §Stage Executor Model),
+  and **every run's evidence MUST record the executor kind for each stage execution**, drawn from
   **`DETERMINISTIC` / `AI` / `HUMAN`**.
-  **Accept**: with AI off — the keyless default — the full system runs with **no AI key present**;
-  recorded demonstration runs with `ai: on` carry per-stage executor-kind labels; a stage executed by a
-  human under the no-plan gate (FR-ORC-031) is recorded as `HUMAN`.
-  **Reject (negative)**: a deterministic execution MUST NOT be presented as AI work; an unlabelled stage
-  execution MUST NOT appear in evidence; the system MUST NOT require an AI key to run its keyless
-  default path; the run-level flag MUST NOT be named or described in a way that claims a property of the
-  run it does not control — `HUMAN` is never flag-selectable.
-  **Rationale recorded at CR-001**: a run-level name must not claim a property the run cannot guarantee.
-  A run started keyless can contain a `HUMAN` execution at the stage-7 no-plan gate, so a
-  "deterministic mode" label would over-promise at the run level. The flag controls exactly one thing —
-  whether AI executors participate — and is named for exactly that. Per-execution kind labels remain
-  literally true of the single execution each one stamps.
-  **Evidence**: a complete run with no AI key configured; per-stage executor-kind labels in run evidence
-  with the flag in both positions.
+  **Accept**: every recorded execution carries its kind; the five deterministic stages record `DETERMINISTIC`;
+  AI-capable stages record `AI`; a stage executed by a human under the no-plan gate records `HUMAN` (FR-ORC-031).
+  **Reject (negative)**: a deterministic execution MUST NOT be presented as AI work; an unlabelled stage execution MUST
+  NOT appear in evidence; and **no run-level flag may claim a property of the run that the run does not control** — the
+  reason CR-001 renamed the former flag, and the reason Decision J removed it rather than renaming it again.
+  **Rationale recorded at CR-028**: with a single runtime path the label is the only thing that distinguishes what ran,
+  so it carries more weight than it did when a flag also existed. `HUMAN` was never flag-selectable and still is not.
+  **Evidence**: per-stage executor-kind labels in every run's evidence, with the pinned model id for AI executions.
 
 - **FR-ORC-030** — *Injectable executors for deterministic reliability proofs.* **[Confirmed —
   AQ-003]** Automated tests MUST be able to inject scriptable fake executors — for example "fail
@@ -957,10 +967,11 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   AQ-003]** The implementation stage MUST be AI-capable: the AI authors the change from the design
   stage's output, the engine applies it on a branch, the **real** build and test suite verify it,
   and failure routes back with the report under bounded attempts before escalating to the human
-  gate. A deterministic **plan-applying** fallback MUST exist.
+  gate. **There is no deterministic fallback for this stage** (Decision J, ADR-004-A2).
 
-  **No-change-plan gate** *(added by CR-001, approved 2026-09-20)*. The deterministic fallback applies a
-  change plan. Where **no change plan exists** for the requirement, the stage MUST NOT proceed. It MUST
+  **No-change-plan gate** *(added by CR-001, approved 2026-09-20; its premise restated by CR-028)*. Where **no change
+  plan exists** for the requirement, the stage MUST NOT proceed — and with no counterpart engine to apply one, the gate,
+  not a fallback, is what prevents an unimplemented change from advancing. It MUST
   suspend at a human gate, stating its expiry consequences in the ask per CL-005 (FR-ORC-013), and
   present exactly three options:
   1. **Proceed as a governance-only run** — recorded decision; downstream stages continue; run evidence
@@ -971,9 +982,9 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   3. **Abandon the run** — terminal `ABANDONED` with the reason recorded.
 
   **Accept**: an AI-authored change is applied on a branch, verified by the real suite, and either
-  passes or routes back with its failure report; the bound is respected before escalation; a
-  deterministic execution with no change plan suspends at the no-plan gate and each of the three options
-  produces its defined effect.
+  passes or routes back with its failure report; the bound is respected before escalation; an
+  execution with no change plan suspends at the no-plan gate and each of the three options produces its defined
+  effect.
   **Reject (negative)**: creative authoring MUST NOT happen outside a stage; a failing AI-authored
   change MUST NOT be reported as success or merged; the verification suite MUST NOT be stubbed or
   simulated for this stage; **a stage with nothing implemented MUST NOT record success, and MUST NOT
@@ -1175,18 +1186,45 @@ repeatability are deterministic engines. Nothing is hardcoded to demonstration i
 | 11 Release readiness | Deterministic evaluation of the nine blocking conditions, plus the release owner's recorded decision |
 | 12 Final engineering summary | Deterministic assembler from recorded evidence only — every claim must be traceable, so creativity is a liability here |
 
+### What ambiguity detection is, and what it is not
+
+Stage 3 is **AI-backed, and semantic**. It reasons over the submitted requirement rather than matching patterns in it,
+which is why CL-003 made this stage AI-capable and why **Decision J's removal of the keyless mode removed no capability
+here** — there was never a deterministic detector that could do this work.
+
+**What that buys**: conflicts between *different concepts* are detectable. The demonstration input — expire after a
+week, retain analytics indefinitely, still redirect for trusted partners — is a contradiction between link lifetime,
+analytics retention and redirect entitlement. **No two clauses bound the same field**, so no structural rule would fire
+on it; recognising it requires understanding what expiry means for redirects.
+
+**What it costs, stated because it is the honest counterweight**:
+
+- **Detection is non-deterministic.** The same input may be classified differently across runs. This is acceptable
+  *here specifically* because the output feeds a **human gate** — a false positive costs a question, and the human is
+  the decider either way. It would not be acceptable at stage 10, which is why policy verdicts are deterministic.
+- **A miss is possible and is not distinguishable from an absence of ambiguity** without a human reading the
+  requirement. The recorded `no_clarification_reason` is what makes a non-detection inspectable rather than silent
+  (DS-A's requirement), and it is the only control against a quiet miss.
+- **The structural alternative was considered and would have been narrower, not safer.** A deterministic checker could
+  decide six classes — missing acceptance criteria, undefined term, unbounded quantifier, missing actor,
+  self-referential constraint, and contradictory bounds on the *same named field*. It could not decide the
+  demonstration input. **A checker that fired on words like "but" or "indefinitely" would look like semantic detection
+  while being a vocabulary list** — it would pass the demonstration and fail the next input, and a reviewer would
+  reasonably read it as tuned to the demo, which is the rigged-demonstration failure FR-ORC-028 and CN-010 exist to
+  prevent. An honest narrow capability beats a broad-looking keyword match; an honest semantic capability with declared
+  variability beats both.
+
 **Binding conditions** (FR-ORC-028, FR-ORC-029, FR-ORC-030):
 
 - One executor interface for every stage; no executor branches on recognizing specific inputs.
 - Tests inject scriptable fake executors, so every reliability proof is deterministic and
   independent of AI availability.
-- The run-level flag **`ai`** takes `on` or `off` and **defaults to `off`** — "with AI off (the keyless
-  default)". The keyless default is runnable with no AI key present. Recorded demonstration runs use
-  `ai: on`. *(Renamed by CR-001: the flag controls only whether AI executors participate, so it does not
-  claim the run is deterministic — a keyless run may still contain a `HUMAN` execution at the stage-7
-  no-plan gate.)*
-- `HUMAN` is **never flag-selectable**; it is recorded as the outcome of a no-plan-gate decision
-  (FR-ORC-031), so the keyless default is unchanged by its existence.
+- **Orchestration always uses AI** (Decision J, ADR-004-A2). There is no run-level switch and no deterministic
+  counterpart for an AI-capable stage. The five genuinely deterministic stages — S1, S8, S10, S11, S12 — keep real
+  engines and record `DETERMINISTIC`. **Tests never call live AI**: reliability proofs are driven by injected fakes
+  (FR-ORC-030), which is why the test suite remains keyless even though the orchestrator does not.
+- `HUMAN` is **never selectable by any caller or configuration**; it is recorded as the outcome of a no-plan-gate
+  decision (FR-ORC-031).
 - Every run's evidence records each stage execution's **executor kind** — `DETERMINISTIC`, `AI`, or
   `HUMAN`. Deterministic executions are labelled demonstration executions and are never presented as AI
   work.
@@ -1280,15 +1318,22 @@ requirement. None constrains implementation until approved.
   approval. *Verifiable: change records exist for every such change.*
 - **NFR-CHG-002** — Replanning voids approvals for invalidated stages rather than carrying them
   forward. *Verifiable: negative test on EC-020.*
-- **NFR-AUT-001** — Autonomy limits are declared per stage, and human-owned actions cannot be
-  taken by an agent at any setting. *Verifiable: refusal test per human-owned action class.*
+- **NFR-AUT-001** — Autonomy limits are declared per stage, and **no workflow step submits or satisfies a
+  human-owned decision**. Actor identity on a submitted decision is **declared, not verified** (FR-ORC-021's declared
+  limitation, CN-012): an impersonating caller with process access is not detectable, and verified actor identity is
+  out of scope for this demonstration. *Verifiable: per-stage autonomy declarations; an architecture test asserting no
+  executor package references the gate-decision path; a refusal test for a self-identified agent actor. **Not**
+  verifiable, and not claimed: that a caller asserting `actorType: human` is in fact human.*
 - **NFR-AUT-002** — Absence of human response never advances a mandatory gate. *Verifiable: the
   silence test in FR-ORC-013.*
-- **NFR-AUT-003** — Every stage execution in every run's evidence is labelled with the executor mode
+- **NFR-AUT-003** — Every stage execution in every run's evidence is labelled with the executor kind
   actually used, and deterministic executions are never presented as AI work. *Verifiable: zero
-  unlabelled stage executions across the demonstration corpus.*
-- **NFR-AUT-004** — The reviewer-default deterministic path runs end to end with no AI key and no
-  network access. *Verifiable: full run in a key-less, network-isolated environment.*
+  unlabelled stage executions across the demonstration corpus.* **Now the sole distinguisher of what ran** — with the
+  run-level flag removed (CR-028), no other field records it.
+- **NFR-AUT-004** — *(RETIRED by owner Decision J, 2026-09-20 — CR-028.)* Derived from CN-011 and retired with it.
+  **NFR-AUT-003 is unaffected and is now more load-bearing**: every execution in every run's evidence carries its
+  executor kind, and a deterministic execution is never presented as AI work. With one runtime path, the label is the
+  only thing distinguishing what actually ran.
 
 ---
 
@@ -1322,9 +1367,11 @@ requirement. None constrains implementation until approved.
   (with conditions) or proposed, with zero unlabelled figures.
 - **SC-013**: Redirect resolution meets PVT-001 at PVT-003 concurrency under declared conditions.
   *(Target pending approval.)*
-- **SC-014**: The complete system runs end to end with no AI key and no network access, exercising
-  the reviewer-default deterministic path.
-- **SC-015**: Zero stage executions appear in evidence without an executor-mode label, and zero
+- **SC-014**: *(RETIRED by owner Decision J, 2026-09-20 — CR-028.)* This criterion required the complete system to run
+  end to end with no AI key and no network. **The narrower claim that survives is FR-ORC-030's**: the reliability suite
+  and the full test suite pass with no AI credential and no network, because they are driven by injected fakes. The
+  *orchestrator* no longer runs keyless, and no criterion claims it does.
+- **SC-015**: Zero stage executions appear in evidence without an executor-**kind** label, and zero
   deterministic executions are presented as AI work.
 - **SC-016**: A requirement outside the three demonstration scenarios completes a full run with no
   executor code changes, demonstrating that executors are generic engines rather than input-aware.
@@ -1371,7 +1418,7 @@ production statistic.
 | PVT-005 | Keyspace before collision pressure | ≥ 10^9 links | Sets code length and alphabet | Uniform random issuance |
 | PVT-006 | Gate wait before safe-stop | 24 h | Long enough for a real reviewer; short enough to demonstrate the timeout path | Configurable; demonstration runs may use a compressed value, labelled as such |
 | PVT-007 | Retry bound and backoff | 3 attempts, exponential from 1 s | Bounded per Constitution VIII without masking permanent faults | Per transient-classified stage |
-| PVT-008 | Coverage, domain and orchestration transitions | ≥ 85% branch | Meaningful for governed logic without coverage theatre | Excludes generated and infrastructure code |
+| PVT-008 | Coverage, domain and orchestration transitions | ≥ 85% branch | Meaningful for governed logic without coverage theatre | **Denominator declared before measurement, not chosen after it.** Included: `domain`, `application`, `orchestration/state`, `orchestration/graph`, `orchestration/reliability`, `orchestration/replan`, `policy`. Excluded with a stated ground each, every one covered by a different test tier rather than by nothing: `config`, `delivery`, `persistence`, `audit/telemetry`, `orchestration/executor/ai`, and generated sources — see T145 (CR-027). **"Infrastructure" is no longer an undefined term here**: a threshold whose denominator is selectable is not a threshold |
 | PVT-009 | Analytics append-failure ceiling, **observable** | ≤ 0.5% of appends may **fail**, every failure counted and visible, **zero silent failures** | **Redefined by ADR-014 from a loss budget to a failure ceiling — the same number, a strictly stronger promise.** A loss budget permits events to vanish unremarked; a failure ceiling permits a bounded number of *counted, visible* failures and no silent ones. 0% was rejected: it cannot survive its own fault-injection test — when the store is deliberately killed, appends must fail and be counted, and that is the design working. A target unfalsifiable under fault injection is not a target | At PVT-003 concurrency. Measured from the **recording port's failure counter** (ADR-014 Condition 2), which every append passes through. No append failure may block or delay the redirect (EC-012, FR-URL-010) |
 | PVT-010 | Retention — **production recommendation, not a demonstration target** | *Recommended for production*: 90 days audit and terminated-run history, 30 days redirect events | **This demonstration retains all records indefinitely** (NFR-AUD-003, Decision H, CR-017). Retention was reduced from a binding target to a recorded recommendation because implementing a purge or an archival move added an archive format, a crash-reconciliation rule, and a DELETE privilege against the audit tables' insert-and-select-only grant — machinery the assessment does not ask for, against a housekeeping benefit a demonstration does not need. **Withdrawn as a binding target by the owner's explicit decision, 2026-09-20, not by implication** | **Not measured and not enforced.** If it were implemented, the audit and run-history clocks would run **from run termination, never record creation** (CR-004 — DF-003's reasoning is preserved inside the recommendation), so a live or suspended run's history could never age out. No personal data is held (AQ-002), so retention is not a privacy control here and its absence creates no exposure |
 | PVT-011 | Default link TTL when unspecified | 30 days | Bounded default rather than unbounded growth | Caller may override within limits |
@@ -1448,8 +1495,15 @@ epistemic state as a timeout, and suspension is the declared safe outcome for it
 - **CN-010**: Executor behavior MUST NOT depend on recognizing specific demonstration inputs, and
   the system MUST NOT be restricted to the three demonstration requirements. *(Gate 2, AQ-003 —
   see FR-ORC-028 and §Stage Executor Model.)*
-- **CN-011**: The reviewer-default path MUST be runnable with no AI key present. AI capability is a
-  per-run mode, never a prerequisite for the system to function. *(Gate 2, AQ-003 — FR-ORC-029.)*
+- **CN-011**: *(RETIRED by owner Decision J, 2026-09-20 — ADR-004 Amendment 02, CR-028.)* This constraint required a
+  reviewer-default path runnable with no AI key, and made AI capability a per-run mode. **Orchestration now always uses
+  AI**: there is no keyless mode and no run-level switch. A fresh orchestration run requires an authenticated Claude
+  Code CLI. **What remains true and is not this constraint**: the URL shortener and the entire test suite run with no AI
+  and no network, because reliability proofs use injected fakes (FR-ORC-030), and the committed scenario evidence is
+  readable end to end with no AI setup. Retired in place rather than deleted: it was a Gate 2 condition and the
+  retirement is part of the record. The counter-case the owner weighed — the assignment asks for a runnable prototype,
+  and this constraint was the cleanest autonomy boundary in the design — is recorded verbatim in ADR-004-A2.
+  *(Gate 2, AQ-003 — FR-ORC-029.)*
 - **CN-012**: **The shortener's actor model and the orchestrator's actor model are separate domains, and no
   credential class crosses the boundary.** Creator credentials (FR-URL-018, FR-URL-019) authorize link creation and
   owner-scoped analytics retrieval, and nothing else. They MUST NOT authenticate or authorize any orchestrator
@@ -1469,7 +1523,11 @@ epistemic state as a timeout, and suspension is the declared safe outcome for it
   and its own store. Rejected as more machinery than the assessment needs; it is the production answer and is
   recorded as future work, not as an oversight. The cost is accepted and disclosed: **anything that can reach the
   port can drive the orchestrator**, which is a localhost-demonstration posture and is stated as such in
-  `docs/LIMITATIONS.md`.
+  `docs/LIMITATIONS.md`. **The consequence this note previously left unstated**: because gate decisions are submitted
+  over such a surface, the `actorType` field is a **declaration rather than a verified fact**, so the governance claim
+  this project can defend is that *no workflow step approves anything* — not that impersonation is prevented
+  (FR-ORC-021's declared limitation, NFR-AUT-001). The two statements were written in different places and never
+  connected; the review connected them.
   *(Owner Decision 3 on the `/speckit-analyze` findings, 2026-09-20.)*
 
 ---
@@ -1737,6 +1795,65 @@ rather than as clarifications. Append-only.
   prod archival job if we were doing this in a real prod env."* Record:
   `docs/governance/change-control/CR-017-retention-as-archival.md`.
 
+- **CR-021** | approved and applied 2026-09-20 | Pravallika Veeravalli | *Actor-authority claim qualified; no mechanism
+  built.* FR-ORC-021's reject clause restated as **no workflow step submits, satisfies or advances a human-owned
+  decision**, with a **declared limitation** that actor identity is asserted and not verified — governance surfaces carry
+  no credential by design (CN-012), so enforcement rests on the machine-access boundary. NFR-AUT-001 narrowed to match
+  and given a checkable assertion it lacked; the CN-012 residual note connected to its consequence. **The constitution is
+  not touched**: Principle III's policy stands, and every gate in this project is in fact decided by the human owner.
+  Owner's grounds: *"I don't think we should solve this problem at all… it is ok if agents act as humans, I don't think
+  that is easily solvable at this point and especially in this assessment."* An operator-issued per-decision token was
+  put to her and **declined, recorded as declined rather than unconsidered**. Record:
+  `docs/governance/change-control/CR-021-actor-authority-claim-qualified.md`.
+
+- **CR-028** | approved and applied 2026-09-20 | Pravallika Veeravalli | *Keyless mode removed (Decision J,
+  ADR-004-A2).* **CN-011, SC-014 and NFR-AUT-004 retired in place.** FR-ORC-029's run-level flag removed, executor-kind
+  recording kept and strengthened; FR-ORC-031's deterministic fallback replaced by the no-plan gate; §Stage Executor
+  Model's binding conditions restated. **CL-003's own text is unaltered** — it records what was decided at Gate 3, and
+  retiring a constraint does not rewrite the clarification that created it. Owner's grounds: *"we don't need the non-AI
+  mode anymore because… reviewers are not going to look at… they're just going to look at the old run information from
+  the ADRs and other files that we are pushing into GitHub"*; the counter-case — the assignment asks for a runnable
+  prototype — was put to her and she answered *"do it."* Record:
+  `docs/governance/change-control/CR-028-keyless-mode-removed-specification.md`.
+
+- **CR-032** | approved and applied 2026-09-20 | Pravallika Veeravalli | *Fallback retired (Decision K).* **FR-ORC-015
+  and EC-023 retired in place**; T087 retired in place with a negative architecture assertion so the behaviour cannot be
+  reintroduced unnoticed; `fallback` removed from the recovery-mechanism enum; the plan's §6 Fallback row kept as a
+  visible absence. **Bounded retry then safe suspension is the entire degradation story.** The retirement is a
+  consequence of Decision J found on verification rather than at decision time: the six deterministic counterparts
+  Decision J struck were every declared fallback in the system. The assignment names fallback among its reliability
+  controls, so the absence is disclosed in `docs/LIMITATIONS.md` (T147) rather than left for a reviewer to notice.
+  Owner's answer, verbatim: **"A"** — a **documented honest absence over a ceremonial presence**. Options declined: one
+  token counterpart, and re-pointing fallback at a genuine degradation (new scope). Record:
+  `docs/governance/change-control/CR-032-fallback-retired-decision-k.md`.
+
+- **CR-025** | approved and applied 2026-09-20 | Pravallika Veeravalli | *Ambiguity detection stated to be semantic and
+  AI-backed.* §Stage Executor Model gains what stage 3's detection **is and is not**: semantic reasoning with declared
+  non-determinism, acceptable because its output feeds a human gate and would not be at stage 10; a miss is
+  indistinguishable from an absence of ambiguity unless `no_clarification_reason` is substantive, which is the only
+  control against a quiet miss. The structural alternative is recorded as **narrower, not safer**. The record's original
+  A/B/C fork dissolved under Decision J — with no keyless path there is no default path on which the scenario fails to
+  fire. Record: `docs/governance/change-control/CR-025-deterministic-ambiguity-detection-scope.md`.
+
+- **CR-027** | approved and applied 2026-09-20 | Pravallika Veeravalli | *Silence-test falsifiability and a published
+  coverage denominator.* PVT-008's conditions cell now names the **denominator declared before measurement** — included
+  and excluded packages with a ground for each and the task covering each exclusion instead — because a threshold whose
+  denominator is selectable is not a threshold. New task T061a proves T061 **fails** when a gate advances on silence,
+  closing an inconsistency the pre-implementation review found: four other harnesses carry a falsifiability fixture and
+  the one guarding *silence is never approval* did not. Record:
+  `docs/governance/change-control/CR-027-silence-test-falsifiability-coverage-exclusions-cosmetics.md`.
+
+- **CR-023** | **WITHDRAWN 2026-09-20 by owner ruling; never applied.** *A distinct short escalation deadline for node
+  overrun (PVT-017).* Proposed a 30-minute operational deadline for the node-overrun gate, distinct from PVT-006's 24-hour
+  deliberative wait. The owner ruled against it: *"I don't think we should have any timeout as I said. Just wait till the
+  user responds. Yeah, that's all. Keep it simple."* The overrun ask is an **ordinary ask under the uniform rule** —
+  PVT-006 like every other gate, expiry to safe suspension, resume re-asks. **No edit was required anywhere**: the
+  approved text already said so, and §Validation Targets still carries **sixteen** rows. **PVT-017 was never minted** —
+  the identifier is unused and free for a future target; it appears in this project only in this entry and in the
+  withdrawn record, never as a target. Reviewer finding A2 is **declined by owner, cost accepted** — a stalled node may wait
+  the uniform deadline before the run parks itself. Record:
+  `docs/governance/change-control/CR-023-overrun-escalation-deadline.md`.
+
 ### CL-004 — Branch strategy | 2026-09-18 | Pravallika Veeravalli
 
 **Decision**: stay on `main`. A single linear history is easiest for reviewers to follow and matches
@@ -1961,9 +2078,9 @@ stages. A requirement with no Design or ADR reference is an orphan in the same s
 | FR-ORC-012 | US-3 | DS-A | — | Plan §3 | ADR-003 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-013 | US-2 | DS-A, DS-C | EC-024 | Plan §3, §5 | ADR-005 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-014 | US-3 | DS-B | EC-022, EC-031, EC-032, EC-033 | Plan §3, §6 | ADR-003 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-015 | US-3 | DS-B | EC-023 | Plan §3, §6 | ADR-003 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-015 *(RETIRED — CR-032)* | US-3 | DS-B | EC-023 *(retired)* | Plan §6 (retired row) | ADR-003, **ADR-004-A2** | T147 (disclosure) | — | `docs/LIMITATIONS.md` |
 | FR-ORC-016 | US-3 | DS-B | EC-022, EC-034, EC-035 | Plan §3, §6 | ADR-003 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-017 | US-2 | DS-C | EC-023, EC-025 | Plan §3, §6 | ADR-003, ADR-008 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-017 | US-2 | DS-C | EC-023 (retired, CR-032), EC-025 | Plan §3, §6 | ADR-003, ADR-008 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-018 | US-3 | DS-C | EC-015, EC-026 | Plan §3, §6 | ADR-002, ADR-008 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-019 | US-3 | DS-C | EC-019, EC-020, EC-030 | Plan §3, §9 | ADR-009 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-020 | US-3 | DS-B | — | Plan §3 | ADR-006 | *Tasks stage* | *Tasks stage* | *Implement stage* |
@@ -1976,6 +2093,6 @@ stages. A requirement with no Design or ADR reference is an orphan in the same s
 | FR-ORC-027 | US-5 | DS-A, DS-B, DS-C | — | Plan §13 | ADR-006 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-028 | US-3, US-5 | DS-A, DS-B, DS-C | — | Spec §Stage Executor Model | ADR-004, ADR-006 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-029 | US-5 | DS-A, DS-B, DS-C | — | Spec §Stage Executor Model | ADR-004 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-030 | US-3 | DS-B, DS-C | EC-015, EC-018, EC-022, EC-023 | Plan §10 | ADR-011, ADR-004 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-ORC-031 | US-3 | DS-B | EC-023, EC-040 | Spec §Stage Executor Model | ADR-004 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-030 | US-3 | DS-B, DS-C | EC-015, EC-018, EC-022, EC-023 (retired, CR-032) | Plan §10 | ADR-011, ADR-004 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-ORC-031 | US-3 | DS-B | EC-023 (retired, CR-032), EC-040 | Spec §Stage Executor Model | ADR-004 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-032 | US-2, US-3 | DS-C | EC-036, EC-037 | Plan §3, §5 | ADR-008 | *Tasks stage* | *Tasks stage* | *Implement stage* |
