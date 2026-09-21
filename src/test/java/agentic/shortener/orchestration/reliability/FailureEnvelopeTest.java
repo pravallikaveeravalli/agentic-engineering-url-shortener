@@ -1,9 +1,9 @@
 package agentic.shortener.orchestration.reliability;
 
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
-import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +15,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -137,58 +136,70 @@ class FailureEnvelopeTest {
                 .translate(new SQLException("mystery", "XX000")).executorProposesRetryable());
     }
 
-    /** Packages a provider's own error types come from. Not ours; the boundary is the point. */
-    private static final List<String> PROVIDER_TYPE_PACKAGES =
-            List.of("java.sql..", "java.net..", "java.io..", "java.util.concurrent..");
+    /**
+     * The rule, minus its exemption, so both the rule and its falsifiability check use one definition.
+     *
+     * <p><strong>What "vendor taxonomy" actually means, arrived at the hard way.</strong> The first version of
+     * this rule forbade every {@code reliability} class from touching {@code java.sql}, {@code java.io},
+     * {@code java.net} or {@code java.util.concurrent} — and {@code CompensationRegister} broke it fifteen
+     * times over by doing ordinary JDBC: opening a connection, inserting a row, and reading SQLSTATE 23505 to
+     * recognise the unique violation EC-022 relies on. None of that is a taxonomy. It is the same
+     * constraint-as-primitive pattern the short-code generator and {@code ArtifactWriteGuard} use, where the
+     * database is the authority and the application reacts to its answer.
+     *
+     * <p>So the rule is scoped to the property T083 is actually about: <em>assigning a
+     * {@link FailureCategory} from a provider's error</em>. A class that holds the classification vocabulary
+     * <strong>and</strong> a provider exception type is a taxonomy; one that holds either alone is not. That
+     * admits {@code CompensationRegister} (provider exceptions, no categories) and {@code RetryPolicy}
+     * (categories, no provider exceptions), and still catches the leak the guard was written for.
+     */
+    /** The provider error types. Each exists to be classified and has no other use in this package. */
+    private static final List<String> PROVIDER_ERROR_TYPES = List.of(
+            "java.sql.SQLException", "java.io.IOException", "java.util.concurrent.TimeoutException",
+            "java.net.SocketTimeoutException", "java.net.ConnectException");
 
-    @Test
-    @DisplayName("the CORE learns no vendor taxonomy — only the translator DEPENDS ON provider types")
-    void coreLearnsNoVendorTaxonomy() {
-        // T083's guard, asserted rather than intended. The reason the repaired static-list option was
-        // rejected is that provider knowledge leaks upward one exception name at a time; naming the single
-        // class allowed to hold it is what stops the first leak rather than the tenth.
-        //
-        // Expressed as a DEPENDENCY rule rather than a text scan. The first version read the source and
-        // flagged FailureCategory's javadoc for the word "IOException" — prose explaining why the taxonomy
-        // lives elsewhere, which is documentation doing its job. The property was never about the text; it
-        // is about which classes reference which types, and ArchUnit says exactly that.
-        ArchRule rule = noClasses()
-                .that().resideInAPackage("agentic.shortener.orchestration.reliability..")
-                .and().doNotHaveFullyQualifiedName(ProviderFailureTranslator.class.getName())
-                .should().dependOnClassesThat()
-                .resideInAnyPackage(PROVIDER_TYPE_PACKAGES.toArray(String[]::new))
-                .because("T083: provider knowledge stays in the plugin. A vendor taxonomy in the core "
-                        + "leaks upward one exception name at a time, and every step looks harmless")
-                .allowEmptyShould(true);
+    /** Classes holding BOTH the classification vocabulary and a provider error type — a taxonomy. */
+    private static List<String> classesHoldingATaxonomy() {
+        return reliabilityClasses().stream()
+                .filter(c -> c.getEnclosingClass().isEmpty())
+                .filter(c -> dependsOn(c, FailureCategory.class.getName()))
+                .filter(c -> PROVIDER_ERROR_TYPES.stream().anyMatch(type -> dependsOn(c, type)))
+                .map(JavaClass::getFullName)
+                .sorted()
+                .toList();
+    }
 
-        rule.check(new ClassFileImporter()
-                .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-                .importPackages("agentic.shortener.orchestration.reliability"));
+    private static boolean dependsOn(JavaClass candidate, String targetFullName) {
+        return candidate.getDirectDependenciesFromSelf().stream()
+                .anyMatch(d -> d.getTargetClass().getFullName().equals(targetFullName));
     }
 
     @Test
-    @DisplayName("the taxonomy check is falsifiable — the exempted class really does hold the taxonomy")
+    @DisplayName("the CORE learns no vendor taxonomy — only the translator maps provider errors to categories")
+    void coreLearnsNoVendorTaxonomy() {
+        // A DEPENDENCY check rather than a text scan. An earlier version read the source and flagged
+        // FailureCategory's javadoc for the word "IOException" — prose explaining why the taxonomy lives
+        // elsewhere, which is documentation doing its job. The property was never about text.
+        assertEquals(List.of(ProviderFailureTranslator.class.getName()), classesHoldingATaxonomy(),
+                "exactly one class may hold both. T083: provider knowledge stays in the plugin, and a "
+                        + "vendor taxonomy in the core leaks upward one exception name at a time");
+    }
+
+    @Test
+    @DisplayName("the taxonomy check is falsifiable — the translator really is the one class that holds one")
     void taxonomyCheckIsFalsifiable() {
-        // The exemption above is one class name, so the check's value depends on that class ACTUALLY
-        // depending on provider types. If it did not, the exemption would be hiding nothing and
-        // coreLearnsNoVendorTaxonomy would pass for the wrong reason — every class clean because none of
-        // them classifies anything.
-        JavaClasses translatorOnly = new ClassFileImporter()
+        // An exact-match assertion is falsifiable in both directions at once, which a "should be empty" one is
+        // not: an empty result would mean either "nothing leaks" or "nothing classifies anything", and only
+        // the first is the property. Requiring the translator to be present rules the second out.
+        assertTrue(classesHoldingATaxonomy().contains(ProviderFailureTranslator.class.getName()),
+                "if the exempted class held no taxonomy, the check above would pass for the wrong reason");
+        assertFalse(classesHoldingATaxonomy().isEmpty());
+    }
+
+    private static JavaClasses reliabilityClasses() {
+        return new ClassFileImporter()
                 .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
                 .importPackages("agentic.shortener.orchestration.reliability");
-
-        List<String> providerPackagesDependedOn = translatorOnly.stream()
-                .filter(c -> c.getFullName().startsWith(ProviderFailureTranslator.class.getName()))
-                .flatMap(c -> c.getDirectDependenciesFromSelf().stream())
-                .map(d -> d.getTargetClass().getPackageName())
-                .filter(p -> p.startsWith("java.sql") || p.startsWith("java.io")
-                        || p.startsWith("java.util.concurrent") || p.startsWith("java.net"))
-                .distinct().sorted().toList();
-
-        assertTrue(providerPackagesDependedOn.containsAll(
-                        List.of("java.io", "java.sql", "java.util.concurrent")),
-                "the one exempted class must be the one that really holds the vendor taxonomy; it "
-                        + "depends on: " + providerPackagesDependedOn);
     }
 
     @Test

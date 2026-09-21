@@ -1,0 +1,368 @@
+# Red-phase evidence
+
+- **Label**: T091-T092-safe-stop-and-retention
+- **Captured (UTC)**: 20260921T124809Z
+- **Command**: `./mvnw -Dtest=ShortLinkTest -Dit.test=SafeStopAndRetentionIT -Dfailsafe.failIfNoSpecifiedTests=false verify`
+- **Exit code**: 1
+- **Requirement**: NFR-TST-002 (red phase evidenced, not asserted); CN-004
+
+## Why this file exists
+
+This is the failing run captured BEFORE the implementation that makes it pass. It is stored
+so that the red phase is readable by a reviewer rather than claimed in a commit message.
+
+## Captured output
+
+```
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< agentic:shortener >--------------------------
+[INFO] Building agentic-sdlc-url-shortener 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ shortener ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 5 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ shortener ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 109 source files with javac [debug parameters release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ shortener ---
+[INFO] skip non existing resourceDirectory /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ shortener ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 80 source files with javac [debug parameters release 21] to target/test-classes
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java uses or overrides a deprecated API.
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.domain.link.ShortLinkTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.042 s -- in agentic.shortener.domain.link.ShortLinkTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- jar:3.4.2:jar (default-jar) @ shortener ---
+[INFO] Building jar: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/shortener-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- spring-boot:3.3.4:repackage (repackage) @ shortener ---
+[INFO] Replacing main artifact /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/shortener-0.1.0-SNAPSHOT.jar with repackaged archive, adding nested dependencies in BOOT-INF/.
+[INFO] The original artifact has been renamed to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/shortener-0.1.0-SNAPSHOT.jar.original
+[INFO] 
+[INFO] --- failsafe:3.2.5:integration-test (default) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.orchestration.state.SafeStopAndRetentionIT
+07:48:12.207 [main] INFO org.testcontainers.images.PullPolicy -- Image pull policy will be performed by: DefaultPullPolicy()
+07:48:12.208 [main] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+07:48:12.219 [main] INFO org.testcontainers.DockerClientFactory -- Testcontainers version: 1.20.1
+07:48:12.373 [main] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Found Docker environment with Environment variables, system properties and defaults. Resolved dockerHost=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+07:48:12.373 [main] INFO org.testcontainers.DockerClientFactory -- Docker host IP address is localhost
+07:48:12.379 [main] INFO org.testcontainers.DockerClientFactory -- Connected to docker: 
+  Server Version: 28.3.3
+  API Version: 1.51
+  Operating System: Ubuntu 24.04.2 LTS
+  Total Memory: 3905 MB
+07:48:12.402 [main] INFO tc.testcontainers/ryuk:0.8.1 -- Creating container for image: testcontainers/ryuk:0.8.1
+07:48:12.446 [main] INFO tc.testcontainers/ryuk:0.8.1 -- Container testcontainers/ryuk:0.8.1 is starting: dc92d6a5bbea15b18551d31e367094ebc90afddca5ab83cf4936ed6e4869799b
+07:48:12.534 [main] INFO tc.testcontainers/ryuk:0.8.1 -- Container testcontainers/ryuk:0.8.1 started in PT0.132625S
+07:48:12.536 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:33518
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+07:48:12.798 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:33518
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+07:48:13.059 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:33518
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+07:48:13.320 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:33518
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+07:48:13.582 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:33518
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+07:48:13.843 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:33518
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+07:48:14.108 [main] INFO org.testcontainers.utility.RyukResourceReaper -- Ryuk started - will monitor and terminate Testcontainers containers on JVM exit
+07:48:14.108 [main] INFO org.testcontainers.DockerClientFactory -- Checking the system...
+07:48:14.109 [main] INFO org.testcontainers.DockerClientFactory -- ✔︎ Docker server version should be at least 1.6.0
+07:48:14.109 [main] INFO tc.postgres:16-alpine -- Creating container for image: postgres:16-alpine
+07:48:14.156 [main] INFO tc.postgres:16-alpine -- Container postgres:16-alpine is starting: fcb457ed91d59accb641eb87fc7081ffe2af107cf6a43c4e27e06b5b03314bed
+07:48:14.760 [main] INFO tc.postgres:16-alpine -- Container postgres:16-alpine started in PT0.651026S
+07:48:14.761 [main] INFO tc.postgres:16-alpine -- Container is started (JDBC URL: jdbc:postgresql://localhost:33519/shortener?loggerLevel=OFF)
+07:48:17.228 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33519/shortener (PostgreSQL 16.15)
+07:48:17.243 [main] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Schema history table "public"."flyway_schema_history" does not exist yet
+07:48:17.245 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 5 migrations (execution time 00:00.008s)
+07:48:17.251 [main] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Creating Schema History table "public"."flyway_schema_history" ...
+07:48:17.282 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": << Empty Schema >>
+07:48:17.288 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "1 - baseline"
+07:48:17.312 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "2 - domain"
+07:48:17.329 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "3 - governance"
+07:48:17.359 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "4 - orchestration graph"
+07:48:17.375 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "5 - artifact provenance"
+07:48:17.385 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 5 migrations to schema "public", now at version v5 (execution time 00:00.062s)
+07:48:17.433 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33519/shortener (PostgreSQL 16.15)
+07:48:17.440 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 5 migrations (execution time 00:00.003s)
+07:48:17.447 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 5
+07:48:17.448 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+07:48:17.484 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33519/shortener (PostgreSQL 16.15)
+07:48:17.490 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 5 migrations (execution time 00:00.003s)
+07:48:17.497 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 5
+07:48:17.498 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+07:48:17.527 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33519/shortener (PostgreSQL 16.15)
+07:48:17.532 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 5 migrations (execution time 00:00.002s)
+07:48:17.539 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 5
+07:48:17.540 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+07:48:17.568 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33519/shortener (PostgreSQL 16.15)
+07:48:17.573 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 5 migrations (execution time 00:00.003s)
+07:48:17.579 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 5
+07:48:17.579 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+07:48:17.606 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33519/shortener (PostgreSQL 16.15)
+07:48:17.611 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 5 migrations (execution time 00:00.002s)
+07:48:17.617 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 5
+07:48:17.617 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+07:48:17.644 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33519/shortener (PostgreSQL 16.15)
+07:48:17.649 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 5 migrations (execution time 00:00.002s)
+07:48:17.655 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 5
+07:48:17.655 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+07:48:17.691 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33519/shortener (PostgreSQL 16.15)
+07:48:17.696 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 5 migrations (execution time 00:00.002s)
+07:48:17.701 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 5
+07:48:17.701 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+07:48:17.727 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33519/shortener (PostgreSQL 16.15)
+07:48:17.732 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 5 migrations (execution time 00:00.002s)
+07:48:17.737 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 5
+07:48:17.737 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+07:48:17.778 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33519/shortener (PostgreSQL 16.15)
+07:48:17.783 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 5 migrations (execution time 00:00.002s)
+07:48:17.788 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 5
+07:48:17.789 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+07:48:17.830 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33519/shortener (PostgreSQL 16.15)
+07:48:17.835 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 5 migrations (execution time 00:00.002s)
+07:48:17.840 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 5
+07:48:17.840 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+07:48:17.867 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33519/shortener (PostgreSQL 16.15)
+07:48:17.872 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 5 migrations (execution time 00:00.002s)
+07:48:17.878 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 5
+07:48:17.878 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+07:48:17.902 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33519/shortener (PostgreSQL 16.15)
+07:48:17.907 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 5 migrations (execution time 00:00.002s)
+07:48:17.912 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 5
+07:48:17.912 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+[ERROR] Tests run: 13, Failures: 1, Errors: 11, Skipped: 0, Time elapsed: 5.827 s <<< FAILURE! -- in agentic.shortener.orchestration.state.SafeStopAndRetentionIT
+[ERROR] agentic.shortener.orchestration.state.SafeStopAndRetentionIT.expiryAbandons -- Time elapsed: 0.049 s <<< ERROR!
+java.lang.UnsupportedOperationException: T091 not implemented
+	at agentic.shortener.orchestration.state.SafeStopHandler.suspend(SafeStopHandler.java:15)
+	at agentic.shortener.orchestration.state.SafeStopAndRetentionIT.expiryAbandons(SafeStopAndRetentionIT.java:220)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.SafeStopAndRetentionIT.ninetyDaysFromLastActivity -- Time elapsed: 0.044 s <<< ERROR!
+java.lang.UnsupportedOperationException: T092 not implemented
+	at agentic.shortener.orchestration.state.RetentionPolicy.autoAbandonAt(RetentionPolicy.java:13)
+	at agentic.shortener.orchestration.state.SafeStopAndRetentionIT.ninetyDaysFromLastActivity(SafeStopAndRetentionIT.java:189)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.SafeStopAndRetentionIT.everySuspensionIsAudited -- Time elapsed: 0.041 s <<< ERROR!
+java.lang.UnsupportedOperationException: T091 not implemented
+	at agentic.shortener.orchestration.state.SafeStopHandler.suspend(SafeStopHandler.java:15)
+	at agentic.shortener.orchestration.state.SafeStopAndRetentionIT.everySuspensionIsAudited(SafeStopAndRetentionIT.java:166)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.SafeStopAndRetentionIT.activityResetsTheClock -- Time elapsed: 0.038 s <<< ERROR!
+java.lang.UnsupportedOperationException: T091 not implemented
+	at agentic.shortener.orchestration.state.SafeStopHandler.suspend(SafeStopHandler.java:15)
+	at agentic.shortener.orchestration.state.SafeStopAndRetentionIT.activityResetsTheClock(SafeStopAndRetentionIT.java:197)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.SafeStopAndRetentionIT.onlyAHumanOrRetentionLeavesSafeStop -- Time elapsed: 0.037 s <<< ERROR!
+java.lang.UnsupportedOperationException: T091 not implemented
+	at agentic.shortener.orchestration.state.SafeStopHandler.suspend(SafeStopHandler.java:15)
+	at agentic.shortener.orchestration.state.SafeStopAndRetentionIT.onlyAHumanOrRetentionLeavesSafeStop(SafeStopAndRetentionIT.java:125)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.SafeStopAndRetentionIT.abandonmentIsNotAPurge -- Time elapsed: 0.047 s <<< ERROR!
+java.lang.UnsupportedOperationException: T091 not implemented
+	at agentic.shortener.orchestration.state.SafeStopHandler.suspend(SafeStopHandler.java:15)
+	at agentic.shortener.orchestration.state.SafeStopAndRetentionIT.abandonmentIsNotAPurge(SafeStopAndRetentionIT.java:296)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.SafeStopAndRetentionIT.uncompensatedEffectIsRecorded -- Time elapsed: 0.035 s <<< ERROR!
+java.lang.UnsupportedOperationException: T091 not implemented
+	at agentic.shortener.orchestration.state.SafeStopHandler.suspendForUncompensatedEffect(SafeStopHandler.java:20)
+	at agentic.shortener.orchestration.state.SafeStopAndRetentionIT.uncompensatedEffectIsRecorded(SafeStopAndRetentionIT.java:142)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.SafeStopAndRetentionIT.everyTriggerClassSuspends -- Time elapsed: 0.051 s <<< ERROR!
+java.lang.UnsupportedOperationException: T091 not implemented
+	at agentic.shortener.orchestration.state.SafeStopHandler.suspend(SafeStopHandler.java:15)
+	at agentic.shortener.orchestration.state.SafeStopAndRetentionIT.everyTriggerClassSuspends(SafeStopAndRetentionIT.java:81)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.SafeStopAndRetentionIT.expiryDoesNotSatisfyAPendingGate -- Time elapsed: 0.051 s <<< ERROR!
+java.lang.UnsupportedOperationException: T091 not implemented
+	at agentic.shortener.orchestration.state.SafeStopHandler.suspend(SafeStopHandler.java:15)
+	at agentic.shortener.orchestration.state.SafeStopAndRetentionIT.expiryDoesNotSatisfyAPendingGate(SafeStopAndRetentionIT.java:266)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.SafeStopAndRetentionIT.onlySuspendedRunsAreReaped -- Time elapsed: 0.038 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalStateException> but was: <java.lang.UnsupportedOperationException>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:67)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3115)
+	at agentic.shortener.orchestration.state.SafeStopAndRetentionIT.onlySuspendedRunsAreReaped(SafeStopAndRetentionIT.java:315)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T092 not implemented
+	at agentic.shortener.orchestration.state.SafeStopHandler.abandonIfExpired(SafeStopHandler.java:32)
+	at agentic.shortener.orchestration.state.SafeStopAndRetentionIT.lambda$onlySuspendedRunsAreReaped$2(SafeStopAndRetentionIT.java:315)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:53)
+	... 6 more
+
+[ERROR] agentic.shortener.orchestration.state.SafeStopAndRetentionIT.suspendedStateIsResumable -- Time elapsed: 0.035 s <<< ERROR!
+java.lang.UnsupportedOperationException: T091 not implemented
+	at agentic.shortener.orchestration.state.SafeStopHandler.suspend(SafeStopHandler.java:15)
+	at agentic.shortener.orchestration.state.SafeStopAndRetentionIT.suspendedStateIsResumable(SafeStopAndRetentionIT.java:101)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.SafeStopAndRetentionIT.unexpiredRunIsNotReaped -- Time elapsed: 0.034 s <<< ERROR!
+java.lang.UnsupportedOperationException: T091 not implemented
+	at agentic.shortener.orchestration.state.SafeStopHandler.suspend(SafeStopHandler.java:15)
+	at agentic.shortener.orchestration.state.SafeStopAndRetentionIT.unexpiredRunIsNotReaped(SafeStopAndRetentionIT.java:253)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   SafeStopAndRetentionIT.onlySuspendedRunsAreReaped:315 Unexpected exception type thrown, expected: <java.lang.IllegalStateException> but was: <java.lang.UnsupportedOperationException>
+[ERROR] Errors: 
+[ERROR]   SafeStopAndRetentionIT.abandonmentIsNotAPurge:296 » UnsupportedOperation T091 not implemented
+[ERROR]   SafeStopAndRetentionIT.activityResetsTheClock:197 » UnsupportedOperation T091 not implemented
+[ERROR]   SafeStopAndRetentionIT.everySuspensionIsAudited:166 » UnsupportedOperation T091 not implemented
+[ERROR]   SafeStopAndRetentionIT.everyTriggerClassSuspends:81 » UnsupportedOperation T091 not implemented
+[ERROR]   SafeStopAndRetentionIT.expiryAbandons:220 » UnsupportedOperation T091 not implemented
+[ERROR]   SafeStopAndRetentionIT.expiryDoesNotSatisfyAPendingGate:266 » UnsupportedOperation T091 not implemented
+[ERROR]   SafeStopAndRetentionIT.ninetyDaysFromLastActivity:189 » UnsupportedOperation T092 not implemented
+[ERROR]   SafeStopAndRetentionIT.onlyAHumanOrRetentionLeavesSafeStop:125 » UnsupportedOperation T091 not implemented
+[ERROR]   SafeStopAndRetentionIT.suspendedStateIsResumable:101 » UnsupportedOperation T091 not implemented
+[ERROR]   SafeStopAndRetentionIT.uncompensatedEffectIsRecorded:142 » UnsupportedOperation T091 not implemented
+[ERROR]   SafeStopAndRetentionIT.unexpiredRunIsNotReaped:253 » UnsupportedOperation T091 not implemented
+[INFO] 
+[ERROR] Tests run: 13, Failures: 1, Errors: 11, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- failsafe:3.2.5:verify (default) @ shortener ---
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  8.451 s
+[INFO] Finished at: 2026-09-21T07:48:18-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-failsafe-plugin:3.2.5:verify (default) on project shortener: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/failsafe-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+```

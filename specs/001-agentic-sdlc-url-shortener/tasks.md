@@ -761,12 +761,12 @@ from the response JSON. Each is `[P]` because each touches its own files and dep
   - **Deps**: T088 · **Par**: yes · **Artifact**: superseding gate record, appended audit correction, link set to expired — each labelled **`COMPENSATION`**
   - **TDD**: EVIDENCE · **Validate**: **EC-022** — at most one correction per effect, **even when a later retry succeeds** · **Docs**: plan §6 · **Trace**: matrix FR-ORC-016, KE-16, EC-022
   - **Guard**: compensation MUST NOT be described as rollback or vice versa; the run history must let a reviewer tell which occurred · **Done**: three compensating actions proven; double-compensation prevented · **Approval**: none
-- [ ] T091 [US3] Safe-stop suspension — `src/main/java/agentic/shortener/orchestration/state/SafeStopHandler.java`
+- [x] T091 [US3] Safe-stop suspension — `src/main/java/agentic/shortener/orchestration/state/SafeStopHandler.java`
   - **Req**: **FR-ORC-017** · **Scn**: DS-C · **ADR**: ADR-008 · **Pre**: T077, T084, T088
   - **Deps**: T077, T084, T088 · **Par**: no · **Artifact**: triggers — gate timeout, unrecoverable failure, blocking policy `FAIL`, **unrecognized failure classification**, **effect with no known compensating action**. State consistent, resumable, reason emitted
   - **TDD**: EVIDENCE · **Validate**: one record per trigger class; state after safe-stop asserted resumable · **Docs**: plan §3, §6 · **Trace**: matrix FR-ORC-017
   - **Guard**: safe-stop MUST NOT continue past the blocked gate on reduced scope without a new human decision, and MUST NOT leave partially applied effects unrecorded · **Done**: five trigger classes recorded · **Approval**: none
-- [ ] T092 [P] [US3] Idle retention and auto-abandonment — `src/main/java/agentic/shortener/orchestration/state/RetentionPolicy.java`
+- [x] T092 [P] [US3] Idle retention and auto-abandonment — `src/main/java/agentic/shortener/orchestration/state/RetentionPolicy.java`
   - **Req**: **FR-ORC-032** (CL-005) · **Scn**: DS-C · **ADR**: ADR-008 · **Pre**: T091
   - **Deps**: T091 · **Par**: yes · **Artifact**: idle clock from **last activity, never creation**; **PVT-015 — 90 days**; expiry → `ABANDONED` with an audit event citing the retention policy version, actor type `system`, authority "pre-approved retention policy"; `auto-abandon-at` exposed via inspection
   - **TDD**: RED-FIRST · **Validate**: **EC-036** — activity one day before expiry **resets** the clock; **EC-037** — expiry while a gate is pending abandons terminally and **does not satisfy the gate** · **Docs**: plan §3 · **Trace**: matrix FR-ORC-032, EC-036, EC-037

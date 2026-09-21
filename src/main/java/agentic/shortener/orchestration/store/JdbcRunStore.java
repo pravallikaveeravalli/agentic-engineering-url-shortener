@@ -223,6 +223,18 @@ public final class JdbcRunStore {
      * drops the NOT NULL rather than inventing a sentinel node.
      */
     public void transitionRun(UUID runId, RunState from, RunState to, String reason) {
+        // Crossing the SAFE_STOP boundary needs three columns to move together — state, suspension_reason and
+        // auto_abandon_at — because V4 makes the latter two non-null IFF suspended. This method writes only
+        // the state, so both directions would fail on a CHECK constraint with a message about a constraint
+        // rather than about the rule. SafeStopHandler owns those transitions; refusing by name here points the
+        // caller at it, and also means no component can resume a suspended run through the general path
+        // (FR-ORC-017).
+        if (from == RunState.SAFE_STOP || to == RunState.SAFE_STOP) {
+            throw new IllegalStateException(
+                    "transitions into or out of SAFE_STOP are not written here: a suspension must disclose "
+                            + "its reason and its auto-abandon time in the same write, and leaving SAFE_STOP "
+                            + "is only a human decision or retention expiry (FR-ORC-017). Use SafeStopHandler");
+        }
         Instant now = clock.instant();
         try (Connection c = connections.get()) {
             c.setAutoCommit(false);
