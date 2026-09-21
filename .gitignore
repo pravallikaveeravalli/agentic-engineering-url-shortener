@@ -1,2 +1,14 @@
-ops/
-.claude/settings.local.json
+# Build output. Task T008.
+target/
+
+# The Maven wrapper jar is committed deliberately: Maven is not installed on every machine, and
+# `./mvnw` is the entry point every task validation command uses. Excluding it would make the
+# repository unbuildable from a clean checkout, which is the property Slice 1's exit condition
+# actually tests.
+!.mvn/wrapper/maven-wrapper.jar
+
+# Local IDE and OS noise.
+.idea/
+*.iml
+.vscode/
+.DS_Store

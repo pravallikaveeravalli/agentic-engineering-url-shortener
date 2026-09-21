@@ -1,0 +1,102 @@
+# Red-phase evidence
+
+- **Label**: T014-DependencyDirectionTest
+- **Captured (UTC)**: 20260921T060037Z
+- **Command**: `./mvnw -Dtest=DependencyDirectionTest test`
+- **Exit code**: 1
+- **Requirement**: NFR-TST-002 (red phase evidenced, not asserted); CN-004
+
+## Why this file exists
+
+This is the failing run captured BEFORE the implementation that makes it pass. It is stored
+so that the red phase is readable by a reviewer rather than claimed in a commit message.
+
+## Captured output
+
+```
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< agentic:shortener >--------------------------
+[INFO] Building agentic-sdlc-url-shortener 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ shortener ---
+[INFO] Copying 0 resource from src/main/resources to target/classes
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ shortener ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 10 source files with javac [debug parameters release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ shortener ---
+[INFO] skip non existing resourceDirectory /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ shortener ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 3 source files with javac [debug parameters release 21] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.arch.DependencyDirectionTest
+01:00:38.990 [main] INFO com.tngtech.archunit.core.PluginLoader -- Detected Java version 21.0.8
+[ERROR] Tests run: 5, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 0.594 s <<< FAILURE! -- in agentic.shortener.arch.DependencyDirectionTest
+[ERROR] agentic.shortener.arch.DependencyDirectionTest.noExecutorReferencesTheGateDecisionPath -- Time elapsed: 0.063 s <<< FAILURE!
+java.lang.AssertionError: Rule 'no classes that reside in a package 'agentic.shortener.orchestration.executor..' should depend on classes that reside in a package 'agentic.shortener.orchestration.gates..', because CR-021: the defensible claim is that NO WORKFLOW STEP submits or satisfies a gate decision. The control is that the code path does not exist — removing the caller, not checking a field a caller supplies' failed to check any classes. This means either that no classes have been passed to the rule at all, or that no classes passed to the rule matched the `that()` clause. To allow rules being evaluated without checking any classes you can either use `ArchRule.allowEmptyShould(true)` on a single rule or set the configuration property `archRule.failOnEmptyShould = false` to change the behavior globally.
+	at com.tngtech.archunit.lang.ArchRule$Factory$SimpleArchRule.verifyNoEmptyShouldIfEnabled(ArchRule.java:201)
+	at com.tngtech.archunit.lang.ArchRule$Factory$SimpleArchRule.evaluate(ArchRule.java:181)
+	at com.tngtech.archunit.lang.ArchRule$Assertions.check(ArchRule.java:84)
+	at com.tngtech.archunit.lang.ArchRule$Factory$SimpleArchRule.check(ArchRule.java:165)
+	at agentic.shortener.arch.DependencyDirectionTest.noExecutorReferencesTheGateDecisionPath(DependencyDirectionTest.java:97)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.arch.DependencyDirectionTest.domainDependsOnNothing -- Time elapsed: 0.053 s <<< FAILURE!
+java.lang.AssertionError: 
+Architecture Violation [Priority: MEDIUM] - Rule 'no classes that reside in a package 'agentic.shortener.domain..' should depend on classes that reside in any package ['org.springframework..', 'jakarta.persistence..', 'org.hibernate..', 'agentic.shortener.persistence..', 'agentic.shortener.delivery..', 'agentic.shortener.orchestration..', 'agentic.shortener.policy..', 'agentic.shortener.audit..', 'agentic.shortener.config..'], because NFR-MNT-001: the domain model must be testable and reasonable about without a framework, a store, or the control plane' was violated (1 times):
+Class <agentic.shortener.domain.DeliberateViolationProbe> is annotated with <org.springframework.stereotype.Component> in (DeliberateViolationProbe.java:0)
+	at com.tngtech.archunit.lang.ArchRule$Assertions.assertNoViolation(ArchRule.java:94)
+	at com.tngtech.archunit.lang.ArchRule$Assertions.check(ArchRule.java:86)
+	at com.tngtech.archunit.lang.ArchRule$Factory$SimpleArchRule.check(ArchRule.java:165)
+	at agentic.shortener.arch.DependencyDirectionTest.domainDependsOnNothing(DependencyDirectionTest.java:67)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   DependencyDirectionTest.domainDependsOnNothing:67 Architecture Violation [Priority: MEDIUM] - Rule 'no classes that reside in a package 'agentic.shortener.domain..' should depend on classes that reside in any package ['org.springframework..', 'jakarta.persistence..', 'org.hibernate..', 'agentic.shortener.persistence..', 'agentic.shortener.delivery..', 'agentic.shortener.orchestration..', 'agentic.shortener.policy..', 'agentic.shortener.audit..', 'agentic.shortener.config..'], because NFR-MNT-001: the domain model must be testable and reasonable about without a framework, a store, or the control plane' was violated (1 times):
+Class <agentic.shortener.domain.DeliberateViolationProbe> is annotated with <org.springframework.stereotype.Component> in (DeliberateViolationProbe.java:0)
+[ERROR]   DependencyDirectionTest.noExecutorReferencesTheGateDecisionPath:97 Rule 'no classes that reside in a package 'agentic.shortener.orchestration.executor..' should depend on classes that reside in a package 'agentic.shortener.orchestration.gates..', because CR-021: the defensible claim is that NO WORKFLOW STEP submits or satisfies a gate decision. The control is that the code path does not exist — removing the caller, not checking a field a caller supplies' failed to check any classes. This means either that no classes have been passed to the rule at all, or that no classes passed to the rule matched the `that()` clause. To allow rules being evaluated without checking any classes you can either use `ArchRule.allowEmptyShould(true)` on a single rule or set the configuration property `archRule.failOnEmptyShould = false` to change the behavior globally.
+[INFO] 
+[ERROR] Tests run: 5, Failures: 2, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.711 s
+[INFO] Finished at: 2026-09-21T01:00:39-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project shortener: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+```

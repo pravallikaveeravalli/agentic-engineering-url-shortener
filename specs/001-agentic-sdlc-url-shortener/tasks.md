@@ -164,12 +164,12 @@ register rather than improvised under pressure.
 
 **Blocking**: T007. **Synchronization point**: T020 gates Phase 2.
 
-- [ ] T008 Build, root package, and layer directories — `pom.xml`, `src/main/java/agentic/shortener/`, `src/test/java/agentic/shortener/`
+- [x] T008 Build, root package, and layer directories — `pom.xml`, `src/main/java/agentic/shortener/`, `src/test/java/agentic/shortener/`
   - **Req**: NFR-MNT-001 · **Scn**: — · **ADR**: **ADR-001** (Accepted) · **Pre**: T007
   - **Deps**: T007 · **Par**: no (root artifact) · **Artifact**: Java 21 + Spring Boot 3 build; packages `domain`, `application`, `delivery`, `persistence`, `orchestration`, `policy`, `audit`, `config`
   - **TDD**: N/A-DOC · **Validate**: `./mvnw -q compile` succeeds on an empty tree · **Docs**: `README.md` build section · **Trace**: declares root package for every later path; CN-002, CN-003
   - **Guard**: implementation MUST NOT start on an unapproved stack — ADR-001 is Accepted, so this is unblocked · **Done**: compile passes; eight packages exist · **Approval**: none
-- [ ] T009 [P] Store-only Docker Compose and reviewer prerequisites — `docker-compose.yml`
+- [x] T009 [P] Store-only Docker Compose and reviewer prerequisites — `docker-compose.yml`
   - **Req**: FR-ORC-004, CL-009 · **Scn**: — · **ADR**: **ADR-002**, **ADR-012** · **Pre**: T008
   - **Deps**: T008 · **Par**: yes · **Artifact**: PostgreSQL 16 service only; app runs on host
   - **TDD**: N/A-DOC · **Validate**: `docker compose up -d` then `docker compose restart db` both succeed · **Docs**: `quickstart.md` prerequisites already state Docker + JDK · **Trace**: — 
@@ -194,12 +194,12 @@ register rather than improvised under pressure.
   - **Deps**: T012 · **Par**: no · **Artifact**: test proving the harness **fails** when a response diverges from the document
   - **TDD**: EVIDENCE · **Validate**: test passes only when the injected drift is detected · **Docs**: ADR-005 §Validation · **Trace**: — 
   - **Guard**: **a harness that has never failed is unvalidated.** This is the falsifiability proof ADR-005 requires · **Done**: drift detected; removing the drift makes conformance pass again · **Approval**: none
-- [ ] T014 [P] Dependency-direction architecture test — `src/test/java/agentic/shortener/arch/DependencyDirectionTest.java`
+- [x] T014 [P] Dependency-direction architecture test — `src/test/java/agentic/shortener/arch/DependencyDirectionTest.java`
   - **Req**: **NFR-MNT-001**, NFR-MNT-002 · **Scn**: — · **ADR**: **ADR-006** · **Pre**: T008
   - **Deps**: T008 · **Par**: yes · **Artifact**: ArchUnit-style test asserting `domain` has no dependency on framework, persistence, delivery, or control-plane packages; plus the **fallback-absence rule** (CR-032) and the **no-executor-references-gate-decision rule** (CR-021, shared with T063)
   - **TDD**: RED-FIRST · **Validate**: `./mvnw -q -Dtest=DependencyDirectionTest test` · **Docs**: ADR-006 §Validation · **Trace**: NFR-MNT-001's "dependency-direction check"
   - **Guard**: also asserts the application plane does not import control-plane packages, and — **added by CR-032** — that **no `FallbackHandler` type exists** in `orchestration/reliability`, so the FR-ORC-015 retirement cannot be quietly undone by a later implementer · **Done**: rules encoded and passing; the fallback-absence rule present · **Approval**: none
-- [ ] T015 Architecture-violation falsifiability test — `src/test/java/agentic/shortener/arch/DependencyDirectionFalsifiabilityTest.java`
+- [x] T015 Architecture-violation falsifiability test — `src/test/java/agentic/shortener/arch/DependencyDirectionFalsifiabilityTest.java`
   - **Req**: NFR-MNT-001 · **Scn**: — · **ADR**: **ADR-006** · **Pre**: T014
   - **Deps**: T014 · **Par**: no · **Artifact**: proof that T014 fails on a deliberately introduced violation
   - **TDD**: EVIDENCE · **Validate**: violation introduced in a fixture → T014's rule reports a failure · **Docs**: ADR-006 §Validation · **Trace**: — 
@@ -209,7 +209,7 @@ register rather than improvised under pressure.
   - **Deps**: T010 · **Par**: yes · **Artifact**: base class providing a real Postgres per suite
   - **TDD**: N/A-DOC · **Validate**: a trivial repository round-trip passes against the container · **Docs**: `quickstart.md` test tiers · **Trace**: — 
   - **Guard**: mocks and in-memory substitutes are prohibited where the property needs a real mechanism (ADR-011) · **Done**: container starts and a round-trip succeeds · **Approval**: none
-- [ ] T017 [P] Two-tier test separation — `pom.xml` surefire/failsafe profiles
+- [x] T017 [P] Two-tier test separation — `pom.xml` surefire/failsafe profiles
   - **Req**: NFR-TST-002, ADR-011 · **Scn**: — · **ADR**: **ADR-011** · **Pre**: T016
   - **Deps**: T016 · **Par**: yes · **Artifact**: fast tier (no container, no framework context) separate from integration tier
   - **TDD**: N/A-DOC · **Validate**: `./mvnw -q test` runs the fast tier without Docker · **Docs**: `quickstart.md` · **Trace**: — 
@@ -224,7 +224,7 @@ register rather than improvised under pressure.
   - **Deps**: T008 · **Par**: yes · **Artifact**: runnable scan over repository **and** captured telemetry
   - **TDD**: TEST-WITH · **Validate**: `scripts/scan.sh` exits non-zero on a planted `crk_` string · **Docs**: `quickstart.md` · **Trace**: `POL-SEC-002`
   - **Guard**: scan must **match a planted credential**, proving the pattern works rather than assuming it (ADR-013) · **Done**: planted-secret detection demonstrated · **Approval**: none
-- [ ] T020 Red-phase evidence capture mechanism — `scripts/record-red.sh`, `docs/evidence/red-phase/`
+- [x] T020 Red-phase evidence capture mechanism — `scripts/record-red.sh`, `docs/evidence/red-phase/`
   - **Req**: **NFR-TST-002** · **Scn**: — · **ADR**: **ADR-011** · **Pre**: T017
   - **Deps**: T017 · **Par**: no (every later RED-FIRST task depends on it) · **Artifact**: script storing a failing run's output as a dated evidence artifact
   - **TDD**: N/A-DOC · **Validate**: script run against a deliberately failing test produces a stored artifact naming the test and the failure reason · **Docs**: `quickstart.md` evidence section · **Trace**: NFR-TST-002's "evidenced, not asserted"; CN-004

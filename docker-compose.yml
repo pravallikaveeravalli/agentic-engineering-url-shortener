@@ -1,0 +1,44 @@
+# Store only. The application runs on the host.
+#
+# ADR-012 (Accepted): Compose carries PostgreSQL and nothing else, so the debugger and the test
+# runner stay attached to the thing being graded. A full-stack Compose profile is recorded as
+# backlog item B6, not adopted.
+#
+# ADR-002 (Accepted): PostgreSQL 16.
+# CL-009 requires the store to be an INDEPENDENTLY RESTARTABLE process — `docker compose restart db`
+# must work without touching the app — or the persistence-layer restart class in FR-ORC-004 cannot
+# be proven at all. That is why the store is a container and the app is not.
+#
+# Task T009.
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: shortener-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: shortener
+      POSTGRES_USER: shortener
+      # Local demonstration credential. Not a secret: it never leaves this machine, the service is
+      # bound to loopback below, and no production deployment exists (EX-007). Named here rather
+      # than hidden so a reviewer can see it is deliberate.
+      POSTGRES_PASSWORD: shortener
+    ports:
+      # Loopback only. Binding 0.0.0.0 would expose the store to the local network for no benefit.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - shortener-db-data:/var/lib/postgresql/data
+    healthcheck:
+      # The restart proof needs to know when the store is accepting connections again, not merely
+      # when the container is up.
+      test: ["CMD-SHELL", "pg_isready -U shortener -d shortener"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 3s
+
+volumes:
+  shortener-db-data:
+    # Named volume, so `docker compose restart db` and a container recreate both preserve state.
+    # Durability across restart is what FR-ORC-004's persistence-layer class is about.
+    name: shortener-db-data
