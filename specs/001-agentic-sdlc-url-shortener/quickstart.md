@@ -87,6 +87,14 @@ A labelled no-op flowing onward would be quiet pretending: proceeding with nothi
 fact you should consciously accept, not discover in a label afterwards. The same principle governs every gate
 here — nothing material advances on inference or silence.
 
+**Where you will actually see this.** Because orchestration always uses AI, stage 7 authors the change from stage 6's
+design output, so an ordinary submission of your own requirement will **not** reach this gate — the condition needs
+stage 6 to have produced nothing usable. The committed out-of-scenario run therefore reaches it by **injecting the
+empty-change-plan condition**, and the evidence **says so on the record it appears in** (CR-033). That is a deliberate
+trade: **you no longer meet this gate by accident**, and we would rather tell you that than let a demonstration imply a
+route that no longer exists. The gate's own behaviour — three options, and a labelled no-op that cannot advance
+downstream — is proven structurally by its unit tests, independently of any run.
+
 **With no deterministic counterpart at stage 7 (Decision J), this gate is the *sole* guard** against an unimplemented
 change advancing. It is the one place in the design where removing the counterparts made an existing control carry more
 weight rather than less.

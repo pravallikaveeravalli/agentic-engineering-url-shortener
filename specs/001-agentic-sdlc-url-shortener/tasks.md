@@ -5,7 +5,7 @@
 **Prerequisites**: `plan.md` (APPROVED 2026-09-20), `spec.md` (approved Gate 2, clarified Gate 3, amended CR-001..007),
 ADR-001..014 (all Accepted, Gate 4), `data-model.md`, `contracts/`, `research.md`, `quickstart.md`
 
-**Governing constitution**: v1.1.0 · **Policy set**: `policy-set-1.0.0` · **Generated**: 2026-09-20
+**Governing constitution**: v1.1.0 · **Policy set**: `policy-set-1.1.0` (CR-015; corrected here by CR-033 — the header had not been bumped with the set) · **Generated**: 2026-09-20
 
 ---
 
@@ -1064,8 +1064,8 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
 - [ ] T141 [US3] Out-of-scenario run — generic-executor proof — `docs/evidence/out-of-scenario/run.json`
   - **Req**: **FR-ORC-028**, **SC-016**, CN-010 · **Scn**: none by design · **ADR**: **ADR-004** · **Pre**: T132, T110
   - **Deps**: T110, T132 · **Par**: no · **Artifact**: a requirement **outside DS-A/B/C**, submitted like any other run, completing the governed lifecycle with **no executor code changes**
-  - **TDD**: EVIDENCE · **Validate**: run completes; zero executor changes in the diff; **the no-plan gate is deliberately exercised** (EC-040) since that is where a reviewer will personally meet governance
-  - **Docs**: `docs/REVIEWER-GUIDE.md` · **Trace**: SC-016, EC-040 · **Guard**: **executors that recognised blessed demo inputs would be a rigged demonstration.** This run is the proof that they do not — and **the generic-executor proof never depended on the mode**: an executor that branched on recognising blessed inputs would be rigged whichever way it was invoked · **Done**: run completes; no-plan gate exercised; diff clean of executor changes · **Approval**: none
+  - **TDD**: EVIDENCE · **Validate**: run completes; zero executor changes in the diff; **and the stage-7 no-plan gate is exercised by injecting the empty-change-plan condition** (EC-040) — the design output is withheld so stage 7 is reached with nothing to apply, and the gate must suspend with its three options rather than no-op forward. **The evidence MUST label this as an injected demonstration** (AS-007 as extended by CR-033), in the same place it presents the suspension, exactly as T136 labels its injected transient fault
+  - **Docs**: `docs/REVIEWER-GUIDE.md` · **Trace**: SC-016, EC-040 · **Guard**: **executors that recognised blessed demo inputs would be a rigged demonstration.** This run is the proof that they do not — and **the generic-executor proof never depended on the mode**: an executor that branched on recognising blessed inputs would be rigged whichever way it was invoked. **Why the gate is now injected rather than encountered** (CR-033): before Decision J a reviewer reached this gate by submitting their own requirement with the AI disabled, and that route no longer exists because stage 7 authors the change. Injection is the honest substitute, and it is **not** a weaker proof of the gate — **T065’s own tests remain the structural proof**, one per option plus the negative test that a labelled no-op cannot advance downstream. What is lost is that a reviewer no longer meets the gate by accident, and the guide says so rather than implying otherwise · **Done**: run completes; the no-plan gate exercised **and labelled as injected**; diff clean of executor changes · **Approval**: none
 - [ ] T142 [US3] Scenario evidence consolidation with executor-kind labels — `docs/evidence/README.md`
   - **Req**: FR-ORC-029, SC-015 · **Scn**: all · **ADR**: ADR-004 · **Pre**: T134, T137, T140, T141
   - **Deps**: T134, T137, T140, T141 · **Par**: no (**synchronization point**) · **Artifact**: index of all four runs; **per-node executor-kind labels**; **pinned model id** for every `AI` execution

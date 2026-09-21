@@ -300,10 +300,17 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   returns, with no state lost.
 - **EC-039**: A creation request carries a known idempotency marker but different content. Must
   conflict, minting nothing and changing nothing.
-- **EC-040**: Deterministic stage 7 is reached with **no change plan** for the requirement — the case a
-  reviewer creates by submitting their own requirement with AI off. Must suspend at the no-plan gate
+- **EC-040**: Stage 7 is reached with **no change plan** for the requirement. Must suspend at the no-plan gate
   offering governance-only / human-implemented / abandon; must **not** no-op forward, and must not allow
   downstream stages to execute on the basis of an unimplemented change (FR-ORC-031, CR-001).
+  **How this condition arises, restated by CR-033.** It previously named one route: a reviewer submitting their own
+  requirement with the AI disabled. **Decision J removed that route** — orchestration always uses AI, so stage 7 authors
+  the change from stage 6's design output and a plan normally exists. The condition now arises when **stage 6 produced
+  no usable design output**, or when **authoring yields nothing applicable** to the branch. Both are real failure states
+  and neither is reviewer-reachable on demand, which is why the demonstration is **injected** (T141) rather than
+  produced by an ordinary submission.
+  **The obligation is unchanged and the gate is more load-bearing than before**: with no deterministic counterpart at
+  stage 7 (ADR-004-A2), this gate is the **sole** guard against an unimplemented change advancing.
 - **EC-041**: Authentication attempted with an **expired** credential. Must be refused, and the refusal must be
   byte-identical to a revoked credential's, so the distinction is not disclosed (FR-URL-019, CR-002).
 - **EC-042**: A client caches a redirect and follows it after the link has expired. Impossible under the
@@ -1551,7 +1558,11 @@ overridden by the human owner; requirements marked **[Assumption-dependent]** ch
 - **AS-006**: One human fills the reviewer, approver, and release-owner roles in demonstration
   runs. The model still distinguishes the roles, and the distinction is what is tested.
 - **AS-007**: Demonstration runs may compress time-based parameters such as PVT-006, provided
-  every compressed value is labelled as compressed in the evidence.
+  every compressed value is labelled as compressed in the evidence. **The same rule governs an injected condition**
+  (CR-033): where evidence exists because a condition was deliberately induced rather than encountered — an injected
+  transient fault (T136), an injected empty change plan (T141), an injected gate advance (T061a) — the evidence MUST
+  say so in the same place it presents the result. **An induced demonstration presented as an encountered one is an
+  evidence-integrity violation** under Principle X, and it is the failure mode that makes injection safe to use at all.
 - **AS-008**: Persistence is durable and transactional enough to make FR-URL-006 and FR-ORC-004
   achievable. Which technology provides that is a Plan-stage decision (CN-002).
 - **AS-009**: Measurements are taken on a single developer machine. All figures are
@@ -1675,7 +1686,7 @@ All constituent items are approved or discharged at the Gate 4 closing package (
 | 2–3 day timebox and scope controls | **APPROVED** — plan §14: milestones, four checkpoints, four stop conditions, cuts hit backlog before evidence |
 | Versioned API/schema deliverables with contract validation | **DISCHARGED** — plan §2 and ADR-005; parser validation executed 2026-09-20, one real defect found and fixed; meta-schema lint remains a Slice 1 task |
 | Approval of every PVT value | **APPROVED** — all 15, see §Validation Targets |
-| Constitution check against v1.1.0 with policy version recorded | **DISCHARGED** — plan §Constitution Check, `policy-set-1.0.0` |
+| Constitution check against v1.1.0 with policy version recorded | **DISCHARGED** — plan §Constitution Check, against `policy-set-1.0.0`, **the set in force at that gate**. The set is now `policy-set-1.1.0` (CR-015: `POL-CHG-003` added, `POL-AUD-002` removed); this row is **a record of what was checked, not a statement of the current set** (annotated by CR-033) |
 
 Original finding retained above for provenance.
 
