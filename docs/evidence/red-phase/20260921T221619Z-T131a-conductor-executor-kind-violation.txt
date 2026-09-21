@@ -1,0 +1,36 @@
+Task T131a — Conductor (run-orchestration driver). Genuine red-phase capture, found by running the real
+test suite after Conductor.java and ConductorIT.java were both written and ConductorIT itself was already
+green in isolation.
+
+Command:
+  ./scripts/ci.sh   (full clean run, fast tier then integration tier)
+
+Result: fast tier failed — a pre-existing architecture test caught a real defect in the new Conductor code.
+
+  [ERROR] Failures:
+  [ERROR]   HumanExecutorKindTest.onlyNoPlanGateWritesHuman:71 only NoPlanGate may call recordExecutorKind
+  in production code: [NoPlanGate.java, Conductor.java] ==> expected: <[NoPlanGate.java]> but was:
+  <[NoPlanGate.java, Conductor.java]>
+  [ERROR] Tests run: 729, Failures: 1, Errors: 0, Skipped: 0
+
+What this caught: Conductor.onStageSucceeded() called `runStore.recordExecutorKind(runId, nodeKey,
+executorKind)` after every successful stage, on the assumption that a node's recorded executor kind is
+written once per execution like any other outcome field. T066's own HumanExecutorKindTest
+(src/test/java/agentic/shortener/orchestration/executor/HumanExecutorKindTest.java) asserts, via a source
+scan of every .java file under src/main/java/agentic/shortener, that JdbcRunStore.recordExecutorKind is
+called by exactly one production class: NoPlanGate. Reading JdbcRunStore and RunInspectionQuery more
+closely confirmed why: `executor_class` (DETERMINISTIC/AI_CAPABLE/HUMAN_GATE) is fixed statically at node
+creation time from the stage number and is what a reader normally consults; `executor_kind_used` stays
+NULL for almost every node and exists ONLY as NoPlanGate's override for the one case where a node's actual
+kind differs from its static class — S7 implemented by a human under the no-plan gate's second option.
+
+Fix: removed the `runStore.recordExecutorKind(...)` call from Conductor.onStageSucceeded(). The local
+`executorKind` value is still read from the stage outcome and used only for the STAGE_EXITED AuditEvent's
+own optional `executorKindUsed` field (an unrelated concern — audit-event metadata, not the
+stage_node.executor_kind_used column HumanExecutorKindTest governs).
+
+Re-run after the fix:
+  ./scripts/build.sh -q clean && ./scripts/ci.sh
+
+Result: CI-EQUIVALENT: GREEN — 729 fast tier (0 failures), 367 integration tier (0 failures, 1 deliberate
+skip — StoreRestartResumeIT, @Disabled, pre-existing and unrelated).
