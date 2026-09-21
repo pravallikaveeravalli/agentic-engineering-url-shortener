@@ -177,7 +177,21 @@ class DsALiveRun extends PostgresIntegrationTest {
         System.out.println("DS-A LIVE RUN: S4 state=" + s4State);
 
         assertEquals(RunState.RUNNING, runState, "the run must be RUNNING (paused at a gate), not "
-                + "suspended or terminal, for this to be the expected architecture-approval stop");
+                + "suspended or terminal, for this to be an expected governed stop");
+
+        // DS-A's OWN premise is that S4's clarification gate does NOT fire for a genuinely well-formed
+        // input. If the real ambiguity-detection stage found material ambiguity anyway, that is the run's
+        // real, governed stopping point -- reported plainly rather than forced past, and DISTINCT from the
+        // expected "reached S6" case so a reader is not left interpreting a generic assertion failure.
+        if (s4State == StageState.AWAITING_APPROVAL) {
+            org.junit.jupiter.api.Assertions.fail("the run stopped at S4's UNRESOLVED_AMBIGUITY gate, not "
+                    + "S6's architecture-approval gate -- the real ambiguity-detection stage found material "
+                    + "ambiguity in this requirement's exact wording. This is a genuine governed stop "
+                    + "(ActorAuthority forbids this agent from deciding it), not a defect in the Conductor "
+                    + "or the adapter. See docs/evidence/ds-a/run-snapshot.md for the full transition "
+                    + "history and the real captured response content.");
+        }
+
         StageState s6State = runStore.node(runId, "S6").orElseThrow().state();
         assertEquals(StageState.AWAITING_APPROVAL, s6State,
                 "expected the run to stop exactly at S6's architecture-approval gate");
@@ -206,10 +220,11 @@ class DsALiveRun extends PostgresIntegrationTest {
                     .append(", executorClass=").append(node.executorClass())
                     .append(", attemptsUsed=").append(node.attemptsUsed()).append('\n');
         }
-        sb.append("\n## Model ids actually used\n\n");
+        sb.append("\n## Model ids and raw responses actually used\n\n");
         for (Map.Entry<String, AiResponse> entry : lastResponseByStage.entrySet()) {
-            sb.append("- ").append(entry.getKey()).append(": ").append(entry.getValue().modelId())
-                    .append('\n');
+            sb.append("### ").append(entry.getKey()).append(" — model ")
+                    .append(entry.getValue().modelId()).append("\n\n```\n")
+                    .append(entry.getValue().content()).append("\n```\n\n");
         }
         Files.writeString(evidenceDir.resolve("run-snapshot.md"), sb.toString(), StandardCharsets.UTF_8);
     }
