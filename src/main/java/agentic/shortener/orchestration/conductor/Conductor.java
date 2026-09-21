@@ -184,8 +184,16 @@ public final class Conductor {
     // ==============================================================================================
 
     /**
-     * Materializes a new run from a raw requirement, transitions it to {@link RunState#RUNNING}, and
-     * drives it as far as it can go before hitting a gate or a terminal outcome. FR-ORC-001.
+     * Materializes a new run from a raw requirement and transitions it to {@link RunState#RUNNING}.
+     * FR-ORC-001, FR-ORC-007.
+     *
+     * <p><strong>Deliberately does not call {@link #advance} itself.</strong> T082a's own Validate clause
+     * requires the run this method hands back to still show the thirteen freshly-materialized nodes with
+     * S4 {@link StageState#BLOCKED} — i.e. a caller (in practice, {@code RunSubmissionController}) needs a
+     * fast, bounded response, not one that blocks for however long a real AI-capable stage takes. Driving
+     * the run is the caller's own, separate decision: {@code RunSubmissionController} advances it on a
+     * background thread after replying; {@link #submit} itself only ever does the fast, synchronous,
+     * deterministic half.
      */
     public UUID submit(agentic.shortener.orchestration.graph.StageTemplate template, String policySetVersion,
             String requirementText) {
@@ -214,7 +222,6 @@ public final class Conductor {
 
             runStore.transitionRun(runId, RunState.PENDING, RunState.RUNNING, "advancing from submission");
         });
-        advance(runId);
         return runId;
     }
 
@@ -313,17 +320,48 @@ public final class Conductor {
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
     }
 
+    /**
+     * Every branch below already turns a classified stage failure into a graceful suspension ({@link
+     * #onStageFailed}). This wrapper is for what none of them anticipates — a run whose earlier state
+     * did not actually come from this (or any) {@link Conductor} instance's own dispatch (a hand-built
+     * fixture, or a run resumed after a crash with no artifact cache to rebuild from — the disclosed
+     * scope boundary in this class's own javadoc). Without it, a precondition this class enforces with an
+     * {@code IllegalStateException} (e.g. {@link #handleClarificationGate}'s required {@code
+     * "ambiguities"} artifact) propagates uncaught through {@link #dispatchRound}'s {@code
+     * CompletableFuture}, out through {@link #advance}, and into whatever called it — an HTTP 500 for a
+     * caller that did nothing wrong, rather than the same governed suspension a classified failure gets.
+     */
     private void dispatchOne(UUID runId, PersistedNode node, Map<String, String> artifacts) {
         String nodeKey = node.nodeKey();
-        if (node.role() == NodeRole.FAN_OUT_PARENT) {
-            handleFanOutParent(runId, node, artifacts);
-        } else if (node.role() == NodeRole.JOIN) {
-            handleJoinNode(runId, node);
-        } else if (nodeKey.equals("S4")) {
-            handleClarificationGate(runId, node, artifacts);
-        } else {
-            dispatchExecutor(runId, node, artifacts);
+        try {
+            if (node.role() == NodeRole.FAN_OUT_PARENT) {
+                handleFanOutParent(runId, node, artifacts);
+            } else if (node.role() == NodeRole.JOIN) {
+                handleJoinNode(runId, node);
+            } else if (nodeKey.equals("S4")) {
+                handleClarificationGate(runId, node, artifacts);
+            } else {
+                dispatchExecutor(runId, node, artifacts);
+            }
+        } catch (RuntimeException e) {
+            suspendOnUnexpectedFailure(runId, nodeKey, e);
         }
+    }
+
+    private void suspendOnUnexpectedFailure(UUID runId, String nodeKey, RuntimeException e) {
+        String detail = nodeKey + ": " + e.getClass().getSimpleName() + ": " + e.getMessage();
+        auditWriter.write(new AuditEvent(null, runId, "system", "STAGE_EXITED", clock.instant(),
+                "stage_node:" + nodeKey, "FAILURE", detail, null, null, null));
+        try {
+            safeStopHandler.suspend(runId, SuspensionTrigger.UNRECOGNIZED_FAILURE_CLASSIFICATION, detail);
+        } catch (RuntimeException suspendFailed) {
+            // The run may already be SAFE_STOP (a concurrently-dispatched sibling node hit its own
+            // failure first) — SafeStopHandler's own idempotency is not assumed here; a second suspend
+            // attempt failing is not itself escalated further.
+        }
+        auditWriter.write(new AuditEvent(null, runId, "system", "RUN_SUSPENDED", clock.instant(),
+                "workflow_run:" + runId, "SUSPENDED",
+                SuspensionTrigger.UNRECOGNIZED_FAILURE_CLASSIFICATION.name() + ": " + detail, null, null, null));
     }
 
     // ==============================================================================================

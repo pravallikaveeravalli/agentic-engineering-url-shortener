@@ -56,11 +56,12 @@ a dedicated test (`RateLimiterTest.theAggregateTierIsNotPartiallyPresent`), not 
 
 **Which run closes it, and where that run's evidence is — stated honestly, not implied**: the closing task
 is `T136a`, in the brownfield demonstration scenario (DS-B). As of this guide, Phase 8's demonstration
-scenarios have not yet been executed as live, submitted runs (see the next section) — there is currently no
-public HTTP endpoint to submit a fresh orchestration run at all. `baseline-omissions.md`'s own status field
-says `open` for exactly this reason. When DS-B runs, its evidence will land under `docs/evidence/`
-alongside the six AI-stage demos already there, and this guide's own claim here should be checked against
-that evidence rather than trusted on the word of this sentence.
+scenarios have not yet been executed as live, submitted runs (see the next section) — a public HTTP endpoint
+to submit a fresh orchestration run now exists (`POST /v1/runs`, `RunSubmissionController`, T082a), but no
+scenario run has been submitted through it yet. `baseline-omissions.md`'s own status field says `open` for
+exactly this reason. When DS-B runs, its evidence will land under `docs/evidence/` alongside the six
+AI-stage demos already there, and this guide's own claim here should be checked against that evidence rather
+than trusted on the word of this sentence.
 
 ## The capability framing, carried forward — and one thing corrected
 
@@ -71,12 +72,16 @@ is structurally unable to see which scenario produced its input (`StageInput`'s 
 machine (there is no keyless mode, ADR-004 Amendment 02). **Reviewing needs none of that** — the committed
 evidence is complete and readable with no AI setup.
 
-**Corrected, carried from `quickstart.md`'s own T127 correction**: as of this guide, there is no HTTP
-surface that actually accepts a submitted requirement — only `GET /v1/runs/{runId}` (inspect) and `POST
-.../gates/{gateId}/decision` (decide a gate) exist. "Reviewers may submit any requirement" is the system's
-design intent, proven at the mechanism level (no executor can special-case a known input even if one
-existed to submit); it is not yet something a reviewer can literally do over HTTP. Stated here rather than
-left for a reviewer to discover by trying it.
+**Corrected again, forward from `quickstart.md`'s own T127 correction**: T127 found no HTTP surface accepted
+a submitted requirement at all — only `GET /v1/runs/{runId}` (inspect) and `POST .../gates/{gateId}/decision`
+(decide a gate) existed. That gap is now closed: `POST /v1/runs` (`RunSubmissionController`, T082a, CR-045)
+admits a requirement, materializes the run, and returns its durable identifier — the response returns
+before the run is fully driven (a bounded, fast reply; the rest advances on a background thread, matching
+`contracts/openapi.yaml`'s own example), so `GET /v1/runs/{runId}` immediately afterward is still how a
+caller watches it progress. "Reviewers may submit any requirement" is now something a reviewer can literally
+do over HTTP, not only the system's proven design intent — carries the same structural guarantee this guide
+already states (no executor can special-case a known input) now that there is a real endpoint for it to
+apply to.
 
 **Committed DS evidence, once it exists, carries per-node executor-kind labels and a pinned model id** — an
 owner instruction carried from `gate-04-adr.md`. Every stage execution states whether it ran

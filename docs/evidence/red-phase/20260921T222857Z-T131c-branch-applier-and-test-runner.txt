@@ -1,0 +1,51 @@
+Task T131c — real BranchApplier and TestSuiteRunner. RED-FIRST.
+
+GitWorktreeBranchApplierTest and ScriptTestSuiteRunnerTest were written for GitWorktreeBranchApplier.java
+and ScriptTestSuiteRunner.java, both already existing at the time (unlike T129/T131a's red-first captures,
+this session did not save a "class does not exist yet" compile-failure snapshot for these two — same
+disclosed process gap as CR-044 notes for T131a). The genuine, unstaged red-phase capture below is a real
+assertion failure the real test suite caught on the first run.
+
+Command:
+  ./scripts/build.sh -q -Dtest=GitWorktreeBranchApplierTest,ScriptTestSuiteRunnerTest test
+
+Result: 5 tests run across both classes, 1 failure.
+
+  [ERROR] GitWorktreeBranchApplierTest.cleanPatchThatBuildsSucceeds -- Time elapsed: 0.156 s <<< FAILURE!
+  org.opentest4j.AssertionFailedError:
+  expected: <line one
+  line two
+  line three
+  > but was: <line one
+  line two
+  line three>
+      at ...GitWorktreeBranchApplierTest.cleanPatchThatBuildsSucceeds(GitWorktreeBranchApplierTest.java:66)
+
+Cause: the test's own `run()` helper strips trailing whitespace from a subprocess's stdout (`.strip()`,
+needed elsewhere in the same file for branch-listing assertions, e.g. asserting a branch list is blank).
+Applied uniformly, it also stripped the trailing newline `git show <branch>:widget.txt` legitimately
+produces, so the expected literal (which still carried a trailing `\n`) never matched. Not a defect in
+GitWorktreeBranchApplier itself -- the actual file content on the created branch was correct, byte for
+byte, up to that one trailing newline the helper had already removed before the comparison ran.
+
+Fix: the expected literal in the one assertion affected was changed to match the stripped form
+("line one\nline two\nline three", no trailing newline).
+
+Re-run:
+  ./scripts/build.sh -q -Dtest=GitWorktreeBranchApplierTest,ScriptTestSuiteRunnerTest test
+
+Result: Tests run: 5, Failures: 0, Errors: 0, Skipped: 0.
+
+What the five tests actually prove, real git subprocesses throughout, never a shell string:
+- a clean, buildable patch: a real branch is created, a real commit lands on it, the file content on that
+  branch is exactly what the diff produced
+- a patch that does not apply at all: no branch is left behind (git branch --list on the would-be name
+  comes back empty) -- proven by actually listing branches after the call, not by trusting the return value
+  alone
+- a patch that applies and commits but fails the (injected) build check: the branch IS kept -- proven the
+  same way, by actually listing it and finding it still there
+- a real Surefire-report directory with two report files (3 run/1 failure, 2 run/1 error) sums to exactly
+  5 run, 2 failed
+- no surefire-reports directory produced at all (a build that failed before Surefire ever ran) is reported
+  as exactly that -- "no surefire-reports directory was produced" -- never as an invented pass or a
+  specific-but-fabricated failure count

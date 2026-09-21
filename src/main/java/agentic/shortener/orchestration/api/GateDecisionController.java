@@ -1,5 +1,6 @@
 package agentic.shortener.orchestration.api;
 
+import agentic.shortener.orchestration.conductor.Conductor;
 import agentic.shortener.orchestration.gates.ActorAuthority;
 import agentic.shortener.orchestration.gates.Actor;
 import agentic.shortener.orchestration.gates.ApprovalGate;
@@ -43,6 +44,16 @@ import java.util.UUID;
  * {@code actorName} are recorded, not verified against any registry, matching {@link ActorAuthority}'s own
  * disclosed limitation.
  *
+ * <p><strong>Resumes the run after applying the decision</strong> (T131a/T131b): {@link
+ * GateOutcomeHandler#apply} only ever changes the gated node's and, for {@code REJECTED}, the run's own
+ * state — nothing in that call drives the run any further. Before {@link Conductor} existed, nothing here
+ * called anything that would; a decision landed and the run simply never progressed past it. {@link
+ * Conductor#advance} is called unconditionally after every applied decision, regardless of outcome —
+ * {@code advance} itself is a no-op on a run that is not {@link agentic.shortener.orchestration.state.RunState#RUNNING},
+ * so this is always safe: a {@code REJECTED} run is already terminal by the time this call happens, an
+ * {@code ESCALATED} decision changed nothing for {@code advance} to act on, and {@code APPROVED}/{@code
+ * CHANGES_REQUESTED} are exactly the two outcomes that leave something newly ready to run.
+ *
  * <h2>Why the 403/400 split for actorType is deliberate, not incidental</h2>
  *
  * <p>{@code contracts/openapi.yaml}'s {@code GateDecisionRequest.actorType} enum is {@code [human]} alone,
@@ -60,14 +71,17 @@ public final class GateDecisionController {
     private final JdbcRunStore runStore;
     private final RunInspectionQuery inspectionQuery;
     private final Clock clock;
+    private final Conductor conductor;
 
     public GateDecisionController(GateStore gateStore, GateOutcomeHandler outcomeHandler,
-                                  JdbcRunStore runStore, RunInspectionQuery inspectionQuery, Clock clock) {
+                                  JdbcRunStore runStore, RunInspectionQuery inspectionQuery, Clock clock,
+                                  Conductor conductor) {
         this.gateStore = Objects.requireNonNull(gateStore, "gateStore");
         this.outcomeHandler = Objects.requireNonNull(outcomeHandler, "outcomeHandler");
         this.runStore = Objects.requireNonNull(runStore, "runStore");
         this.inspectionQuery = Objects.requireNonNull(inspectionQuery, "inspectionQuery");
         this.clock = Objects.requireNonNull(clock, "clock");
+        this.conductor = Objects.requireNonNull(conductor, "conductor");
     }
 
     /**
@@ -154,6 +168,7 @@ public final class GateDecisionController {
         long decisionId = gateStore.recordDecision(decision);
         GateDecision recorded = gateStore.decisionById(decisionId).orElseThrow();
         outcomeHandler.apply(id, gate.get().nodeKey(), recorded);
+        conductor.advance(id);
 
         return ResponseEntity.ok(inspectionQuery.inspect(id).orElseThrow());
     }

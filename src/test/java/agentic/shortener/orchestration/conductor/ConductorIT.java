@@ -95,6 +95,29 @@ class ConductorIT extends PostgresIntegrationTest {
     // ==============================================================================================
 
     @Test
+    @DisplayName("T082a: submit() alone materializes 13 nodes with S4 BLOCKED and does not itself advance")
+    void submitAloneDoesNotAdvanceTheRun() throws Exception {
+        CountDownLatch unusedBarrier1 = new CountDownLatch(2);
+        CountDownLatch unusedBarrier2 = new CountDownLatch(2);
+
+        Conductor conductor = new Conductor(runStore, gateStore, gateRequestPresenter(), artifactWriteGuard,
+                auditWriter, StageTelemetry.disabled(), safeStopHandler(), retryPolicy(),
+                stubExecutors(notMaterialAmbiguity(), unusedBarrier1, unusedBarrier2),
+                FanOutPlanner.singleChild(), clock, dispatchPool);
+
+        UUID runId = conductor.submit(StageTemplate.standard(), "policy-set-1.1.0",
+                "a requirement whose submission alone must not drive anything");
+
+        List<PersistedNode> nodes = runStore.persistedNodes(runId);
+        assertEquals(13, nodes.size(), "StageTemplate.standard() materializes 13 nodes (S1-S12 plus S7.join)");
+        assertEquals(StageState.BLOCKED, runStore.node(runId, "S4").orElseThrow().state(),
+                "submit() must not itself have advanced the run far enough for S4 to be anything but "
+                        + "BLOCKED -- a caller (RunSubmissionController) needs a fast, bounded response, "
+                        + "not one that blocks for however long a real AI-capable stage takes");
+        assertEquals(RunState.RUNNING, runStore.run(runId).orElseThrow().state());
+    }
+
+    @Test
     @DisplayName("S9/S10 dispatch concurrently, a 2-child S7 fan-out dispatches concurrently, "
             + "run reaches COMPLETED with every node settled")
     void nonLinearFanOutAndJoinReachTerminalOutcome() throws Exception {
@@ -109,6 +132,7 @@ class ConductorIT extends PostgresIntegrationTest {
 
         UUID runId = conductor.submit(StageTemplate.standard(), "policy-set-1.1.0",
                 "a genuinely well-formed test requirement");
+        conductor.advance(runId);
 
         // S4 was skipped (no material ambiguity), S6 and S11 are gate-held — answer both to let the run
         // finish, calling advance() again after each exactly as a real gate-decision handler would.
@@ -149,6 +173,7 @@ class ConductorIT extends PostgresIntegrationTest {
 
         UUID runId = conductor.submit(StageTemplate.standard(), "policy-set-1.1.0",
                 "a requirement whose ambiguity check reports MATERIAL_PENDING");
+        conductor.advance(runId);
 
         // The run must be paused, not failed and not progressed: S4 awaiting a decision, S5 (and
         // everything after it) never dispatched, and the run itself still RUNNING — a suspended run with

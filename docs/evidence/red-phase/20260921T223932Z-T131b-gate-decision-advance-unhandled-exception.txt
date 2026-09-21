@@ -1,0 +1,43 @@
+Task T131b — wiring Conductor.advance() into GateDecisionController. Genuine red-phase capture.
+
+GateDecisionController was changed to call conductor.advance(id) after every applied gate decision
+(previously nothing resumed a run once a gate decision landed -- a real, disclosed gap). Re-running the
+ALREADY-COMMITTED, already-passing GateDecisionControllerIT caught a real regression immediately.
+
+Command:
+  ./scripts/build.sh -q -Dtest=GateDecisionControllerIT -DfailIfNoTests=false verify
+
+Result: 1 of 11 tests failed.
+
+  [ERROR] GateDecisionControllerIT.eachSubmittableOutcomeIsRecorded:152
+  {"timestamp":"2026-09-21T22:35:16.630+00:00","status":500,"error":"Internal Server Error",
+  "path":"/v1/runs/5b07b623-ea17-46c0-823f-76af5f552d86/gates/gate-CHANGES_REQUESTED/decision"}
+  ==> expected: <200> but was: <500>
+
+Server-side root cause, from the same run's log:
+  java.util.concurrent.CompletionException: java.lang.IllegalStateException: S4 became ready with no
+  'ambiguities' artifact from S3 -- S3's own contract requires it to always answer with at least one record
+
+Cause: GateDecisionControllerIT's own fixture (runWithAPendingGate) builds a realistic-LOOKING S1-S4 run by
+calling JdbcRunStore.transitionNode directly, node by node -- it never actually runs S1/S2/S3 through any
+executor, so no "ambiguities" artifact (or any artifact at all) was ever produced for that run in ANY
+Conductor instance's in-memory cache (Conductor.artifactsByRun -- a disclosed, per-instance cache, not
+reconstructed from the database; see Conductor's own javadoc and CR-044's carried-forward enforcement
+points). The CHANGES_REQUESTED outcome returns S4 to READY; Conductor.advance(), now wired in, sees S4 ready
+and tries to actually dispatch it via handleClarificationGate, which requires that artifact and had no
+fallback but to throw. The exception propagated uncaught through dispatchRound's CompletableFuture, through
+advance(), into the HTTP request -- a caller who submitted a perfectly valid decision got a 500 with no
+governance record of why, which is itself a defect independent of this one fixture: ANY run whose earlier
+artifacts were not produced by this Conductor instance (a fixture, or -- the disclosed scope boundary -- a
+run resumed after a crash) would hit the same uncaught exception.
+
+Fix: Conductor.dispatchOne now wraps its dispatch in a try/catch; any RuntimeException it did not already
+anticipate is routed through the same governed path a classified stage failure already takes --
+SafeStopHandler.suspend with SuspensionTrigger.UNRECOGNIZED_FAILURE_CLASSIFICATION, with both a
+STAGE_EXITED and a RUN_SUSPENDED audit event recording why. A caller now gets a 200 with the run correctly
+shown as suspended, never an unexplained 500.
+
+Re-run:
+  ./scripts/build.sh -q -Dtest=GateDecisionControllerIT -DfailIfNoTests=false verify
+
+Result: Tests run: 11, Failures: 0, Errors: 0, Skipped: 0.
