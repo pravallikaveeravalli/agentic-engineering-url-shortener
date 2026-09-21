@@ -111,32 +111,32 @@ register rather than improvised under pressure.
 
 **Synchronization point**: T007 gates all of Phase 1.
 
-- [ ] T001 Must-have scope register — `docs/delivery/scope-register.md`
+- [x] T001 Must-have scope register — `docs/delivery/scope-register.md`
   - **Req**: CN-007 · **Scn**: all · **ADR**: — · **Pre**: plan §14 approved
   - **Deps**: none · **Par**: no (first task) · **Artifact**: table of the nine slices with per-slice must-have items
   - **TDD**: N/A-DOC · **Validate**: every slice in plan §14 has a row; reviewer can read it in one page · **Docs**: new file · **Trace**: links each slice to the FRs it delivers
   - **Guard**: register must not restate the plan; it must be the operational checklist derived from it · **Done**: nine rows, each naming its exit condition · **Approval**: none
-- [ ] T002 [P] Deferred-scope backlog register — `docs/delivery/backlog.md`
+- [x] T002 [P] Deferred-scope backlog register — `docs/delivery/backlog.md`
   - **Req**: DF-004 · **Scn**: — · **ADR**: ADR-009, ADR-012, ADR-014 · **Pre**: T001
   - **Deps**: T001 · **Par**: yes (separate file) · **Artifact**: labelled backlog with source of each deferral
   - **TDD**: N/A-DOC · **Validate**: every DF-004 item and every ADR-deferred item present · **Docs**: new file · **Trace**: each item cites the record that deferred it
   - **Guard**: backlog items MUST NOT be pulled forward without an owner decision; the file states this. **AI wiring for any stage MUST NOT appear in this register at the outset** — the initial build wires all six (owner decision 2026-09-20); it may re-enter the backlog only by a recorded checkpoint decision · **Done**: run-level circuit breaker, expiry notification, artifact-consumption tracking, full-stack Compose, `redirect_event` partitioning, SDK transport adapter all present — **and no AI stage listed** · **Approval**: none
-- [ ] T003 [P] Day-level milestone schedule — `docs/delivery/milestones.md`
+- [x] T003 [P] Day-level milestone schedule — `docs/delivery/milestones.md`
   - **Req**: CN-007 · **Scn**: — · **ADR**: — · **Pre**: T001
   - **Deps**: T001 · **Par**: yes · **Artifact**: Day 1 AM/PM, Day 2 AM/midday/PM, Day 3 AM/midday/PM with the slice due at each
   - **TDD**: N/A-DOC · **Validate**: matches plan §14 exactly; no milestone invented · **Docs**: new file · **Trace**: milestone → slice → tasks
   - **Guard**: **the schedule is a control instrument, not a promise, and not a source of pressure.** Completeness takes priority over speed (owner amendment, Gate 5); there is no external submission deadline. Slippage is observed at a checkpoint (T005) and **escalated to the owner for direction** — never a silent extension, and never a self-executing cut · **Done**: nine milestones mapped, with the control-not-promise framing stated in the file · **Approval**: none
-- [ ] T004 [P] Critical-path declaration — `docs/delivery/critical-path.md`
+- [x] T004 [P] Critical-path declaration — `docs/delivery/critical-path.md`
   - **Req**: CN-007 · **Scn**: — · **ADR**: ADR-003 · **Pre**: T001
   - **Deps**: T001 · **Par**: yes · **Artifact**: path `1→2→4→5→6→8→9` with the reason each link is non-removable
   - **TDD**: N/A-DOC · **Validate**: Slice 3 correctly marked as DS-B's subject rather than critical-path · **Docs**: new file · **Trace**: — 
   - **Guard**: must state that Slice 7's `failure_event` capture precedes Slice 8 or the scenarios produce no MTTR population · **Done**: dependency reasons stated per link · **Approval**: none
-- [ ] T005 Checkpoint decision procedure — `docs/delivery/checkpoints.md`
+- [x] T005 Checkpoint decision procedure — `docs/delivery/checkpoints.md`
   - **Req**: CN-007 · **Scn**: — · **ADR**: ADR-004 · **Pre**: T001, T002, T003
   - **Deps**: T001, T002, T003 · **Par**: no (consumes all three) · **Artifact**: four checkpoints with the cut each authorises
   - **TDD**: N/A-DOC · **Validate**: each checkpoint names what it cuts *from the backlog* and what it may never cut · **Docs**: new file · **Trace**: — 
   - **Guard**: a checkpoint MUST NOT authorise cutting mandatory validation or reviewer evidence; stated explicitly. **A checkpoint observes and reports; it does not itself cut.** Under the Gate 5 time-attitude amendment, **a scope cut happens only if the owner orders one at a checkpoint, on the record** — the checkpoint's output is an escalation with options, not an executed reduction. **AI wiring reduction is the first option the owner would be offered** (plan §14), never a default the worker applies. The file must state that distinction, because it is the difference between a controlled cut and a quietly narrowed scope · **Done**: four checkpoints present, each stating its observation, the options it escalates, and what it may never cut · **Approval**: none
-- [ ] T006 [P] Stop-conditions register — `docs/delivery/stop-conditions.md`
+- [x] T006 [P] Stop-conditions register — `docs/delivery/stop-conditions.md`
   - **Req**: CN-007, CN-005, Constitution X · **Scn**: — · **ADR**: — · **Pre**: T001
   - **Deps**: T001 · **Par**: yes · **Artifact**: four stop conditions, each with the required report
   - **TDD**: N/A-DOC · **Validate**: fabrication-pressure condition present and marked non-waivable; each condition classified **HALT** or **ESCALATE** per the table below · **Docs**: new file · **Trace**: — 
