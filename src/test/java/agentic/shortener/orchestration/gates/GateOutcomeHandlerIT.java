@@ -154,6 +154,40 @@ class GateOutcomeHandlerIT extends PostgresIntegrationTest {
     }
 
     @Test
+    @DisplayName("REGRESSION (T096): EC-019 — a downstream node RUNNING is skipped, never force-invalidated")
+    void changesRequestedDoesNotInvalidateAnInFlightDownstreamNode() {
+        // Found while extracting T096's shared DownstreamInvalidation: the original private methods here
+        // applied RUNNING -> INVALIDATED unconditionally, because no test had ever driven a downstream
+        // node into RUNNING before requesting changes upstream of it. Fixed at the source
+        // (DownstreamInvalidation, shared by this class and ReplanService), proven here directly too.
+        driveToS4Gate();
+        runStore.transitionNode(runId, "S4", StageState.AWAITING_APPROVAL, StageState.SUCCEEDED,
+                "answered");
+        runStore.transitionNode(runId, "S5", StageState.BLOCKED, StageState.READY, "x");
+        runStore.transitionNode(runId, "S5", StageState.READY, StageState.RUNNING, "x");
+        runStore.transitionNode(runId, "S5", StageState.RUNNING, StageState.SUCCEEDED, "decomposed");
+        runStore.transitionNode(runId, "S6", StageState.BLOCKED, StageState.READY, "x");
+        // S6 is IN FLIGHT when the change request lands — left running, never completed.
+        runStore.transitionNode(runId, "S6", StageState.READY, StageState.RUNNING, "x");
+
+        GateDecision decision = new GateDecision(runId, "S3", 3, GateClass.UNRESOLVED_AMBIGUITY,
+                GateOutcome.CHANGES_REQUESTED, new Actor("human", "the owner"), T0,
+                "the ambiguity check missed a case",
+                "docs/governance/gate-decisions/gate-03b.md",
+                List.of("re-check for contradictory bounds"), null, null);
+
+        handler.apply(runId, "S3", decision);
+
+        assertEquals(StageState.RUNNING, runStore.node(runId, "S6").orElseThrow().state(),
+                "EC-019: an in-flight stage is not mutated mid-execution — S6 must still be RUNNING, "
+                        + "exactly as it was when the change request landed");
+        // Everything else downstream that was NOT in flight is still invalidated as before — EC-019
+        // scopes the exception to the in-flight node, it does not disable invalidation entirely.
+        assertEquals(StageState.INVALIDATED, runStore.node(runId, "S4").orElseThrow().state());
+        assertEquals(StageState.INVALIDATED, runStore.node(runId, "S5").orElseThrow().state());
+    }
+
+    @Test
     @DisplayName("CHANGES_REQUESTED voids the approvals it invalidates, by a superseding record (EC-020)")
     void changesRequestedVoidsInvalidatedApprovals() {
         driveToS4Gate();

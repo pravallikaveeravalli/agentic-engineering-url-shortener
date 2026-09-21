@@ -786,7 +786,7 @@ from the response JSON. Each is `[P]` because each touches its own files and dep
   - **Deps**: T093 · **Par**: yes · **Artifact**: run-level lease making concurrent resumption of one persisted state impossible
   - **TDD**: RED-FIRST · **Validate**: **EC-026** — two concurrent resume attempts; exactly one advances · **Docs**: plan §6 · **Trace**: matrix FR-ORC-018, EC-026
   - **Guard**: without this, resumption is the most likely source of duplicated committed effects · **Done**: EC-026 proven · **Approval**: none
-- [ ] T096 [US3] Dynamic replanning with approval voiding — `src/main/java/agentic/shortener/orchestration/replan/ReplanService.java`
+- [x] T096 [US3] Dynamic replanning with approval voiding — `src/main/java/agentic/shortener/orchestration/replan/ReplanService.java`
   - **Req**: **FR-ORC-019**, NFR-CHG-002, SC-007 · **Scn**: DS-C · **ADR**: **ADR-009** · **Pre**: T074, T075, T058
   - **Deps**: T058, T074, T075 · **Par**: no (**synchronization point**) · **Artifact**: **transitive downstream closure** over persisted `dependency_edge` rows from the changed artifact's producing stage; affected **nodes** → `INVALIDATED`; approvals voided by **superseding gate record**; `ReplanEvent` recording cause, **`invalidatedNodes` as node keys**, voided approvals — node-level, so a replan may invalidate one fan-out child and leave its siblings intact
   - **TDD**: EVIDENCE · **Validate**: affected set equals the computed closure; **unaffected parallel branches untouched**; **EC-020** — a voided approval cannot satisfy the re-planned stage; **EC-019** — in-flight stage not corrupted; **EC-030** — cycle-introducing replan rejected
