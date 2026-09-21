@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("T053 provisioning: the absences")
 class ProvisionCreatorTest {
 
-    private static final Path SCRIPT = Path.of("ops/scripts/provision-creator.sh");
+    private static final Path SCRIPT = Path.of("scripts/provision-creator.sh");
 
     @Test
     @DisplayName("the script exists and is executable")

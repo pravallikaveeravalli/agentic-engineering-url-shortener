@@ -429,7 +429,7 @@ resolution, and expiry outcomes.
   - **Deps**: T022 · **Par**: no (guards create and analytics) · **Artifact**: `Authorization: Bearer <key>`; SHA-256 of the full presented string; **constant-time comparison**; expired and revoked refused with the **same response shape**
   - **TDD**: RED-FIRST · **Validate**: authenticated vs anonymous create; **EC-041** expired-vs-revoked byte-identity; constant-time unit test · **Docs**: `contracts/openapi.yaml` `creatorApiKey` · **Trace**: matrix FR-URL-018, EC-041, CL-001
   - **Guard**: bearer transport chosen because proxies and scrubbers redact `Authorization` **by default** — a custom header would forfeit that. Redirects never enter this filter · **Done**: all four tests pass · **Approval**: none
-- [x] T053 [US1] Operator provisioning script with required expiry — `ops/scripts/provision-creator.sh`
+- [x] T053 [US1] Operator provisioning script with required expiry — `scripts/provision-creator.sh`
   - **Req**: **FR-URL-019** · **Scn**: — · **ADR**: **ADR-013**, ADR-012 · **Pre**: T052
   - **Deps**: T052 · **Par**: no · **Artifact**: `crk_` + base64url of **≥ 256 CSPRNG bits**; `--expires <duration|never>` **required, no default**; key displayed **once** to the operator terminal; only the hash stored
   - **TDD**: RED-FIRST · **Validate**: script **exits non-zero without `--expires`**; `never` yields null `expires_at` and nothing else does; hash-only storage asserted; needs store connectivity but **not** a running application

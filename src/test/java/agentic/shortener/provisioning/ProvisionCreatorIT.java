@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("T053 provisioning against a real store")
 class ProvisionCreatorIT extends PostgresIntegrationTest {
 
-    private static final Path SCRIPT = Path.of("ops/scripts/provision-creator.sh");
+    private static final Path SCRIPT = Path.of("scripts/provision-creator.sh");
 
     private Path psqlWrapper;
 

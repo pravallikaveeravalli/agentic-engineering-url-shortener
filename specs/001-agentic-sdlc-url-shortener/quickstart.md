@@ -148,9 +148,9 @@ rollback/compensation, safe-stop, resumption, replanning, concurrency, security,
 ### Provision a creator — no HTTP endpoint exists for this
 
 ```
-<run script> ops/scripts/provision-creator.sh --name demo --expires 90d
+<run script> scripts/provision-creator.sh --name demo --expires 90d
 #   or, to deliberately create a non-expiring credential:
-<run script> ops/scripts/provision-creator.sh --name demo --expires never
+<run script> scripts/provision-creator.sh --name demo --expires never
 ```
 
 **The `--expires` parameter is required and has no default.** Omit it and the script exits non-zero without
