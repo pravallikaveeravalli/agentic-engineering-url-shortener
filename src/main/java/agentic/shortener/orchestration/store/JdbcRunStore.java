@@ -1,5 +1,6 @@
 package agentic.shortener.orchestration.store;
 
+import agentic.shortener.orchestration.executor.ExecutorKind;
 import agentic.shortener.orchestration.graph.DependencyEdge;
 import agentic.shortener.orchestration.graph.JoinSemantics;
 import agentic.shortener.orchestration.graph.NodeRole;
@@ -210,6 +211,38 @@ public final class JdbcRunStore {
             throw new IllegalStateException(
                     "failed to transition " + nodeKey + " from " + from + " to " + to
                             + "; neither the state nor its transition was written", e);
+        }
+    }
+
+    /**
+     * Records what actually ran a node. Task T065, T066. FR-ORC-029.
+     *
+     * <p>Deliberately separate from {@link #transitionNode}, not a parameter added to it. Retrofitting
+     * every existing call site with an executor-kind argument would force a value onto transitions that
+     * are not stage executions at all — {@code BLOCKED} → {@code READY} has no executor kind to report —
+     * and would touch every caller in this codebase for a fact only {@link NoPlanGate} currently needs to
+     * write. A narrow, additive method is what keeps every already-passing call site untouched.
+     *
+     * <p>{@code HUMAN} is never selectable by any caller or configuration except through
+     * {@code NoPlanGate.humanImplemented} — this method itself does not enforce that (it would accept any
+     * {@link ExecutorKind} from any caller), because the real control is architectural: nothing else in
+     * this codebase calls it with {@code HUMAN}, and {@code StageOutcome.succeeded()} already refuses an
+     * executor from ever producing that kind through the normal execution path (T069).
+     */
+    public void recordExecutorKind(UUID runId, String nodeKey, ExecutorKind kind) {
+        Objects.requireNonNull(runId, "runId");
+        Objects.requireNonNull(nodeKey, "nodeKey");
+        Objects.requireNonNull(kind, "kind");
+        String sql = "UPDATE stage_node SET executor_kind_used = ? WHERE run_id = ? AND node_key = ?";
+        try (Connection c = connections.get(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, kind.name());
+            ps.setObject(2, runId);
+            ps.setString(3, nodeKey);
+            if (ps.executeUpdate() != 1) {
+                throw new IllegalStateException("no such node: " + nodeKey + " in run " + runId);
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("failed to record executor kind for " + nodeKey, e);
         }
     }
 

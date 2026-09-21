@@ -520,12 +520,12 @@ outcome, including deliberate silence.
   - **Deps**: T059 · **Par**: yes · **Artifact**: **the ten plan-§5 classes**, of which the no-change-plan and **node-overrun** classes are two, each with what it blocks
   - **TDD**: RED-FIRST · **Validate**: enum completeness test asserting the count **against plan §5's table row count**, so the enum and the plan cannot drift apart silently · **Docs**: plan §5 · **Trace**: — 
   - **Guard**: a gate class present in the plan but absent from the enum is a silent skip · **Done**: ten classes; each names its blocked scope · **Approval**: none
-- [ ] T065 [US2] No-change-plan gate with three options — `src/main/java/agentic/shortener/orchestration/gates/NoPlanGate.java`
+- [x] T065 [US2] No-change-plan gate with three options — `src/main/java/agentic/shortener/orchestration/gates/NoPlanGate.java`
   - **Req**: **FR-ORC-031** (CR-001) · **Scn**: DS-A · **ADR**: **ADR-004** · **Pre**: T064, T060
   - **Deps**: T060, T064 · **Par**: no · **Artifact**: **(1)** governance-only run — downstream continues, implementation labelled **intentionally skipped by human decision**; **(2)** human-implemented — real testing judges it, executor kind `HUMAN`; **(3)** abandon → `ABANDONED`
   - **TDD**: RED-FIRST · **Validate**: one test per option, plus a **negative test that a labelled no-op cannot advance downstream stages** · **Docs**: `quickstart.md` stage-7 section · **Trace**: matrix FR-ORC-031, EC-040
   - **Guard**: **a labelled no-op that flows onward is quiet pretending.** Proceeding with nothing implemented requires a recorded human decision · **Done**: three options plus the negative test pass · **Approval**: none
-- [ ] T066 [P] [US2] HUMAN executor kind recorded — `src/main/java/agentic/shortener/orchestration/executor/ExecutorKind.java`
+- [x] T066 [P] [US2] HUMAN executor kind recorded — `src/main/java/agentic/shortener/orchestration/executor/ExecutorKind.java`
   - **Req**: **FR-ORC-029** (CR-001) · **Scn**: DS-A · **ADR**: ADR-004 · **Pre**: T065
   - **Deps**: T065 · **Par**: yes · **Artifact**: `DETERMINISTIC` | `AI` | `HUMAN`; `HUMAN` **never selectable by any caller or configuration**, only a no-plan-gate outcome
   - **TDD**: RED-FIRST · **Validate**: test asserting `HUMAN` is recorded **only** as a no-plan-gate outcome and cannot be requested by any caller or configuration · **Docs**: `contracts/workflow-state.schema.json` `executorKindUsed` · **Trace**: matrix FR-ORC-029, KE-25
