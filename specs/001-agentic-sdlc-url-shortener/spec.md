@@ -2072,25 +2072,25 @@ stages. A requirement with no Design or ADR reference is an orphan in the same s
 
 | Requirement | Journey | Scenario | Edge cases | Design | ADR | Task | Test | Evidence |
 |---|---|---|---|---|---|---|---|---|
-| FR-URL-001 | US-1 | DS-A | — | Plan §2 | ADR-007 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-002 | US-1 | DS-A | EC-006, EC-007 | Plan §2 | ADR-007 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-003 | US-1 | DS-A | EC-008 | Plan §2, §8 | ADR-007 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-004 | US-1 | DS-A | — | Plan §2, §8 | ADR-013 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-005 | US-1 | DS-B | EC-004, EC-005 | Plan §2, §8 | ADR-013 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-006 | US-1 | DS-A | EC-001, EC-008 | Plan §2 | ADR-002, ADR-007 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-007 | US-1 | DS-A | — | Plan §2 | ADR-014 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-008 | US-1 | DS-A | EC-009 | Plan §2 | ADR-014 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-009 | US-1 | DS-A | EC-014 | Plan §2 | ADR-002 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-010 | US-1 | DS-B | EC-012, EC-013 | Plan §2, §7 | ADR-014, ADR-010 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-011 | US-1 | DS-B | — | Plan §2 | ADR-013, ADR-014 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-012 | US-1 | DS-A | EC-002, EC-003, EC-039 | Plan §2 | ADR-007 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-013 | US-1 | DS-B | EC-001, EC-013 | Plan §2 | ADR-002, ADR-007, ADR-014 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-014 | US-1 | DS-B | EC-010, EC-011 | Plan §2 | ADR-002, ADR-014 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-015 | US-1 | DS-B | EC-011 | Plan §2 | ADR-012 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-016 | US-1 | DS-B | EC-013 | Plan §2, §8 | ADR-013 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-017 | US-1, US-5 | DS-A | EC-007 | Plan §7, §8 | ADR-010, ADR-013 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-018 | US-1 | DS-A | — | Plan §2, §8 | ADR-013 | *Tasks stage* | *Tasks stage* | *Implement stage* |
-| FR-URL-019 | US-1, US-5 | DS-A | — | Plan §8, §Project Structure | ADR-013, ADR-012 | *Tasks stage* | *Tasks stage* | *Implement stage* |
+| FR-URL-001 | US-1 | DS-A | — | Plan §2 | ADR-007 | T039, T042 | UrlShortenerAcceptanceIT (SC-001), CreateLinkConformanceIT | `docs/evidence/`, CI GREEN |
+| FR-URL-002 | US-1 | DS-A | EC-006, EC-007 | Plan §2 | ADR-007 | T033, T042 | UrlSyntaxValidatorTest, UrlShortenerAcceptanceIT (SC-002) | `docs/evidence/`, CI GREEN |
+| FR-URL-003 | US-1 | DS-A | EC-008 | Plan §2, §8 | ADR-007 | T034 | DestinationNormalizerTest, CreateLinkConformanceIT (ordering) | `docs/evidence/`, CI GREEN |
+| FR-URL-004 | US-1 | DS-A | — | Plan §2, §8 | ADR-013 | T035 | SchemeAllowListTest, UrlShortenerAcceptanceIT (row 1) | `docs/evidence/`, CI GREEN |
+| FR-URL-005 | US-1 | DS-B | EC-004, EC-005 | Plan §2, §8 | ADR-013 | T036 | AbuseGuardTest, CreateLinkConformanceIT (EC-004/EC-005 wired) | `docs/evidence/`, CI GREEN |
+| FR-URL-006 | US-1 | DS-A | EC-001, EC-008 | Plan §2 | ADR-002, ADR-007 | T038, T039, T040 | ShortCodeGeneratorTest, CreateLinkUseCaseTest, ConcurrentCreationIT | `docs/evidence/`, CI GREEN |
+| FR-URL-007 | US-1 | DS-A | — | Plan §2 | ADR-014 | T043, T044 | ResolveLinkUseCaseTest, RedirectIT | `docs/evidence/`, CI GREEN |
+| FR-URL-008 | US-1 | DS-A | EC-009 | Plan §2 | ADR-014 | T046, T047 | ExpiryPolicyTest, ExpiredLinkIT, UrlShortenerAcceptanceIT (SC-003) | `docs/evidence/`, CI GREEN |
+| FR-URL-009 | US-1 | DS-A | EC-014 | Plan §2 | ADR-002 | T046 | ExpiryPolicyTest | `docs/evidence/`, CI GREEN |
+| FR-URL-010 | US-1 | DS-B | EC-012, EC-013 | Plan §2, §7 | ADR-014, ADR-010 | T048, T050 | AnalyticsRecorderTest, AnalyticsRecordingIT, AnalyticsDurabilityIT | `docs/evidence/`, CI GREEN |
+| FR-URL-011 | US-1 | DS-B | — | Plan §2 | ADR-013, ADR-014 | T051 | GetAnalyticsUseCaseTest, AuthenticationIT, UrlShortenerAcceptanceIT (row 6) | `docs/evidence/`, CI GREEN |
+| FR-URL-012 | US-1 | DS-A | EC-002, EC-003, EC-039 | Plan §2 | ADR-007 | T041, T042 | IdempotencyResolverTest, UrlShortenerAcceptanceIT (rows 7-9) | `docs/evidence/`, CI GREEN |
+| FR-URL-013 | US-1 | DS-B | EC-001, EC-013 | Plan §2 | ADR-002, ADR-007, ADR-014 | T040 | ConcurrentCreationIT at PVT-003 | `docs/evidence/`, CI GREEN |
+| FR-URL-014 | US-1 | DS-B | EC-010, EC-011 | Plan §2 | ADR-002, ADR-014 | T045 | RedirectIT (EC-011), CreationFailureIsolationIT (EC-010) | `docs/evidence/`, CI GREEN |
+| FR-URL-015 | US-1 | DS-B | EC-011 | Plan §2 | ADR-012 | T056 | HealthPayloadTest, ReadinessDegradationIT | `docs/evidence/`, CI GREEN |
+| FR-URL-016 | US-1 | DS-B | EC-013 | Plan §2, §8 | ADR-013 | T054, T055, **T136a pending** | **PARTIAL** — RateLimiterTest, RateLimitIT (PVT-012, PVT-013). PVT-014 **not built**: deferred to T136a, disclosed in `baseline-omissions.md` | `docs/evidence/`, CI GREEN |
+| FR-URL-017 | US-1, US-5 | DS-A | EC-007 | Plan §7, §8 | ADR-010, ADR-013 | T037 | CredentialRedactionTest, CredentialTelemetryIT, scan.sh --telemetry | `docs/evidence/`, CI GREEN |
+| FR-URL-018 | US-1 | DS-A | — | Plan §2, §8 | ADR-013 | T044, T052 | AuthenticationIT, RedirectIT | `docs/evidence/`, CI GREEN |
+| FR-URL-019 | US-1, US-5 | DS-A | — | Plan §8, §Project Structure | ADR-013, ADR-012 | T052, T053 | ProvisionCreatorTest, ProvisionCreatorIT, AuthenticationIT (EC-041) | `docs/evidence/`, CI GREEN |
 | FR-ORC-001 | US-3 | DS-A | EC-029 | Plan §3 | ADR-003 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-002 | US-3 | DS-A | EC-030 | Plan §3 | ADR-003, ADR-008 | *Tasks stage* | *Tasks stage* | *Implement stage* |
 | FR-ORC-003 | US-3 | DS-A | EC-017, EC-018 | Plan §3 | ADR-003 | *Tasks stage* | *Tasks stage* | *Implement stage* |

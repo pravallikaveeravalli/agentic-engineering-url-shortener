@@ -31,21 +31,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * T042 — {@code POST /v1/links} conformance across every declared response. FR-URL-001, FR-URL-002.
  *
- * <p><strong>Which codes are proved live, and which are not.</strong> The contract declares 201, 200,
- * 400, 401, 409, 429 and 503 for this operation. Five are reachable now — 401 became reachable when T052
- * added authentication — and are driven against the running application. Two are not, and saying so is
- * the point:
+ * <p><strong>Which codes are proved live, and where.</strong> The contract declares 201, 200, 400, 401,
+ * 409, 429 and 503 for this operation, and <strong>all seven are now asserted live somewhere</strong>:
  *
  * <ul>
- *   <li><strong>429</strong> needs the rate-limit tiers, which are T054 and T055.
- *   <li><strong>503</strong> needs the store to go away mid-suite. {@code ReadinessDegradationIT} owns
- *       that, with its own container, because stopping the shared one would break every other test in
- *       the tier.
+ *   <li><strong>201, 200, 400, 401, 409</strong> — here.
+ *   <li><strong>429</strong> — {@code RateLimitIT} and {@code UrlShortenerAcceptanceIT}, since T054 built
+ *       the creation tier. It was listed here as "not yet reachable" until the Slice 3 boundary sweep
+ *       caught the claim going stale, which is the kind of thing that only a re-read finds.
+ *   <li><strong>503</strong> — {@code CreationFailureIsolationIT}, which fails the write rather than
+ *       stopping the shared container.
  * </ul>
  *
- * <p>For those three this asserts what <em>can</em> be asserted now — that the contract declares an
- * {@code Error} body for each, so the shape is fixed before the behaviour arrives. A test claiming
- * coverage it does not have would be the overclaim the Gate 7 sweep exists to catch.
+ * <p>This class still asserts the contract's <em>shape</em> for 429 and 503 as well, so a loosening of
+ * the document is caught here even though the behaviour is proved elsewhere.
  *
  * <p>T042's guard: <em>"a code MUST NOT be returned that cannot subsequently be resolved — persist
  * durably first."</em> Asserted by reading every returned code back through a separate request.
@@ -262,12 +261,12 @@ class CreateLinkConformanceIT extends PostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("429 and 503 have their Error shape fixed in the contract already")
-    void notYetReachableCodesAreDeclared() {
-        // Stated as what it is: a document assertion, not a live one. It fixes the shape now so the
-        // behaviour arriving at T054/T055 and in ReadinessDegradationIT cannot quietly invent a
-        // different one. 401 has moved out of this list because T052 made it reachable, and it is now
-        // asserted live above.
+    @DisplayName("429 and 503 declare a strict Error shape, asserted live in their own classes")
+    void everyDeclaredCodeHasAStrictShape() {
+        // A document assertion, and no longer a stand-in for missing behaviour: 429 is exercised live by
+        // RateLimitIT and the acceptance sweep, and 503 by CreationFailureIsolationIT. Keeping the shape
+        // check here means a loosening of the contract fails in the class that owns the contract, rather
+        // than only in whichever behavioural test happens to notice.
         for (int status : List.of(429, 503)) {
             assertTrue(harness.rejectsUnexpectedFields("/v1/links", "post", status),
                     "POST /v1/links " + status + " must declare a strict Error schema, so the "

@@ -189,9 +189,41 @@ public class LinkController {
      */
     @ExceptionHandler({IllegalArgumentException.class, NullPointerException.class})
     public ResponseEntity<Map<String, Object>> onDomainRefusal(RuntimeException e) {
-        // The message is the domain's own and names the rule, not an internal: "scheme 'javascript' is
-        // not allow-listed" is actionable, and it is not a stack trace or an exception class name.
-        return error(HttpStatus.BAD_REQUEST, "INVALID_INPUT", safeMessage(e));
+        // The message is the domain's own and names the rule, not an internal: a scheme refusal citing
+        // FR-URL-004 is actionable, and it is not a stack trace or an exception class name.
+        return error(HttpStatus.BAD_REQUEST, refusalCode(e.getMessage()), safeMessage(e));
+    }
+
+    /**
+     * Rule citation to error code.
+     *
+     * <p>SC-002 requires a refusal to be <em>actionable</em>, and both {@code quickstart.md} §2 and the
+     * contract's own examples name specific codes — {@code SCHEME_NOT_ALLOWED} for a disallowed scheme,
+     * {@code EXPIRY_IN_PAST} for a past expiry. A single {@code INVALID_INPUT} for everything satisfied
+     * the schema and told a caller nothing, which T057's sweep is what caught.
+     *
+     * <p><strong>Keyed on the requirement identifier, not on prose.</strong> Every refusal message cites
+     * the rule it enforces, and a requirement id is a stable governed identifier — unlike a sentence,
+     * which somebody will reword. An allow-list again, for the same reason as
+     * {@link #DOMAIN_REFUSAL_MARKERS}: anything unrecognised falls back to the generic code rather than
+     * being guessed at.
+     */
+    private static final Map<String, String> REFUSAL_CODES_BY_RULE = Map.of(
+            "FR-URL-004", "SCHEME_NOT_ALLOWED",
+            "EC-014", "EXPIRY_IN_PAST",
+            "EC-007", "CREDENTIALS_IN_DESTINATION",
+            "FR-URL-005", "DESTINATION_NOT_PERMITTED");
+
+    private static String refusalCode(String message) {
+        if (message == null) {
+            return "INVALID_INPUT";
+        }
+        for (Map.Entry<String, String> mapping : REFUSAL_CODES_BY_RULE.entrySet()) {
+            if (message.contains(mapping.getKey())) {
+                return mapping.getValue();
+            }
+        }
+        return "INVALID_INPUT";
     }
 
     @ExceptionHandler(IllegalStateException.class)

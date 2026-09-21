@@ -172,6 +172,63 @@ class BaselineOmissionsTest {
      * two lines. A phrase assertion against wrapped text is a line-width assertion in disguise, and it
      * fails on a reflow that changed nothing. This project has now hit that shape four times.
      */
+    @Test
+    @DisplayName("T057's Done: FR-URL-016's matrix row reads PARTIAL and names the closing run")
+    void frUrl016MatrixRowReadsPartial() throws Exception {
+        // T057's Done condition includes "FR-URL-016's matrix reference reads *partial* until T136a
+        // closes it". A matrix row that simply listed passing tests would be the green false link
+        // POL-TRC-001 exists to prevent — the hardest kind to find later, because everything about it
+        // looks correct.
+        //
+        // Asserted here rather than left to a reader, because the traceability matrix is exactly the
+        // artifact nobody re-reads once it is full.
+        String row = Files.readString(Path.of("specs/001-agentic-sdlc-url-shortener/spec.md")).lines()
+                .filter(line -> line.startsWith("| FR-URL-016 |"))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("FR-URL-016 has no traceability matrix row"));
+
+        assertTrue(row.contains("PARTIAL"),
+                "the row must say PARTIAL while two of three tiers are built: " + row);
+        assertTrue(row.contains("PVT-014"), "and name the tier that is missing: " + row);
+        assertTrue(row.contains("T136a"), "and the run that closes it: " + row);
+        assertTrue(row.contains("baseline-omissions"),
+                "and point at the register that discloses it: " + row);
+        assertFalse(row.contains("*Implement stage*"),
+                "the placeholder must be replaced, or the row claims nothing at all: " + row);
+    }
+
+    @Test
+    @DisplayName("no other requirement row is left claiming a partial as complete")
+    void everyOtherMatrixRowIsFilledIn() throws Exception {
+        // The counterpart: FR-URL-016 is the ONLY row entitled to read PARTIAL, and every other
+        // requirement this slice covered must have real references rather than the stage placeholder.
+        // A row still reading "*Implement stage*" after its tests exist is an orphan in POL-TRC-001's
+        // sense, and one reading PARTIAL without a disclosure behind it would be worse.
+        List<String> stillPlaceholders = new ArrayList<>();
+        List<String> unexplainedPartials = new ArrayList<>();
+
+        for (String line : Files.readString(Path.of("specs/001-agentic-sdlc-url-shortener/spec.md"))
+                .lines().toList()) {
+            if (!line.startsWith("| FR-URL-")) {
+                continue;
+            }
+            String requirement = line.split("\\|")[1].trim();
+            if (line.contains("*Implement stage*")) {
+                stillPlaceholders.add(requirement);
+            }
+            if (line.contains("PARTIAL") && !line.contains("baseline-omissions")) {
+                unexplainedPartials.add(requirement);
+            }
+        }
+
+        assertEquals(List.of(), stillPlaceholders,
+                "these URL requirements are implemented but their matrix rows still read "
+                        + "'*Implement stage*': " + stillPlaceholders);
+        assertEquals(List.of(), unexplainedPartials,
+                "these rows read PARTIAL with no disclosure record behind them: " + unexplainedPartials
+                        + ". A recorded partial is a legal matrix state; a silent one is not");
+    }
+
     private static String section(String entryBody, String heading) {
         int from = entryBody.indexOf(heading);
         if (from < 0) {
