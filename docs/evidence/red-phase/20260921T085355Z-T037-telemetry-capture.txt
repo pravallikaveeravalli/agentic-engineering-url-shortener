@@ -1,0 +1,380 @@
+# Red-phase evidence
+
+- **Label**: T037-telemetry-capture
+- **Captured (UTC)**: 20260921T085355Z
+- **Command**: `./mvnw -Dtest=ShortLinkTest -Dit.test=CredentialTelemetryIT -DfailIfNoTests=false verify`
+- **Exit code**: 1
+- **Requirement**: NFR-TST-002 (red phase evidenced, not asserted); CN-004
+
+## Why this file exists
+
+This is the failing run captured BEFORE the implementation that makes it pass. It is stored
+so that the red phase is readable by a reviewer rather than claimed in a commit message.
+
+## Captured output
+
+```
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< agentic:shortener >--------------------------
+[INFO] Building agentic-sdlc-url-shortener 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ shortener ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 3 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ shortener ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ shortener ---
+[INFO] skip non existing resourceDirectory /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ shortener ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.domain.link.ShortLinkTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.019 s -- in agentic.shortener.domain.link.ShortLinkTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- jar:3.4.2:jar (default-jar) @ shortener ---
+[INFO] Building jar: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/shortener-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- spring-boot:3.3.4:repackage (repackage) @ shortener ---
+[INFO] Replacing main artifact /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/shortener-0.1.0-SNAPSHOT.jar with repackaged archive, adding nested dependencies in BOOT-INF/.
+[INFO] The original artifact has been renamed to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/shortener-0.1.0-SNAPSHOT.jar.original
+[INFO] 
+[INFO] --- failsafe:3.2.5:integration-test (default) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.observability.CredentialTelemetryIT
+03:53:57.659 [main] INFO org.testcontainers.images.PullPolicy -- Image pull policy will be performed by: DefaultPullPolicy()
+03:53:57.661 [main] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+03:53:57.673 [main] INFO org.testcontainers.DockerClientFactory -- Testcontainers version: 1.20.1
+03:53:57.830 [main] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Found Docker environment with Environment variables, system properties and defaults. Resolved dockerHost=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+03:53:57.831 [main] INFO org.testcontainers.DockerClientFactory -- Docker host IP address is localhost
+03:53:57.837 [main] INFO org.testcontainers.DockerClientFactory -- Connected to docker: 
+  Server Version: 28.3.3
+  API Version: 1.51
+  Operating System: Ubuntu 24.04.2 LTS
+  Total Memory: 3905 MB
+03:53:57.858 [main] INFO tc.testcontainers/ryuk:0.8.1 -- Creating container for image: testcontainers/ryuk:0.8.1
+03:53:57.901 [main] INFO tc.testcontainers/ryuk:0.8.1 -- Container testcontainers/ryuk:0.8.1 is starting: cd9bf6efed8fed883aced66730f5a877df62a666321beda81d6fd3d71d7d6015
+03:53:57.994 [main] INFO tc.testcontainers/ryuk:0.8.1 -- Container testcontainers/ryuk:0.8.1 started in PT0.136645S
+03:53:57.996 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:32839
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+03:53:58.258 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:32839
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+03:53:58.515 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:32839
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+03:53:58.771 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:32839
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+03:53:59.036 [main] INFO org.testcontainers.utility.RyukResourceReaper -- Ryuk started - will monitor and terminate Testcontainers containers on JVM exit
+03:53:59.036 [main] INFO org.testcontainers.DockerClientFactory -- Checking the system...
+03:53:59.037 [main] INFO org.testcontainers.DockerClientFactory -- ✔︎ Docker server version should be at least 1.6.0
+03:53:59.038 [main] INFO tc.postgres:16-alpine -- Creating container for image: postgres:16-alpine
+03:53:59.081 [main] INFO tc.postgres:16-alpine -- Container postgres:16-alpine is starting: d0621646e324951dfd26abe241d74de40e683d3b5c64defc129dae77415a3955
+03:53:59.714 [main] INFO tc.postgres:16-alpine -- Container postgres:16-alpine started in PT0.676307S
+03:53:59.715 [main] INFO tc.postgres:16-alpine -- Container is started (JDBC URL: jdbc:postgresql://localhost:32840/shortener?loggerLevel=OFF)
+03:53:59.747 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [agentic.shortener.observability.CredentialTelemetryIT]: CredentialTelemetryIT does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+03:53:59.779 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration agentic.shortener.ShortenerApplication for test class agentic.shortener.observability.CredentialTelemetryIT
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.4)
+
+2026-09-21T03:54:02.234-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] a.s.observability.CredentialTelemetryIT  : Starting CredentialTelemetryIT using Java 21.0.8 with PID 60528 (started by pravallikaveeravalli in /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener)
+2026-09-21T03:54:02.234-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] a.s.observability.CredentialTelemetryIT  : No active profile set, falling back to 1 default profile: "default"
+2026-09-21T03:54:02.471-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-21T03:54:02.478-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 5 ms. Found 0 JPA repository interfaces.
+2026-09-21T03:54:02.684-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 0 (http)
+2026-09-21T03:54:02.688-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-09-21T03:54:02.689-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.30]
+2026-09-21T03:54:02.703-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-09-21T03:54:02.703-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 464 ms
+2026-09-21T03:54:02.816-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-09-21T03:54:02.874-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@a6a2c20
+2026-09-21T03:54:02.874-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-09-21T03:54:02.884-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:32840/shortener (PostgreSQL 16.15)
+2026-09-21T03:54:02.897-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table "public"."flyway_schema_history" does not exist yet
+2026-09-21T03:54:02.898-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 3 migrations (execution time 00:00.006s)
+2026-09-21T03:54:02.903-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table "public"."flyway_schema_history" ...
+2026-09-21T03:54:02.932-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": << Empty Schema >>
+2026-09-21T03:54:02.938-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "1 - baseline"
+2026-09-21T03:54:02.957-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "2 - domain"
+2026-09-21T03:54:02.971-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "3 - governance"
+2026-09-21T03:54:02.993-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] o.f.core.internal.command.DbMigrate      : Successfully applied 3 migrations to schema "public", now at version v3 (execution time 00:00.034s)
+2026-09-21T03:54:03.022-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-09-21T03:54:03.036-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.3.Final
+2026-09-21T03:54:03.045-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-09-21T03:54:03.128-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-21T03:54:03.245-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-21T03:54:03.246-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-21T03:54:03.488-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-09-21T03:54:03.518-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 57126 (http) with context path '/'
+2026-09-21T03:54:03.526-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [           main] a.s.observability.CredentialTelemetryIT  : Started CredentialTelemetryIT in 1.383 seconds (process running for 6.083)
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+WARNING: A Java agent has been loaded dynamically (/Users/pravallikaveeravalli/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.19/byte-buddy-agent-1.14.19.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+2026-09-21T03:54:03.822-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] org.springframework.test.context.cache   : Spring test ApplicationContext cache statistics: [DefaultContextCache@66f62b8c size = 1, maxSize = 32, parentContextCount = 0, hitCount = 4, missCount = 1, failureCount = 0]
+2026-09-21T03:54:03.823-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.t.s.c.g.d.core.command.AbstrDockerCmd  : Cmd: d0621646e324951dfd26abe241d74de40e683d3b5c64defc129dae77415a3955,false
+2026-09-21T03:54:03.825-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.t.s.c.g.d.c.e.InspectContainerCmdExec  : GET: DefaultWebTarget{path=[/containers/d0621646e324951dfd26abe241d74de40e683d3b5c64defc129dae77415a3955/json], queryParams={}}
+2026-09-21T03:54:03.826-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] g.d.z.s.o.a.h.c.h.i.c.InternalHttpClient : ex-00000010: preparing request execution
+2026-09-21T03:54:03.826-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.h.c.h.p.RequestAddCookies  : Cookie spec selected: strict
+2026-09-21T03:54:03.826-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.h.c.h.p.RequestAuthCache   : Auth cache not set in the context
+2026-09-21T03:54:03.826-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.h.c.h.i.c.ProtocolExec     : ex-00000010: target auth state: UNCHALLENGED
+2026-09-21T03:54:03.826-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.h.c.h.i.c.ProtocolExec     : ex-00000010: proxy auth state: UNCHALLENGED
+2026-09-21T03:54:03.826-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.h.c.h.i.c.ConnectExec      : ex-00000010: acquiring connection with route {}->unix://localhost:2375
+2026-09-21T03:54:03.826-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] g.d.z.s.o.a.h.c.h.i.c.InternalHttpClient : ex-00000010: acquiring endpoint (3 MINUTES)
+2026-09-21T03:54:03.826-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] h.i.i.PoolingHttpClientConnectionManager : ex-00000010: endpoint lease request (3 MINUTES) [route: {}->unix://localhost:2375][total available: 0; route allocated: 0 of 2147483647; total allocated: 0 of 2147483647]
+2026-09-21T03:54:03.826-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] h.i.i.PoolingHttpClientConnectionManager : ex-00000010: endpoint leased [route: {}->unix://localhost:2375][total available: 0; route allocated: 1 of 2147483647; total allocated: 1 of 2147483647]
+2026-09-21T03:54:03.826-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] h.i.i.PoolingHttpClientConnectionManager : ex-00000010: acquired ep-0000000F
+2026-09-21T03:54:03.826-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] g.d.z.s.o.a.h.c.h.i.c.InternalHttpClient : ex-00000010: acquired endpoint ep-0000000F
+2026-09-21T03:54:03.826-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.h.c.h.i.c.ConnectExec      : ex-00000010: opening connection {}->unix://localhost:2375
+2026-09-21T03:54:03.826-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] g.d.z.s.o.a.h.c.h.i.c.InternalHttpClient : ep-0000000F: connecting endpoint (3 MINUTES)
+2026-09-21T03:54:03.827-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] h.i.i.PoolingHttpClientConnectionManager : ep-0000000F: connecting endpoint to unix://localhost:2375 (3 MINUTES)
+2026-09-21T03:54:03.827-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] .i.i.DefaultHttpClientConnectionOperator : http-outgoing-2: connecting to localhost/127.0.0.1:2375
+2026-09-21T03:54:03.827-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] .i.i.DefaultHttpClientConnectionOperator : http-outgoing-2: connection established /Users/pravallikaveeravalli/.colima/default/docker.sock<->/Users/pravallikaveeravalli/.colima/default/docker.sock
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] h.i.i.PoolingHttpClientConnectionManager : ep-0000000F: connected http-outgoing-2
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] g.d.z.s.o.a.h.c.h.i.c.InternalHttpClient : ep-0000000F: endpoint connected
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.h.c.h.i.c.MainClientExec   : ex-00000010: executing GET /v1.32/containers/d0621646e324951dfd26abe241d74de40e683d3b5c64defc129dae77415a3955/json HTTP/1.1
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] g.d.z.s.o.a.h.c.h.i.c.InternalHttpClient : ep-0000000F: start execution ex-00000010
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] h.i.i.PoolingHttpClientConnectionManager : ep-0000000F: executing exchange ex-00000010 over http-outgoing-2
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.hc.client5.http.headers    : http-outgoing-2 >> GET /v1.32/containers/d0621646e324951dfd26abe241d74de40e683d3b5c64defc129dae77415a3955/json HTTP/1.1
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.hc.client5.http.headers    : http-outgoing-2 >> accept: application/json
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.hc.client5.http.headers    : http-outgoing-2 >> x-tc-sid: 233e4cf3-6bf6-409f-b0fa-0bb5214b92c0
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.hc.client5.http.headers    : http-outgoing-2 >> User-Agent: tc-java/1.20.1
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.hc.client5.http.headers    : http-outgoing-2 >> Accept-Encoding: gzip, x-gzip, deflate
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.hc.client5.http.headers    : http-outgoing-2 >> Host: localhost:2375
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.hc.client5.http.headers    : http-outgoing-2 >> Connection: keep-alive
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 >> "GET /v1.32/containers/d0621646e324951dfd26abe241d74de40e683d3b5c64defc129dae77415a3955/json HTTP/1.1[\r][\n]"
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 >> "accept: application/json[\r][\n]"
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 >> "x-tc-sid: 233e4cf3-6bf6-409f-b0fa-0bb5214b92c0[\r][\n]"
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 >> "User-Agent: tc-java/1.20.1[\r][\n]"
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 >> "Accept-Encoding: gzip, x-gzip, deflate[\r][\n]"
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 >> "Host: localhost:2375[\r][\n]"
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 >> "Connection: keep-alive[\r][\n]"
+2026-09-21T03:54:03.828-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 >> "[\r][\n]"
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 << "HTTP/1.1 200 OK[\r][\n]"
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 << "Api-Version: 1.51[\r][\n]"
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 << "Content-Type: application/json[\r][\n]"
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 << "Docker-Experimental: false[\r][\n]"
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 << "Ostype: linux[\r][\n]"
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 << "Server: Docker/28.3.3 (linux)[\r][\n]"
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 << "Date: Mon, 21 Sep 2026 08:54:03 GMT[\r][\n]"
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 << "Transfer-Encoding: chunked[\r][\n]"
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 << "[\r][\n]"
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 << "140a[\r][\n]"
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 << "{"Id":"d0621646e324951dfd26abe241d74de40e683d3b5c64defc129dae77415a3955","Created":"2026-09-21T08:53:59.201935739Z","Path":"docker-entrypoint.sh","Args":["postgres","-c","fsync=off"],"State":{"Status":"running","Running":true,"Paused":false,"Restarting":false,"OOMKilled":false,"Dead":false,"Pid":155773,"ExitCode":0,"Error":"","StartedAt":"2026-09-21T08:53:59.225681983Z","FinishedAt":"0001-01-01T00:00:00Z"},"Image":"sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea","ResolvConfPath":"/var/lib/docker/containers/d0621646e324951dfd26abe241d74de40e683d3b5c64defc129dae77415a3955/resolv.conf","HostnamePath":"/var/lib/docker/containers/d0621646e324951dfd26abe241d74de40e683d3b5c64defc129dae77415a3955/hostname","HostsPath":"/var/lib/docker/containers/d0621646e324951dfd26abe241d74de40e683d3b5c64defc129dae77415a3955/hosts","LogPath":"/var/lib/docker/containers/d0621646e324951dfd26abe241d74de40e683d3b5c64defc129dae77415a3955/d0621646e324951dfd26abe241d74de40e683d3b5c64defc129dae77415a3955-json.log","Name":"/elated_visvesvaraya","RestartCount":0,"Driver":"overlayfs","Platform":"linux","MountLabel":"","ProcessLabel":"","AppArmorProfile":"docker-default","ExecIDs":null,"HostConfig":{"Binds":[],"ContainerIDFile":"","LogConfig":{"Type":"json-file","Config":{}},"NetworkMode":"bridge","PortBindings":{"5432/tcp":[{"HostIp":"","HostPort":""}]},"RestartPolicy":{"Name":"no","MaximumRetryCount":0},"AutoRemove":false,"VolumeDriver":"","VolumesFrom":[],"ConsoleSize":[0,0],"CapAdd":null,"CapDrop":null,"CgroupnsMode":"private","Dns":null,"DnsOptions":null,"DnsSearch":null,"ExtraHosts":[],"GroupAdd":null,"IpcMode":"shareable","Cgroup":"","Links":null,"OomScoreAdj":0,"PidMode":"","Privileged":false,"PublishAllPorts":false,"ReadonlyRootfs":false,"SecurityOpt":null,"UTSMode":"","UsernsMode":"","ShmSize":67108864,"Runtime":"runc","Isolation":"","CpuShares":0,"Memory":0,"NanoCpus":0,"CgroupParent":"","BlkioWeight":0,"BlkioWeightDevice":null,"BlkioDeviceReadBps":null,"BlkioDeviceWriteBps":null,"BlkioDeviceReadIOps":null,"BlkioDeviceWriteIOps":null,"CpuPeriod":0,"CpuQuota":0,"CpuRealtimePeriod":0,"CpuRealtimeRuntime":0,"CpusetCpus":"","CpusetMems":"","Devices":null,"DeviceCgroupRules":null,"DeviceRequests":null,"MemoryReservation":0,"MemorySwap":0,"MemorySwappiness":null,"OomKillDisable":null,"PidsLimit":null,"Ulimits":null,"CpuCount":0,"CpuPercent":0,"IOMaximumIOps":0,"IOMaximumBandwidth":0,"MaskedPaths":["/proc/asound","/proc/acpi","/proc/interrupts","/proc/kcore","/proc/keys","/proc/latency_stats","/proc/timer_list","/proc/timer_stats","/proc/sched_debug","/proc/scsi","/sys/firmware","/sys/devices/virtual/powercap"],"ReadonlyPaths":["/proc/bus","/proc/fs","/proc/irq","/proc/sys","/proc/sysrq-trigger"]},"GraphDriver":{"Data":null,"Name":"overlayfs"},"Mounts":[{"Type":"volume","Name":"e425d8a2c8a8201f642bb3e989e676cabdf181f72cf6fa35a9b945eaf6eff806","Source":"/var/lib/docker/volumes/e425d8a2c8a8201f642bb3e989e676cabdf181f72cf6fa35a9b945eaf6eff806/_data","Destination":"/var/lib/postgresql/data","Driver":"local","Mode":"","RW":true,"Propagation":""}],"Config":{"Hostname":"d0621646e324","Domainname":"","User":"","AttachStdin":false,"AttachStdout":false,"AttachStderr":false,"ExposedPorts":{"5432/tcp":{}},"Tty":false,"OpenStdin":false,"StdinOnce":false,"Env":["POSTGRES_USER=shortener","POSTGRES_PASSWORD=shortener","POSTGRES_DB=shortener","PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin","GOSU_VERSION=1.19","LANG=en_US.utf8","PG_MAJOR=16","PG_VERSION=16.15","PG_SHA256=c1575341fa7bd40f5274ea465b34390f4dc64cdd0770af327005caaeb9f6b7ed","DOCKER_PG_LLVM_DEPS=llvm21-dev \t\tclang21","PGDATA=/var/lib/postgresql/data"],"Cmd":["postgres","-c","fsync=off"],"Image":"postgres:16-alpine","Volumes":{"/var/lib/postgresql/data":{}},"WorkingDir":"/","Entrypoint":["docker-entrypoint.sh"],"OnBuild":null,"Labels":{"org.testcontainers":"true","org.testcontainers.lang":"java","org.testcontainers.sessionId":"233e4cf3-6bf6-409f-b0fa-0bb5214b92c0","org.testcontainers.version":"1.20.1"},"StopSignal":"SIGINT"},"NetworkSettings":{"Bridge":"","SandboxID":"3b5d01380f02a7faa257f0b8567d3e6d305844c6a9019d9b5d439eec5b028090","SandboxKey":"/var/run/docker/netns/3b5d01380f02","Ports":{"5432/tcp":[{"HostIp":"0.0.0.0","HostPort":"32840"},{"HostIp":"::","HostPort":"32840"}]},"HairpinMode":false,"LinkLocalIPv6Address":"","LinkLocalIPv6PrefixLen":0,"SecondaryIPAddresses":null,"SecondaryIPv6Addresses":null,"EndpointID":"6bdc0c1da86266f27031103dd60753b44e94752ec71a9955cafbd82ffc79c819","Gateway":"172.17.0.1","GlobalIPv6Address":"","GlobalIPv6PrefixLen":0,"IPAddress":"172.17.0.3","IPPrefixLen":16,"IPv6Gateway":"","MacAddress":"62:6b:6e:03:a7:b2","Networks":{"bridge":{"IPAMConfig":null,"Links":null,"Aliases":null,"MacAddress":"62:6b:6e:03:a7:b2","DriverOpts":null,"GwPriority":0,"NetworkID":"516a0eee83307be87ce1abd1b6d53fb981742553ce7b0495b4745343ac49336b","EndpointID":"6bdc0c1da86266f27031103dd60753b44e94752ec71a9955cafbd82ffc79c819","Gateway":"172.17.0.1","IPAddress":"172.17.0.3","IPPrefixLen":16,"IPv6Gateway":"","GlobalIPv6Address":"","GlobalIPv6PrefixLen":0,"DNSNames":null}}}}[\n]"
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 << "[\r][\n]"
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 << "0[\r][\n]"
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.apache.hc.client5.http.wire  : http-outgoing-2 << "[\r][\n]"
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.hc.client5.http.headers    : http-outgoing-2 << HTTP/1.1 200 OK
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.hc.client5.http.headers    : http-outgoing-2 << Api-Version: 1.51
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.hc.client5.http.headers    : http-outgoing-2 << Content-Type: application/json
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.hc.client5.http.headers    : http-outgoing-2 << Docker-Experimental: false
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.hc.client5.http.headers    : http-outgoing-2 << Ostype: linux
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.hc.client5.http.headers    : http-outgoing-2 << Server: Docker/28.3.3 (linux)
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.hc.client5.http.headers    : http-outgoing-2 << Date: Mon, 21 Sep 2026 08:54:03 GMT
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.hc.client5.http.headers    : http-outgoing-2 << Transfer-Encoding: chunked
+2026-09-21T03:54:03.829-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] c.g.d.z.s.o.a.h.c.h.i.c.MainClientExec   : ex-00000010: connection can be kept alive for 3 MINUTES
+2026-09-21T03:54:03.830-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] g.d.z.s.o.a.h.c.h.i.c.InternalHttpClient : ep-0000000F: releasing valid endpoint
+2026-09-21T03:54:03.830-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] h.i.i.PoolingHttpClientConnectionManager : ep-0000000F: releasing endpoint
+2026-09-21T03:54:03.830-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] h.i.i.PoolingHttpClientConnectionManager : ep-0000000F: connection http-outgoing-2 can be kept alive for 3 MINUTES
+2026-09-21T03:54:03.830-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] h.i.i.PoolingHttpClientConnectionManager : ep-0000000F: connection released [route: {}->unix://localhost:2375][total available: 1; route allocated: 1 of 2147483647; total allocated: 1 of 2147483647]
+2026-09-21T03:54:03.831-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] org.postgresql.Driver                    : Connecting with URL: jdbc:postgresql://localhost:32840/shortener?loggerLevel=OFF
+2026-09-21T03:54:03.831-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] org.postgresql.jdbc.PgConnection         : PostgreSQL JDBC Driver 42.7.4
+2026-09-21T03:54:03.832-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] org.postgresql.jdbc.PgConnection         :   setDefaultFetchSize = 0
+2026-09-21T03:54:03.832-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] org.postgresql.jdbc.PgConnection         :   setPrepareThreshold = 5
+2026-09-21T03:54:03.832-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.p.core.v3.ConnectionFactoryImpl        : Trying to establish a protocol version 3 connection to localhost:32840
+2026-09-21T03:54:03.832-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.p.core.v3.ConnectionFactoryImpl        : Receive Buffer Size is 408,300
+2026-09-21T03:54:03.832-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.p.core.v3.ConnectionFactoryImpl        : Send Buffer Size is 146,988
+2026-09-21T03:54:03.840-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] org.springframework.test.context.cache   : Spring test ApplicationContext cache statistics: [DefaultContextCache@66f62b8c size = 1, maxSize = 32, parentContextCount = 0, hitCount = 5, missCount = 1, failureCount = 0]
+2026-09-21T03:54:03.846-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] org.springframework.test.context.cache   : Spring test ApplicationContext cache statistics: [DefaultContextCache@66f62b8c size = 1, maxSize = 32, parentContextCount = 0, hitCount = 15, missCount = 1, failureCount = 0]
+2026-09-21T03:54:03.852-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : HTTP POST http://localhost:57126/v1/links
+2026-09-21T03:54:03.855-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Accept=[text/plain, application/json, application/*+json, */*]
+2026-09-21T03:54:03.856-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Writing [{"destination":"https://svc-admin-qzjxvm:hunter2-qzjxvm@example.com/x"}] as "application/json"
+2026-09-21T03:54:03.857-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] s.n.www.protocol.http.HttpURLConnection  : sun.net.www.MessageHeader@35b5056e7 pairs: {POST /v1/links HTTP/1.1: null}{Accept: text/plain, application/json, application/*+json, */*}{Content-Type: application/json}{User-Agent: Java/21.0.8}{Host: localhost:57126}{Connection: keep-alive}{Content-Length: 71}
+2026-09-21T03:54:03.872-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] o.a.c.a.jaspic.AuthConfigFactoryImpl     : Loading persistent provider registrations from [/private/var/folders/dc/fym9400d3pxgqycfvr2cq8vr0000gn/T/tomcat.0.16252473878594967875/conf/jaspic-providers.xml]
+2026-09-21T03:54:03.873-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-21T03:54:03.873-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-09-21T03:54:03.873-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Detected StandardServletMultipartResolver
+2026-09-21T03:54:03.873-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Detected AcceptHeaderLocaleResolver
+2026-09-21T03:54:03.873-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Detected FixedThemeResolver
+2026-09-21T03:54:03.873-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@3b4cce5a
+2026-09-21T03:54:03.874-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.support.SessionFlashMapManager@6179551b
+2026-09-21T03:54:03.874-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : enableLoggingRequestDetails='false': request parameters and headers will be masked to prevent unsafe logging of potentially sensitive data
+2026-09-21T03:54:03.874-05:00  INFO 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-09-21T03:54:03.876-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : POST "/v1/links", parameters={}
+2026-09-21T03:54:03.878-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to agentic.shortener.delivery.LinkController#create(CreateLinkRequest)
+2026-09-21T03:54:03.886-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [CreateLinkRequest[destination=https://svc-admin-qzjxvm:hunter2-qzjxvm@example.com/x, expiresAt=null]]
+2026-09-21T03:54:03.894-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [text/plain, application/json, application/*+json, */*] and supported [application/json, application/*+json]
+2026-09-21T03:54:03.895-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [{shortCode=-p08jjw, destination=https://svc-admin-qzjxvm:hunter2-qzjxvm@example.com/x, createdAt=202 (truncated)...]
+2026-09-21T03:54:03.898-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Completed 201 CREATED
+2026-09-21T03:54:03.898-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] s.n.www.protocol.http.HttpURLConnection  : sun.net.www.MessageHeader@7de4bd8f6 pairs: {null: HTTP/1.1 201}{Content-Type: application/json}{Transfer-Encoding: chunked}{Date: Mon, 21 Sep 2026 08:54:03 GMT}{Keep-Alive: timeout=60}{Connection: keep-alive}
+2026-09-21T03:54:03.898-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Response 201 CREATED
+2026-09-21T03:54:03.899-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Reading to [java.lang.String] as "application/json"
+2026-09-21T03:54:03.899-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : HTTP POST http://localhost:57126/v1/links
+2026-09-21T03:54:03.900-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Accept=[text/plain, application/json, application/*+json, */*]
+2026-09-21T03:54:03.900-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Writing [{"destination":"https://svc-admin-qzjxvm:hunter2-qzjxvm@169.254.169.254/latest/meta-data"}] as "application/json"
+2026-09-21T03:54:03.901-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] s.n.www.protocol.http.HttpURLConnection  : sun.net.www.MessageHeader@7545cb177 pairs: {POST /v1/links HTTP/1.1: null}{Accept: text/plain, application/json, application/*+json, */*}{Content-Type: application/json}{User-Agent: Java/21.0.8}{Host: localhost:57126}{Connection: keep-alive}{Content-Length: 90}
+2026-09-21T03:54:03.902-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-2] o.s.web.servlet.DispatcherServlet        : POST "/v1/links", parameters={}
+2026-09-21T03:54:03.902-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-2] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to agentic.shortener.delivery.LinkController#create(CreateLinkRequest)
+2026-09-21T03:54:03.902-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-2] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [CreateLinkRequest[destination=https://svc-admin-qzjxvm:hunter2-qzjxvm@169.254.169.254/latest/meta-da (truncated)...]
+2026-09-21T03:54:03.904-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [text/plain, application/json, application/*+json, */*] and supported [application/json, application/*+json]
+2026-09-21T03:54:03.904-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [{shortCode=gfpe6JI, destination=https://svc-admin-qzjxvm:hunter2-qzjxvm@169.254.169.254/latest/meta- (truncated)...]
+2026-09-21T03:54:03.904-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-2] o.s.web.servlet.DispatcherServlet        : Completed 201 CREATED
+2026-09-21T03:54:03.904-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] s.n.www.protocol.http.HttpURLConnection  : sun.net.www.MessageHeader@635b3ec76 pairs: {null: HTTP/1.1 201}{Content-Type: application/json}{Transfer-Encoding: chunked}{Date: Mon, 21 Sep 2026 08:54:03 GMT}{Keep-Alive: timeout=60}{Connection: keep-alive}
+2026-09-21T03:54:03.904-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Response 201 CREATED
+2026-09-21T03:54:03.904-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Reading to [java.lang.String] as "application/json"
+2026-09-21T03:54:03.904-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : HTTP POST http://localhost:57126/v1/links
+2026-09-21T03:54:03.905-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Accept=[text/plain, application/json, application/*+json, */*]
+2026-09-21T03:54:03.905-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Writing [{"destination":"https://svc-admin-qzjxvm:hunter2-qzjxvm@example.com/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}] as "application/json"
+2026-09-21T03:54:03.906-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] s.n.www.protocol.http.HttpURLConnection  : sun.net.www.MessageHeader@1f9b86f57 pairs: {POST /v1/links HTTP/1.1: null}{Accept: text/plain, application/json, application/*+json, */*}{Content-Type: application/json}{User-Agent: Java/21.0.8}{Host: localhost:57126}{Connection: keep-alive}{Content-Length: 2170}
+2026-09-21T03:54:03.906-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-3] o.s.web.servlet.DispatcherServlet        : POST "/v1/links", parameters={}
+2026-09-21T03:54:03.907-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-3] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to agentic.shortener.delivery.LinkController#create(CreateLinkRequest)
+2026-09-21T03:54:03.907-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-3] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [CreateLinkRequest[destination=https://svc-admin-qzjxvm:hunter2-qzjxvm@example.com/xxxxxxxxxxxxxxxxxx (truncated)...]
+2026-09-21T03:54:03.908-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-3] .m.m.a.ExceptionHandlerExceptionResolver : Using @ExceptionHandler agentic.shortener.delivery.LinkController#onDomainRefusal(RuntimeException)
+2026-09-21T03:54:03.908-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [text/plain, application/json, application/*+json, */*] and supported [application/json, application/*+json]
+2026-09-21T03:54:03.909-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [{code=INVALID_INPUT, message=destination exceeds 2048 characters (FR-URL-001): 2152}]
+2026-09-21T03:54:03.909-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] s.n.www.protocol.http.HttpURLConnection  : sun.net.www.MessageHeader@15aa30845 pairs: {null: HTTP/1.1 400}{Content-Type: application/json}{Transfer-Encoding: chunked}{Date: Mon, 21 Sep 2026 08:54:03 GMT}{Connection: close}
+2026-09-21T03:54:03.909-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-3] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [java.lang.IllegalArgumentException: destination exceeds 2048 characters (FR-URL-001): 2152]
+2026-09-21T03:54:03.909-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-3] o.s.web.servlet.DispatcherServlet        : Completed 400 BAD_REQUEST
+2026-09-21T03:54:03.909-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Response 400 BAD_REQUEST
+2026-09-21T03:54:03.909-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Reading to [java.lang.String] as "application/json"
+2026-09-21T03:54:03.909-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : HTTP POST http://localhost:57126/v1/links
+2026-09-21T03:54:03.909-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Accept=[text/plain, application/json, application/*+json, */*]
+2026-09-21T03:54:03.909-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Writing [{"destination":"https://svc-admin-qzjxvm@example.com/x"}] as "application/json"
+2026-09-21T03:54:03.910-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] s.n.www.protocol.http.HttpURLConnection  : sun.net.www.MessageHeader@74fbee597 pairs: {POST /v1/links HTTP/1.1: null}{Accept: text/plain, application/json, application/*+json, */*}{Content-Type: application/json}{User-Agent: Java/21.0.8}{Host: localhost:57126}{Connection: keep-alive}{Content-Length: 56}
+2026-09-21T03:54:03.910-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-4] o.s.web.servlet.DispatcherServlet        : POST "/v1/links", parameters={}
+2026-09-21T03:54:03.910-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-4] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to agentic.shortener.delivery.LinkController#create(CreateLinkRequest)
+2026-09-21T03:54:03.910-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-4] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [CreateLinkRequest[destination=https://svc-admin-qzjxvm@example.com/x, expiresAt=null]]
+2026-09-21T03:54:03.912-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [text/plain, application/json, application/*+json, */*] and supported [application/json, application/*+json]
+2026-09-21T03:54:03.912-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [{shortCode=_6fgOW0, destination=https://svc-admin-qzjxvm@example.com/x, createdAt=2026-09-21T08:54:0 (truncated)...]
+2026-09-21T03:54:03.912-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-4] o.s.web.servlet.DispatcherServlet        : Completed 201 CREATED
+2026-09-21T03:54:03.912-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] s.n.www.protocol.http.HttpURLConnection  : sun.net.www.MessageHeader@3794621d6 pairs: {null: HTTP/1.1 201}{Content-Type: application/json}{Transfer-Encoding: chunked}{Date: Mon, 21 Sep 2026 08:54:03 GMT}{Keep-Alive: timeout=60}{Connection: keep-alive}
+2026-09-21T03:54:03.912-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Response 201 CREATED
+2026-09-21T03:54:03.912-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Reading to [java.lang.String] as "application/json"
+2026-09-21T03:54:03.912-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : HTTP POST http://localhost:57126/v1/links
+2026-09-21T03:54:03.912-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Accept=[text/plain, application/json, application/*+json, */*]
+2026-09-21T03:54:03.913-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Writing [{"destination":"https://svc-admin-qzjxvm:hunter2-qzjxvm@exa mple.com/malformed"}] as "application/json"
+2026-09-21T03:54:03.914-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] s.n.www.protocol.http.HttpURLConnection  : sun.net.www.MessageHeader@737e4a7b7 pairs: {POST /v1/links HTTP/1.1: null}{Accept: text/plain, application/json, application/*+json, */*}{Content-Type: application/json}{User-Agent: Java/21.0.8}{Host: localhost:57126}{Connection: keep-alive}{Content-Length: 80}
+2026-09-21T03:54:03.914-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-5] o.s.web.servlet.DispatcherServlet        : POST "/v1/links", parameters={}
+2026-09-21T03:54:03.914-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-5] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to agentic.shortener.delivery.LinkController#create(CreateLinkRequest)
+2026-09-21T03:54:03.915-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-5] m.m.a.RequestResponseBodyMethodProcessor : Read "application/json;charset=UTF-8" to [CreateLinkRequest[destination=https://svc-admin-qzjxvm:hunter2-qzjxvm@exa mple.com/malformed, expire (truncated)...]
+2026-09-21T03:54:03.916-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-5] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [text/plain, application/json, application/*+json, */*] and supported [application/json, application/*+json]
+2026-09-21T03:54:03.916-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-5] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [{shortCode=lPGRh1u, destination=https://svc-admin-qzjxvm:hunter2-qzjxvm@exa mple.com/malformed, crea (truncated)...]
+2026-09-21T03:54:03.916-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-5] o.s.web.servlet.DispatcherServlet        : Completed 201 CREATED
+2026-09-21T03:54:03.916-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] s.n.www.protocol.http.HttpURLConnection  : sun.net.www.MessageHeader@5f5caea56 pairs: {null: HTTP/1.1 201}{Content-Type: application/json}{Transfer-Encoding: chunked}{Date: Mon, 21 Sep 2026 08:54:03 GMT}{Keep-Alive: timeout=60}{Connection: keep-alive}
+2026-09-21T03:54:03.916-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Response 201 CREATED
+2026-09-21T03:54:03.916-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] o.s.web.client.RestTemplate              : Reading to [java.lang.String] as "application/json"
+2026-09-21T03:54:03.918-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] org.springframework.test.context.cache   : Spring test ApplicationContext cache statistics: [DefaultContextCache@66f62b8c size = 1, maxSize = 32, parentContextCount = 0, hitCount = 16, missCount = 1, failureCount = 0]
+2026-09-21T03:54:03.923-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] org.springframework.test.context.cache   : Spring test ApplicationContext cache statistics: [DefaultContextCache@66f62b8c size = 1, maxSize = 32, parentContextCount = 0, hitCount = 26, missCount = 1, failureCount = 0]
+2026-09-21T03:54:03.923-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] a.s.observability.CredentialTelemetryIT  : planted-telemetry-probe-qzjxvm
+2026-09-21T03:54:03.923-05:00 DEBUG 60528 --- [agentic-sdlc-url-shortener] [           main] org.springframework.test.context.cache   : Spring test ApplicationContext cache statistics: [DefaultContextCache@66f62b8c size = 1, maxSize = 32, parentContextCount = 0, hitCount = 27, missCount = 1, failureCount = 0]
+[ERROR] Tests run: 3, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 6.366 s <<< FAILURE! -- in agentic.shortener.observability.CredentialTelemetryIT
+[ERROR] agentic.shortener.observability.CredentialTelemetryIT.credentialsNeverReachTelemetryOrResponses -- Time elapsed: 0.075 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: the password reached telemetry. FR-URL-017 is non-waivable: this is a stop condition, not a defect to schedule. ==> expected: <false> but was: <true>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertFalse.failNotFalse(AssertFalse.java:63)
+	at org.junit.jupiter.api.AssertFalse.assertFalse(AssertFalse.java:36)
+	at org.junit.jupiter.api.Assertions.assertFalse(Assertions.java:239)
+	at agentic.shortener.observability.CredentialTelemetryIT.credentialsNeverReachTelemetryOrResponses(CredentialTelemetryIT.java:143)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   CredentialTelemetryIT.credentialsNeverReachTelemetryOrResponses:143 the password reached telemetry. FR-URL-017 is non-waivable: this is a stop condition, not a defect to schedule. ==> expected: <false> but was: <true>
+[INFO] 
+[ERROR] Tests run: 3, Failures: 1, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- failsafe:3.2.5:verify (default) @ shortener ---
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  7.751 s
+[INFO] Finished at: 2026-09-21T03:54:04-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-failsafe-plugin:3.2.5:verify (default) on project shortener: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/failsafe-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+```

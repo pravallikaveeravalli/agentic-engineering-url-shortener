@@ -329,12 +329,12 @@ resolution, and expiry outcomes.
   - **Deps**: T033, T034 · **Par**: no (consumes both) · **Artifact**: explicit allow-list; every other scheme refused
   - **TDD**: RED-FIRST · **Validate**: allow-list matrix test including `javascript:`, `data:`, `file:` · **Docs**: plan §8 · **Trace**: matrix FR-URL-004, `POL-SEC-001`
   - **Guard**: **no configuration, override, or exception may widen this.** A test asserts that a config attempt to add a scheme does not take effect · **Done**: matrix passes; widening attempt refused · **Approval**: none
-- [ ] T036 [P] [US1] Abuse and malicious-redirect controls — `src/main/java/agentic/shortener/domain/validation/AbuseGuard.java`
+- [x] T036 [P] [US1] Abuse and malicious-redirect controls — `src/main/java/agentic/shortener/domain/validation/AbuseGuard.java`
   - **Req**: **FR-URL-005** · **Scn**: DS-B · **ADR**: ADR-013 · **Pre**: T035
   - **Deps**: T035 · **Par**: yes · **Artifact**: private, loopback, link-local targets and own-space redirect loops each produce the documented outcome
   - **TDD**: RED-FIRST · **Validate**: `-Dtest=AbuseGuardTest` covering EC-004, EC-005 · **Docs**: plan §8 threat model T-02, T-01 · **Trace**: matrix FR-URL-005
   - **Guard**: such destinations MUST NOT be silently accepted and served · **Done**: EC-004 and EC-005 inputs refused or recorded as accepted risk · **Approval**: none
-- [ ] T037 [P] [US1] Credential-bearing authority handling — `src/main/java/agentic/shortener/domain/validation/`
+- [x] T037 [P] [US1] Credential-bearing authority handling — `src/main/java/agentic/shortener/domain/validation/`
   - **Req**: **FR-URL-017** (non-waivable) · **Scn**: DS-A · **ADR**: ADR-010, ADR-013 · **Pre**: T035
   - **Deps**: T035 · **Par**: yes · **Artifact**: credentials embedded in a submitted destination never reach any log or trace
   - **TDD**: RED-FIRST · **Validate**: `-Dtest=CredentialRedactionTest` covering EC-007, plus T019 scan over captured telemetry · **Docs**: plan §8 T-03 · **Trace**: matrix FR-URL-017
@@ -342,7 +342,7 @@ resolution, and expiry outcomes.
 
 ### URL shortening
 
-- [ ] T038 [US1] Short-code alphabet and generator — `src/main/java/agentic/shortener/domain/shortcode/ShortCodeGenerator.java`
+- [x] T038 [US1] Short-code alphabet and generator — `src/main/java/agentic/shortener/domain/shortcode/ShortCodeGenerator.java`
   - **Req**: **FR-URL-006**, NFR-SCA-002 · **Scn**: DS-A · **ADR**: **ADR-007** · **Pre**: T035
   - **Deps**: T035 · **Par**: no (interface consumed by T039–T041) · **Artifact**: **CSPRNG**; 57-character confusable-free alphabet excluding `0`/`O` and `1`/`l`/`I`; length 7 (≈ 2×10¹², three orders above **PVT-005**); case-sensitive
   - **TDD**: RED-FIRST · **Validate**: `-Dtest=ShortCodeGeneratorTest` asserting alphabet exclusions, length, and RNG source · **Docs**: ADR-007 · **Trace**: matrix FR-URL-006, EC-008

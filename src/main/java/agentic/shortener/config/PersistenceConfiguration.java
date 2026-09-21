@@ -4,7 +4,7 @@ import agentic.shortener.application.LinkService;
 import agentic.shortener.domain.analytics.RedirectEventRepository;
 import agentic.shortener.domain.creator.CreatorRepository;
 import agentic.shortener.domain.idempotency.IdempotencyRepository;
-import agentic.shortener.domain.link.ShortCodeGenerator;
+import agentic.shortener.domain.shortcode.ShortCodeGenerator;
 import agentic.shortener.domain.link.ShortLinkRepository;
 import agentic.shortener.persistence.ConnectionSource;
 import agentic.shortener.persistence.JdbcCreatorRepository;

@@ -1,5 +1,6 @@
 package agentic.shortener.domain.link;
 
+import agentic.shortener.domain.validation.CredentialRedactor;
 import agentic.shortener.domain.validation.SchemeAllowList;
 
 import java.time.Instant;
@@ -79,6 +80,11 @@ public final class ShortLink {
         // second copy here: two definitions of a security control drift, and the copy nobody tests is
         // the one that stays wrong.
         SchemeAllowList.requirePermitted(destination);
+
+        // EC-007, FR-URL-017 (non-waivable). An invariant of the type rather than a caller's duty,
+        // which is T021's Done condition: a destination carrying credentials is not a valid
+        // destination, so no caller has to remember to ask.
+        CredentialRedactor.requireNoCredentials(destination);
 
         // FR-URL-009: strictly after. Equal instants would mean a link expiring the moment it
         // exists, which is the already-expired state the requirement forbids.

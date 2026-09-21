@@ -2,6 +2,7 @@ package agentic.shortener.delivery;
 
 import agentic.shortener.application.LinkService;
 import agentic.shortener.domain.link.ShortLink;
+import agentic.shortener.domain.validation.CredentialRedactor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -37,8 +38,23 @@ public class LinkController {
         this.links = links;
     }
 
-    /** Request body matching the `CreateLinkRequest` schema. */
+    /**
+     * Request body matching the `CreateLinkRequest` schema.
+     *
+     * <p><strong>{@code toString} redacts, and that is not cosmetic.</strong> Spring MVC logs the
+     * deserialized body at {@code DEBUG} — {@code Read "application/json" to [CreateLinkRequest[...]]} —
+     * which calls this method. A credential-bearing destination therefore reached the log <em>before</em>
+     * any validation ran, so refusing it later would not have stopped the leak. FR-URL-017 is
+     * non-waivable, and {@code CredentialTelemetryIT} found this by reading what the application actually
+     * wrote rather than by reasoning about what it ought to write.
+     */
     public record CreateLinkRequest(String destination, String expiresAt) {
+
+        @Override
+        public String toString() {
+            return "CreateLinkRequest[destination=" + CredentialRedactor.redact(destination)
+                    + ", expiresAt=" + expiresAt + "]";
+        }
     }
 
     @PostMapping("/v1/links")
