@@ -2,10 +2,12 @@ package agentic.shortener.persistence;
 
 import agentic.shortener.domain.idempotency.IdempotencyRecord;
 import agentic.shortener.domain.idempotency.IdempotencyRepository;
+import agentic.shortener.domain.idempotency.MarkerAlreadyUsedException;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Objects;
 import java.util.Optional;
@@ -19,6 +21,9 @@ import java.util.UUID;
  * correctness bug and a cross-tenant leak at once (KE-03).
  */
 public final class JdbcIdempotencyRepository implements IdempotencyRepository {
+
+    /** PostgreSQL SQLSTATE for unique_violation — here, the composite (creator_id, marker) key. */
+    private static final String UNIQUE_VIOLATION = "23505";
 
     private final ConnectionSource connections;
 
@@ -40,6 +45,15 @@ public final class JdbcIdempotencyRepository implements IdempotencyRepository {
             ps.setTimestamp(5, Timestamp.from(record.createdAt()));
             ps.executeUpdate();
             return record;
+        } catch (SQLException e) {
+            if (UNIQUE_VIOLATION.equals(e.getSQLState())) {
+                // The composite primary key is the authority on whether a marker is taken, and another
+                // request claimed it between resolution and this insert. Translated so the caller can
+                // re-resolve; before this, the race surfaced as a 503, which told the caller their
+                // store was broken when in fact their own retry had won.
+                throw new MarkerAlreadyUsedException(record.scopedKey(), e);
+            }
+            throw new IllegalStateException("failed to save idempotency record " + record.scopedKey(), e);
         } catch (Exception e) {
             throw new IllegalStateException("failed to save idempotency record " + record.scopedKey(), e);
         }

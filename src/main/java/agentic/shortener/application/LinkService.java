@@ -3,10 +3,16 @@ package agentic.shortener.application;
 import agentic.shortener.domain.analytics.RedirectEventRepository;
 import agentic.shortener.domain.creator.Creator;
 import agentic.shortener.domain.creator.CreatorRepository;
-import agentic.shortener.domain.link.ShortCodeCollisionException;
-import agentic.shortener.domain.shortcode.ShortCodeGenerator;
+import agentic.shortener.domain.idempotency.IdempotencyRecord;
+import agentic.shortener.domain.idempotency.IdempotencyRepository;
+import agentic.shortener.domain.idempotency.MarkerAlreadyUsedException;
 import agentic.shortener.domain.link.ShortLink;
 import agentic.shortener.domain.link.ShortLinkRepository;
+import agentic.shortener.domain.validation.AbuseGuard;
+import agentic.shortener.domain.validation.CredentialRedactor;
+import agentic.shortener.domain.validation.DestinationNormalizer;
+import agentic.shortener.domain.validation.SchemeAllowList;
+import agentic.shortener.domain.validation.UrlSyntaxValidator;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -16,72 +22,162 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Link creation and lookup. Task T032.
+ * Coordinates creation. Tasks T032, T041, T042.
  *
- * <p>The application-plane use case. Holds no HTTP concern and no SQL: the controller translates to and
- * from HTTP, the repositories translate to and from the store, and this decides what happens.
+ * <p>The application-plane entry point. Holds no HTTP concern and no SQL: the controller translates to
+ * and from HTTP, the repositories translate to and from the store, and this decides the order of
+ * operations between {@link IdempotencyResolver} and {@link CreateLinkUseCase}.
  *
- * <p><strong>Collision handling is ADR-007's bounded retry, and the bound is the point.</strong> A
- * collision is a normal outcome under contention (FR-URL-013), not a fault — but an unbounded retry loop
- * would turn a systematic problem, such as a generator returning a constant, into a hang rather than an
- * error. So the attempts are counted and exhaustion is an explicit failure.
+ * <p><strong>The retry logic is not duplicated here.</strong> It lives in {@link CreateLinkUseCase},
+ * once. An earlier version of this class had its own copy, which is exactly how two implementations of
+ * one rule start to drift.
  *
  * <p>The clock is injected because FR-URL-009's expiry rules and EC-036's idle-retention tests both need
- * to control time, and a test that sleeps is a test that is slow and flaky at once.
+ * to control time, and a test that sleeps is slow and flaky at once.
  */
 public final class LinkService {
-
-    /**
-     * ADR-007's bound. Five attempts against 2^42 of code space: if five CSPRNG draws all collide, the
-     * cause is not bad luck — it is a broken generator or an exhausted keyspace, and either deserves a
-     * reported failure rather than a sixth attempt.
-     */
-    private static final int MAX_CODE_ATTEMPTS = 5;
 
     /** PVT-011's default TTL, applied when the caller supplies no expiry (FR-URL-009). */
     private static final Duration DEFAULT_TTL = Duration.ofDays(30);
 
+    /**
+     * What happened, in CL-008's terms. The controller maps this to 201, 200 or 409 and nothing else.
+     *
+     * @param link   the link to serve — the new one for a mint, the original for a replay, absent for a
+     *               conflict
+     * @param reason names the rule for a conflict; never the input
+     */
+    public record CreationOutcome(IdempotencyResolver.Kind kind, Optional<ShortLink> link,
+                                  String reason) {
+    }
+
     private final ShortLinkRepository links;
     private final CreatorRepository creators;
     private final RedirectEventRepository events;
-    private final ShortCodeGenerator codes;
+    private final IdempotencyRepository markers;
+    private final CreateLinkUseCase createLink;
+    private final IdempotencyResolver idempotency;
+    private final DestinationNormalizer normalizer;
+    private final UrlSyntaxValidator syntax;
+    private final AbuseGuard abuse;
     private final Clock clock;
 
     public LinkService(ShortLinkRepository links, CreatorRepository creators,
-                       RedirectEventRepository events, ShortCodeGenerator codes, Clock clock) {
+                       RedirectEventRepository events, IdempotencyRepository markers,
+                       CreateLinkUseCase createLink, IdempotencyResolver idempotency,
+                       DestinationNormalizer normalizer, UrlSyntaxValidator syntax,
+                       AbuseGuard abuse, Clock clock) {
         this.links = Objects.requireNonNull(links, "links");
         this.creators = Objects.requireNonNull(creators, "creators");
         this.events = Objects.requireNonNull(events, "events");
-        this.codes = Objects.requireNonNull(codes, "codes");
+        this.markers = Objects.requireNonNull(markers, "markers");
+        this.createLink = Objects.requireNonNull(createLink, "createLink");
+        this.idempotency = Objects.requireNonNull(idempotency, "idempotency");
+        this.normalizer = Objects.requireNonNull(normalizer, "normalizer");
+        this.syntax = Objects.requireNonNull(syntax, "syntax");
+        this.abuse = Objects.requireNonNull(abuse, "abuse");
         this.clock = Objects.requireNonNull(clock, "clock");
     }
 
     /**
-     * Creates a link, minting a code and retrying a bounded number of times on collision.
+     * The destination pipeline, in the order the requirements fix. Task T034's Artifact says
+     * normalization is applied <strong>before validation and storage</strong>, and this is the
+     * composition point where that ordering exists to be asserted — the ordering half T034 could only
+     * state, {@code CreateLinkConformanceIT} now proves by submitting a destination with surrounding
+     * whitespace, which succeeds only if normalization runs first.
      *
-     * @throws IllegalArgumentException if the destination or expiry breaks a domain rule — the domain
-     *                                  type raises it, and this method does not second-guess the rule
+     * <p>Order, and why this order:
+     * <ol>
+     *   <li><strong>Normalize.</strong> Everything after it judges one canonical form, so two spellings
+     *       of the same URL cannot be refused differently, and an idempotency fingerprint over the
+     *       normalized destination makes a replay a replay.
+     *   <li><strong>Scheme allow-list</strong> (FR-URL-004, non-waivable). First among the checks so the
+     *       most specific and most important refusal is the one the caller is told about.
+     *   <li><strong>Syntax and length</strong> (FR-URL-002, EC-006).
+     *   <li><strong>Credentials</strong> (EC-007, FR-URL-017, non-waivable).
+     *   <li><strong>Abuse controls</strong> (FR-URL-005) — last, because they need a host and the steps
+     *       above are what establish there is one.
+     * </ol>
+     *
+     * <p>Steps 2 and 4 are <em>also</em> enforced inside {@link ShortLink#create}, and that repetition is
+     * deliberate rather than an oversight. The type holds them as invariants so no caller can forget
+     * (T021's Done condition); the pipeline runs them here so the caller gets the most useful message.
+     * Both call the same single definition, so there is nothing to drift.
+     *
+     * @return the normalized destination
+     * @throws IllegalArgumentException with a message that names the rule and never the input
      */
-    public ShortLink create(UUID creatorId, String destination, Instant expiresAt) {
-        Objects.requireNonNull(creatorId, "creatorId");
-        Instant now = clock.instant();
-        Instant expiry = expiresAt != null ? expiresAt : now.plus(DEFAULT_TTL);
+    private String vet(String destination) {
+        String normalized = normalizer.normalize(destination);
 
-        ShortCodeCollisionException lastCollision = null;
-        for (int attempt = 1; attempt <= MAX_CODE_ATTEMPTS; attempt++) {
-            // The domain type validates before any store call, so an invalid destination never reaches
-            // PostgreSQL and never consumes an attempt.
-            ShortLink candidate = ShortLink.create(codes.next(), destination, creatorId, now, expiry);
-            try {
-                return links.save(candidate);
-            } catch (ShortCodeCollisionException collision) {
-                lastCollision = collision;
-            }
+        SchemeAllowList.requirePermitted(normalized);
+
+        UrlSyntaxValidator.Result result = syntax.validate(normalized);
+        if (!result.valid()) {
+            throw new IllegalArgumentException(result.reason());
         }
-        throw new IllegalStateException(
-                "could not mint an unused short code in " + MAX_CODE_ATTEMPTS + " attempts. Against "
-                        + "2^42 of code space this is not bad luck: suspect the generator or an "
-                        + "exhausted keyspace (ADR-007)", lastCollision);
+
+        CredentialRedactor.requireNoCredentials(normalized);
+        abuse.requireNotAbusive(normalized);
+        return normalized;
+    }
+
+    /**
+     * Creates a link, honouring CL-008's three marker behaviours.
+     *
+     * <p><strong>Resolution comes first and writes nothing</strong>, so a replay and a conflict both cost
+     * a read and no more. Only a mint proceeds to insert.
+     *
+     * <p><strong>The marker is recorded after the link exists</strong>, because the record must carry the
+     * code and the code is not known until the insert succeeds. That leaves a window in which a
+     * concurrent request with the same marker can claim it first, and the store — not this code — is the
+     * authority on who won. The loser compensates: the link it just minted is expired, using the action
+     * the Compensation Register defines for a link that should not have been created, and the request is
+     * re-resolved so the caller gets the replay or the conflict that is actually true.
+     *
+     * <p><strong>The residual, stated rather than implied</strong>: the compensated link still exists, as
+     * {@code EXPIRED} rather than absent, and its code is spent. Removing the window entirely needs both
+     * inserts in one transaction, which the per-call-connection repository design does not currently
+     * offer. It is bounded, it is never a false replay, and it is recorded rather than quietly accepted.
+     *
+     * @throws IllegalArgumentException if the destination or expiry breaks a domain rule
+     */
+    public CreationOutcome create(UUID creatorId, String marker, String destination,
+                                  Instant expiresAt) {
+        Objects.requireNonNull(creatorId, "creatorId");
+        Instant expiry = expiresAt != null ? expiresAt : clock.instant().plus(DEFAULT_TTL);
+
+        // Normalization and every refusal happen BEFORE the marker is consulted. A request that is
+        // going to be refused must be refused whether or not it carries a marker, and the fingerprint
+        // must be taken over the canonical destination or two spellings of one URL would conflict.
+        String vetted = vet(destination);
+
+        IdempotencyResolver.Resolution resolution =
+                idempotency.resolve(creatorId, marker, vetted, expiry);
+        if (resolution.kind() != IdempotencyResolver.Kind.MINT) {
+            return new CreationOutcome(resolution.kind(), resolution.replayed(), resolution.reason());
+        }
+
+        ShortLink minted = createLink.create(creatorId, vetted, expiry);
+        if (marker == null || marker.isBlank()) {
+            return new CreationOutcome(IdempotencyResolver.Kind.MINT, Optional.of(minted), "");
+        }
+
+        try {
+            markers.save(IdempotencyRecord.of(creatorId, marker, vetted, expiry,
+                    minted.shortCode(), clock.instant()));
+            return new CreationOutcome(IdempotencyResolver.Kind.MINT, Optional.of(minted), "");
+        } catch (MarkerAlreadyUsedException raced) {
+            links.expire(minted);
+            IdempotencyResolver.Resolution settled =
+                    idempotency.resolve(creatorId, marker, vetted, expiry);
+            return new CreationOutcome(settled.kind(), settled.replayed(), settled.reason());
+        }
+    }
+
+    /** The unmarked path. CL-008 case 1: always mint. */
+    public ShortLink create(UUID creatorId, String destination, Instant expiresAt) {
+        return create(creatorId, null, destination, expiresAt).link().orElseThrow();
     }
 
     public Optional<ShortLink> find(String shortCode) {
@@ -96,10 +192,9 @@ public final class LinkService {
      * Ensures a creator exists, for the walking skeleton's unauthenticated path.
      *
      * <p><strong>A deliberate scaffold, and named as one.</strong> FR-URL-018 requires link creation to
-     * be authenticated; the walking skeleton is T032 and authentication is a later task. Until then a
-     * single well-known demonstration creator owns skeleton-created links, because KE-01 has no state
-     * for a link without an owner and the foreign key would refuse one. It is not a security decision
-     * and must not survive into the authenticated path.
+     * be authenticated; authentication is T052. Until then a single well-known demonstration creator owns
+     * skeleton-created links, because KE-01 has no state for a link without an owner and the foreign key
+     * would refuse one. It is not a security decision and must not survive into the authenticated path.
      */
     public UUID demonstrationCreator() {
         // All-hex, because a UUID literal must be. An earlier version used

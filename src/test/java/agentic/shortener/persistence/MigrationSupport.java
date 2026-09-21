@@ -13,12 +13,12 @@ import org.testcontainers.containers.PostgreSQLContainer;
  * these tests could only run against a database they are permitted to destroy \u2014 a property worth not
  * depending on.
  */
-final class MigrationSupport {
+public final class MigrationSupport {
 
     private MigrationSupport() {
     }
 
-    static void migrate(PostgreSQLContainer<?> container, String schema) {
+    public static void migrate(PostgreSQLContainer<?> container, String schema) {
         Flyway.configure()
                 .dataSource(container.getJdbcUrl(), container.getUsername(), container.getPassword())
                 .schemas(schema)

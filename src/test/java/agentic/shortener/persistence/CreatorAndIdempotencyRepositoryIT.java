@@ -4,6 +4,7 @@ import agentic.shortener.domain.analytics.RedirectEvent;
 import agentic.shortener.domain.creator.Creator;
 import agentic.shortener.domain.creator.CreatorCredential;
 import agentic.shortener.domain.idempotency.IdempotencyRecord;
+import agentic.shortener.domain.idempotency.MarkerAlreadyUsedException;
 import agentic.shortener.domain.link.ShortLink;
 import agentic.shortener.support.PostgresIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -148,7 +149,13 @@ class CreatorAndIdempotencyRepositoryIT extends PostgresIntegrationTest {
         UUID id = newCreator();
         links.save(ShortLink.create("dm0001", "https://example.com/a", id, NOW, LATER));
         markers.save(IdempotencyRecord.of(id, "dup", "https://example.com/a", LATER, "dm0001", NOW));
-        assertThrows(IllegalStateException.class,
+
+        // TIGHTENED at T042, not relaxed. This asserted IllegalStateException, which the repository
+        // raised for every SQL problem alike — so a duplicate marker was indistinguishable from a
+        // broken store, and LinkController's handler turned a caller-side race into a 503 telling them
+        // their database was down. The duplicate is now its own domain exception, and asserting the
+        // specific type is what stops that regressing.
+        assertThrows(MarkerAlreadyUsedException.class,
                 () -> markers.save(IdempotencyRecord.of(
                         id, "dup", "https://example.com/a", LATER, "dm0001", NOW)),
                 "the composite primary key must reject a second row for the same scoped marker");

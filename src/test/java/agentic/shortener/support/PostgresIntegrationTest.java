@@ -48,13 +48,27 @@ import static org.junit.jupiter.api.Assertions.fail;
 @Testcontainers
 public abstract class PostgresIntegrationTest {
 
-    /** ADR-002 fixes PostgreSQL 16. The tag is pinned, not floating, so the tier is reproducible. */
+    /**
+     * ADR-002 fixes PostgreSQL 16. The tag is pinned, not floating, so the tier is reproducible.
+     *
+     * <p><strong>{@code max_connections} is raised above the image default of 100.</strong> PVT-003 is
+     * 100 concurrent <em>clients</em>, and T040 drives exactly that many against this container. The
+     * image's default left no headroom for the container's own sessions, so the tenth repeat of the
+     * forced-contention test failed with {@code FATAL: sorry, too many clients already} — a harness
+     * limit reported as a store failure, which is the worst kind of red because it looks like a
+     * correctness bug.
+     *
+     * <p>This is a limit of the <em>test</em> harness rather than of the application: production wires
+     * {@code DataSource::getConnection}, which is Hikari-pooled, while the integration tests hand out a
+     * raw connection per call so a repository stays constructible without a Spring context.
+     */
     @Container
     protected static final PostgreSQLContainer<?> POSTGRES =
             new PostgreSQLContainer<>("postgres:16-alpine")
                     .withDatabaseName("shortener")
                     .withUsername("shortener")
-                    .withPassword("shortener");
+                    .withPassword("shortener")
+                    .withCommand("postgres", "-c", "max_connections=300");
 
     private static final Duration REACHABILITY_TIMEOUT = Duration.ofSeconds(60);
 

@@ -52,6 +52,18 @@ shortener:
     enabled: true
     creation-per-creator-per-minute: 60
     redirect-per-code-per-minute: 600
+  # own-hosts — this service's own host names, for EC-005: a destination pointing back into our own
+  # short-link space is a redirect chain or a loop, and FR-URL-005 refuses it.
+  #
+  # A DEPLOYMENT MUST SET ITS REAL PUBLIC HOST HERE. The value below is the local default and is not a
+  # security decision. AbuseGuard refuses to be constructed from an empty set, so the check can never
+  # be silently vacuous — but it cannot detect a set that is non-empty and wrong, which is why this
+  # comment is here and not only in the class.
+  #
+  # A comma-separated scalar rather than a YAML sequence: @Value binds a scalar reliably, while a
+  # sequence needs @ConfigurationProperties, which would put a framework annotation on the path to a
+  # domain type for no gain.
+  own-hosts: localhost
   readiness:
     # Readiness FAILS CLOSED. If the store cannot be reached, the instance reports not-ready rather
     # than accepting traffic it cannot serve. Failing open would make a broken instance look healthy,

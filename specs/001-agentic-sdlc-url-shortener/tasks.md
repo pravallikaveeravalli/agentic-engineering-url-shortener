@@ -347,22 +347,22 @@ resolution, and expiry outcomes.
   - **Deps**: T035 · **Par**: no (interface consumed by T039–T041) · **Artifact**: **CSPRNG**; 57-character confusable-free alphabet excluding `0`/`O` and `1`/`l`/`I`; length 7 (≈ 2×10¹², three orders above **PVT-005**); case-sensitive
   - **TDD**: RED-FIRST · **Validate**: `-Dtest=ShortCodeGeneratorTest` asserting alphabet exclusions, length, and RNG source · **Docs**: ADR-007 · **Trace**: matrix FR-URL-006, EC-008
   - **Guard**: a general-purpose PRNG makes codes predictable and the link space enumerable — the test asserts the **secure** RNG · **Done**: alphabet, length, and RNG asserted · **Approval**: none
-- [ ] T039 [US1] Insert-and-catch collision handling with bounded retry — `src/main/java/agentic/shortener/application/CreateLinkUseCase.java`
+- [x] T039 [US1] Insert-and-catch collision handling with bounded retry — `src/main/java/agentic/shortener/application/CreateLinkUseCase.java`
   - **Req**: **FR-URL-006**, FR-URL-001 · **Scn**: DS-A · **ADR**: **ADR-007**, ADR-002 · **Pre**: T038, T026
   - **Deps**: T026, T038 · **Par**: no (core write path) · **Artifact**: insert, catch unique-violation, regenerate, bounded retry; **never read-then-overwrite**
   - **TDD**: RED-FIRST · **Validate**: forced-collision test with a stubbed generator returning a duplicate → retry then success, **existing link untouched** · **Docs**: ADR-007 · **Trace**: matrix FR-URL-006, EC-001
   - **Guard**: **the prohibited overwrite must be structurally inexpressible** — there is no branch in which an existing link is replaced. A check-then-insert implementation fails the concurrency test · **Done**: forced-collision and bound-exhaustion tests pass; exhaustion fails rather than reusing · **Approval**: none
-- [ ] T040 [US1] Concurrent-creation uniqueness proof — `src/test/java/agentic/shortener/concurrency/ConcurrentCreationIT.java`
+- [x] T040 [US1] Concurrent-creation uniqueness proof — `src/test/java/agentic/shortener/concurrency/ConcurrentCreationIT.java`
   - **Req**: **FR-URL-013**, FR-URL-006 · **Scn**: DS-B · **ADR**: **ADR-002**, ADR-011 · **Pre**: T039
   - **Deps**: T039 · **Par**: no · **Artifact**: concurrent creations converge on distinct codes with no overwrite, against a **real** Postgres
   - **TDD**: EVIDENCE · **Validate**: `-Dtest=ConcurrentCreationIT verify` at **PVT-003** concurrency · **Docs**: — · **Trace**: matrix FR-URL-013, EC-001
   - **Guard**: deterministic barriers, not sleeps. A mocked or in-memory store cannot exhibit the contention this proves (ADR-011) · **Done**: distinct codes; zero overwrites; no flakiness across ten runs · **Approval**: none
-- [ ] T041 [US1] Marker-only idempotency, three semantics — `src/main/java/agentic/shortener/application/IdempotencyResolver.java`
+- [x] T041 [US1] Marker-only idempotency, three semantics — `src/main/java/agentic/shortener/application/IdempotencyResolver.java`
   - **Req**: **FR-URL-012** · **Scn**: DS-A · **ADR**: ADR-007 · **Pre**: T039, T023
   - **Deps**: T023, T039 · **Par**: no (guards the create path) · **Artifact**: **(1)** no marker → always mint; **(2)** same marker + identical request → replay the **original** as success, labelled `replay: true`, **zero new side effects**; **(3)** same marker + different content → **explicit conflict**, nothing minted, nothing changed
   - **TDD**: RED-FIRST · **Validate**: one test per case plus a **cross-creator non-deduplication** test · **Docs**: `contracts/openapi.yaml` 200/201/409 · **Trace**: matrix FR-URL-012, EC-002, EC-003, EC-039
   - **Guard**: **no destination-based deduplication at any scope, ever** (CL-008). A replay MUST NOT alter the existing link's expiry · **Done**: three cases plus cross-creator case pass · **Approval**: none
-- [ ] T042 [US1] Create endpoint and error mapping — `src/main/java/agentic/shortener/delivery/LinkController.java`
+- [x] T042 [US1] Create endpoint and error mapping — `src/main/java/agentic/shortener/delivery/LinkController.java`
   - **Req**: FR-URL-001, FR-URL-002 · **Scn**: DS-A · **ADR**: ADR-005 · **Pre**: T041, T012
   - **Deps**: T012, T041 · **Par**: no (shared controller) · **Artifact**: `POST /v1/links` returning code, destination, creation time, expiry state; error shapes per contract
   - **TDD**: RED-FIRST · **Validate**: `-Dtest=OpenApiConformanceTest` now covers create; 400/401/409/429/503 shapes asserted · **Docs**: `contracts/openapi.yaml` · **Trace**: matrix FR-URL-001

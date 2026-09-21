@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
@@ -20,10 +21,10 @@ import java.util.Map;
 /**
  * The walking skeleton's HTTP surface. Task T032. FR-URL-015. ADR-001, ADR-012.
  *
- * <p>Two operations only: create a link, and read its analytics. That is what a walking skeleton is —
- * one path through every layer, proving the layers connect. Redirect resolution, authentication, rate
- * limiting and idempotency are later tasks and are deliberately absent rather than stubbed, because a
- * stub that returns a plausible answer is worse than an endpoint that does not exist yet.
+ * <p>Two operations: create a link, and read its analytics. Creation now honours CL-008's three marker
+ * behaviours (T042). Redirect resolution, authentication and rate limiting are later tasks — T043–T045,
+ * T052, T054–T055 — and are deliberately absent rather than stubbed, because a stub that returns a
+ * plausible answer is worse than an endpoint that does not exist yet.
  *
  * <p><strong>Responses conform to `contracts/openapi.yaml`, which Gate 7 froze.</strong> The field names
  * and shapes here match the `Link`, `Analytics` and `Error` component schemas; T012's conformance harness
@@ -57,8 +58,20 @@ public class LinkController {
         }
     }
 
+    /**
+     * {@code POST /v1/links}. Task T042. FR-URL-001, FR-URL-002, FR-URL-012.
+     *
+     * <p>Three outcomes, and exactly the three CL-008 defines: <strong>201</strong> for a mint,
+     * <strong>200</strong> for a replay — success, not an error, and labelled {@code replay: true} —
+     * and <strong>409</strong> for the same marker with different content.
+     *
+     * <p>The {@code Idempotency-Key} header is optional, and its absence means <em>always mint</em>.
+     * There is no destination-based deduplication at any scope, ever.
+     */
     @PostMapping("/v1/links")
-    public ResponseEntity<Map<String, Object>> create(@RequestBody CreateLinkRequest request) {
+    public ResponseEntity<Map<String, Object>> create(
+            @RequestBody CreateLinkRequest request,
+            @RequestHeader(value = "Idempotency-Key", required = false) String marker) {
         if (request == null || request.destination() == null) {
             return error(HttpStatus.BAD_REQUEST, "INVALID_INPUT", "A destination is required.");
         }
@@ -77,8 +90,15 @@ public class LinkController {
 
         // The demonstration creator is a deliberate scaffold until authentication lands; LinkService
         // names it as one. KE-01 forbids a link without an owner, so the skeleton needs some owner.
-        ShortLink created = links.create(links.demonstrationCreator(), request.destination(), expiresAt);
-        return ResponseEntity.status(HttpStatus.CREATED).body(linkBody(created, false));
+        LinkService.CreationOutcome outcome =
+                links.create(links.demonstrationCreator(), marker, request.destination(), expiresAt);
+
+        return switch (outcome.kind()) {
+            case MINT -> ResponseEntity.status(HttpStatus.CREATED)
+                    .body(linkBody(outcome.link().orElseThrow(), false));
+            case REPLAY -> ResponseEntity.ok(linkBody(outcome.link().orElseThrow(), true));
+            case CONFLICT -> error(HttpStatus.CONFLICT, "IDEMPOTENCY_CONFLICT", outcome.reason());
+        };
     }
 
     @GetMapping("/v1/links/{shortCode}/analytics")

@@ -1,21 +1,29 @@
 package agentic.shortener.config;
 
+import agentic.shortener.application.CreateLinkUseCase;
+import agentic.shortener.application.IdempotencyResolver;
 import agentic.shortener.application.LinkService;
 import agentic.shortener.domain.analytics.RedirectEventRepository;
 import agentic.shortener.domain.creator.CreatorRepository;
 import agentic.shortener.domain.idempotency.IdempotencyRepository;
 import agentic.shortener.domain.shortcode.ShortCodeGenerator;
 import agentic.shortener.domain.link.ShortLinkRepository;
+import agentic.shortener.domain.validation.AbuseGuard;
+import agentic.shortener.domain.validation.DestinationNormalizer;
+import agentic.shortener.domain.validation.UrlSyntaxValidator;
 import agentic.shortener.persistence.ConnectionSource;
 import agentic.shortener.persistence.JdbcCreatorRepository;
 import agentic.shortener.persistence.JdbcIdempotencyRepository;
 import agentic.shortener.persistence.JdbcRedirectEventRepository;
 import agentic.shortener.persistence.JdbcShortLinkRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
 import java.time.Clock;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 
 /**
  * Wiring. Task T032.
@@ -81,9 +89,47 @@ public class PersistenceConfiguration {
     }
 
     @Bean
+    public CreateLinkUseCase createLinkUseCase(ShortLinkRepository links, ShortCodeGenerator codes,
+                                               Clock clock) {
+        return new CreateLinkUseCase(links, codes, clock);
+    }
+
+    @Bean
+    public IdempotencyResolver idempotencyResolver(IdempotencyRepository markers,
+                                                  ShortLinkRepository links) {
+        return new IdempotencyResolver(markers, links);
+    }
+
+    @Bean
+    public DestinationNormalizer destinationNormalizer() {
+        return new DestinationNormalizer();
+    }
+
+    @Bean
+    public UrlSyntaxValidator urlSyntaxValidator() {
+        return new UrlSyntaxValidator();
+    }
+
+    /**
+     * EC-005 needs to know which hosts are ours. Configurable — unlike the scheme allow-list, which
+     * must not be (FR-URL-004) — because the answer genuinely differs per deployment.
+     *
+     * <p>The failure direction is guarded at the type: {@link AbuseGuard} refuses an empty set, so a
+     * missing or blank configuration is a startup failure rather than a check that silently passes
+     * everything.
+     */
+    @Bean
+    public AbuseGuard abuseGuard(@Value("${shortener.own-hosts}") String ownHosts) {
+        return new AbuseGuard(new LinkedHashSet<>(Arrays.asList(ownHosts.split(","))));
+    }
+
+    @Bean
     public LinkService linkService(ShortLinkRepository links, CreatorRepository creators,
-                                  RedirectEventRepository events, ShortCodeGenerator codes,
-                                  Clock clock) {
-        return new LinkService(links, creators, events, codes, clock);
+                                  RedirectEventRepository events, IdempotencyRepository markers,
+                                  CreateLinkUseCase createLink, IdempotencyResolver idempotency,
+                                  DestinationNormalizer normalizer, UrlSyntaxValidator syntax,
+                                  AbuseGuard abuse, Clock clock) {
+        return new LinkService(links, creators, events, markers, createLink, idempotency,
+                normalizer, syntax, abuse, clock);
     }
 }
