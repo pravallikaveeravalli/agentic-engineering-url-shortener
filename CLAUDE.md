@@ -75,6 +75,18 @@ corrected forward by a record in the current package, which is itself an orphan-
 The check has found real defects in every package it has been run on; treat a clean result as the exception to verify,
 not the expectation.
 
+**Artifact-coverage sweep** — at every slice boundary, for every task completed in that slice: *does its
+validation assert everything the task's `Artifact` field names?* Ordered by the human owner at Gate 7
+after the second instance of the same defect. The failure mode it addresses is specific and not caught
+by testing: the acting agent writes both a task's implementation and its verification, so the
+verification inherits the agent's reading of the task. A red-green cycle cannot detect that — the test
+passes the code because one reading produced both — and neither can re-reading the task, for the same
+reason. **What exposes it is reading a different artifact**: CR-035's instance surfaced from the task
+dependency graph, CR-036's from a README table that listed five files where the test checked two.
+Findings are fixed **red-first where they are code** and **recorded where they are records**; register
+or plan text goes through change control. A clause that is true in fact but unasserted is a finding,
+not a pass: it means a future change can break it silently.
+
 ## Lifecycle
 
 SpecKit is the sole lifecycle framework. The authoritative stage order and the mandatory human gate
