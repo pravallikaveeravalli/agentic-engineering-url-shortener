@@ -150,7 +150,7 @@ register rather than improvised under pressure.
     | **Timebox exhausted** with slices incomplete | **ESCALATE to the owner for direction** | Time-based. Reports exactly what is done, what is not, and why — the owner decides whether anything is cut |
 
   - **Done**: four conditions present, each classified HALT or ESCALATE with its reason; the two non-waivable halts marked as such · **Approval**: none
-- [ ] T007 [GATE] Scope-control acknowledgement — `docs/governance/gate-decisions/gate-<next>-scope-control.md`
+- [x] T007 [GATE] Scope-control acknowledgement — `docs/governance/gate-decisions/gate-06-scope-control.md`
   - **Req**: Constitution III · **Scn**: — · **ADR**: — · **Pre**: T001–T006
   - **Deps**: T001–T006 · **Par**: no · **Artifact**: gate record acknowledging the registers as the operative controls
   - **TDD**: N/A-DOC · **Validate**: record carries the four mandatory fields and the `CLAUDE.md` structure · **Docs**: gate record · **Trace**: gate → registers
