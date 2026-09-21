@@ -28,7 +28,18 @@ public interface RedirectEventRepository {
      */
     RedirectEvent append(RedirectEvent event);
 
-    /** Creator-scoped time-series retrieval (FR-URL-011). */
+    /**
+     * Every retained event for one code, in time order. FR-URL-011.
+     *
+     * <p><strong>Unbounded on purpose.</strong> The first version of T051 used the windowed read below
+     * with {@code now()} as its upper bound, and an event timestamped even slightly ahead of that — clock
+     * skew between two instances is enough — vanished from the owner's analytics silently. CR-017 retains
+     * events indefinitely, so "all of them" is the honest query, and expressing it as a method rather
+     * than as a very large date keeps it from looking like a sentinel.
+     */
+    List<RedirectEvent> findByShortCode(String shortCode);
+
+    /** A time window, for reporting that asks for one (FR-URL-011). */
     List<RedirectEvent> findByShortCodeBetween(String shortCode, Instant from, Instant to);
 
     long countByShortCode(String shortCode);

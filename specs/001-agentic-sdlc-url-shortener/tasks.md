@@ -401,22 +401,22 @@ resolution, and expiry outcomes.
 
 ### Analytics
 
-- [ ] T048 [US1] Analytics recording port — `src/main/java/agentic/shortener/domain/analytics/AnalyticsRecordingPort.java`
+- [x] T048 [US1] Analytics recording port — `src/main/java/agentic/shortener/domain/analytics/AnalyticsRecordingPort.java`
   - **Req**: FR-URL-010 · **Scn**: DS-B · **ADR**: **ADR-014 Condition 2** · **Pre**: T024
   - **Deps**: T024 · **Par**: no (every append depends on it) · **Artifact**: owned interface through which **every** append passes
   - **TDD**: TEST-WITH · **Validate**: T049's architecture rule · **Docs**: plan §2 analytics row · **Trace**: matrix FR-URL-010
   - **Guard**: **Condition 2 — implementation MUST NOT bypass the port anywhere**: not for convenience, not for a hot path, not in tests that then fail to exercise it · **Done**: port defined; no direct store access from the resolution path · **Approval**: none
-- [ ] T049 [US1] Port-bypass architecture test — `src/test/java/agentic/shortener/arch/AnalyticsPortBypassTest.java`
+- [x] T049 [US1] Port-bypass architecture test — `src/test/java/agentic/shortener/arch/AnalyticsPortBypassTest.java`
   - **Req**: FR-URL-010 · **Scn**: — · **ADR**: **ADR-014 Condition 2** · **Pre**: T048
   - **Deps**: T048 · **Par**: no · **Artifact**: test asserting no append reaches the store except through the port, **demonstrated to fail on a deliberate bypass**
   - **TDD**: EVIDENCE · **Validate**: bypass fixture → rule reports failure · **Docs**: ADR-014 §Risks · **Trace**: — 
   - **Guard**: this is the mechanism that keeps ADR-014's evolution ladder reachable; without it the port is advisory · **Done**: rule passes clean and fails on bypass · **Approval**: none
-- [ ] T050 [US1] Synchronous separate-transaction append with isolated failure — `src/main/java/agentic/shortener/persistence/analytics/`
+- [x] T050 [US1] Synchronous separate-transaction append with isolated failure — `src/main/java/agentic/shortener/persistence/analytics/`
   - **Req**: **FR-URL-010** · **Scn**: DS-B · **ADR**: **ADR-014** · **Pre**: T048, T043
   - **Deps**: T043, T048 · **Par**: no (resolution path) · **Artifact**: append in its **own transaction**; failure **isolated, counted, logged**; redirect still succeeds
   - **TDD**: RED-FIRST · **Validate**: **EC-012** — redirect succeeds while the append is forced to fail; and an accepted event survives a store restart · **Docs**: ADR-014 · **Trace**: matrix FR-URL-010, EC-012
   - **Guard**: **same-transaction append is prohibited** — it would fail the redirect, violating EC-012. This corrected the plan's original provisional position · **Done**: EC-012 test passes; durability-on-acknowledgement proven; failure counter exposed · **Approval**: none
-- [ ] T051 [P] [US1] Owner-scoped analytics retrieval — `src/main/java/agentic/shortener/application/GetAnalyticsUseCase.java`
+- [x] T051 [P] [US1] Owner-scoped analytics retrieval — `src/main/java/agentic/shortener/application/GetAnalyticsUseCase.java`
   - **Req**: **FR-URL-011** · **Scn**: DS-B · **ADR**: **ADR-013**, ADR-014 · **Pre**: T050, T052
   - **Deps**: T050, T052 · **Par**: yes · **Artifact**: time-ordered events readable **only by the owning creator**
   - **TDD**: RED-FIRST · **Validate**: owner → `200`; non-owner → `404`; anonymous → `401`/`404`; **non-owner and not-found responses byte-identical** · **Docs**: `contracts/openapi.yaml` · **Trace**: matrix FR-URL-011

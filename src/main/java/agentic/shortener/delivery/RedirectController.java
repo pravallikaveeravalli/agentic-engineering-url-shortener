@@ -1,6 +1,7 @@
 package agentic.shortener.delivery;
 
 import agentic.shortener.application.ResolveLinkUseCase;
+import agentic.shortener.domain.analytics.AnalyticsRecordingPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Clock;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -39,14 +41,26 @@ import java.util.Objects;
 public class RedirectController {
 
     private final ResolveLinkUseCase resolve;
+    private final AnalyticsRecordingPort analytics;
+    private final Clock clock;
 
-    public RedirectController(ResolveLinkUseCase resolve) {
+    public RedirectController(ResolveLinkUseCase resolve, AnalyticsRecordingPort analytics,
+                              Clock clock) {
         this.resolve = Objects.requireNonNull(resolve, "resolve");
+        this.analytics = Objects.requireNonNull(analytics, "analytics");
+        this.clock = Objects.requireNonNull(clock, "clock");
     }
 
     @GetMapping("/{shortCode:[A-Za-z0-9]{7}}")
     public ResponseEntity<Map<String, Object>> follow(@PathVariable String shortCode) {
         ResolveLinkUseCase.Resolution resolution = resolve.resolve(shortCode);
+
+        if (resolution.outcome() == ResolveLinkUseCase.Outcome.REDIRECT) {
+            // One event per redirect (FR-URL-010), through the port and never around it (ADR-014
+            // Condition 2). This call cannot throw — that is the port's contract, and it is what keeps
+            // EC-012 true: a resolvable link must not go dark because a counter could not be written.
+            analytics.record(shortCode, clock.instant());
+        }
 
         return switch (resolution.outcome()) {
             case REDIRECT -> ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT)

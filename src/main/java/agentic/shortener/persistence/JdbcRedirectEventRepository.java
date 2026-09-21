@@ -53,6 +53,30 @@ public final class JdbcRedirectEventRepository implements RedirectEventRepositor
     }
 
     @Override
+    public List<RedirectEvent> findByShortCode(String shortCode) {
+        Objects.requireNonNull(shortCode, "shortCode");
+        // No time bound at all — see the interface note. Ordered by the identity column as well as the
+        // timestamp, so two events recorded in the same instant still come back in a stable order.
+        String sql = "SELECT redirect_event_id, short_code, occurred_at FROM redirect_event "
+                + "WHERE short_code = ? ORDER BY occurred_at, redirect_event_id";
+        List<RedirectEvent> found = new ArrayList<>();
+        try (Connection c = connections.get(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, shortCode);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    found.add(RedirectEvent.of(
+                            rs.getLong("redirect_event_id"),
+                            rs.getString("short_code"),
+                            rs.getTimestamp("occurred_at").toInstant()));
+                }
+            }
+            return List.copyOf(found);
+        } catch (Exception e) {
+            throw new IllegalStateException("failed to read redirect events for " + shortCode, e);
+        }
+    }
+
+    @Override
     public List<RedirectEvent> findByShortCodeBetween(String shortCode, Instant from, Instant to) {
         Objects.requireNonNull(shortCode, "shortCode");
         Objects.requireNonNull(from, "from");

@@ -1,0 +1,266 @@
+# Red-phase evidence
+
+- **Label**: T048-T051-analytics
+- **Captured (UTC)**: 20260921T093620Z
+- **Command**: `./mvnw -Dtest=AnalyticsRecorderTest,GetAnalyticsUseCaseTest,AnalyticsPortBypassTest -Dit.test=AnalyticsRecordingIT -DfailIfNoTests=false verify`
+- **Exit code**: 1
+- **Requirement**: NFR-TST-002 (red phase evidenced, not asserted); CN-004
+
+## Why this file exists
+
+This is the failing run captured BEFORE the implementation that makes it pass. It is stored
+so that the red phase is readable by a reviewer rather than claimed in a commit message.
+
+## Captured output
+
+```
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< agentic:shortener >--------------------------
+[INFO] Building agentic-sdlc-url-shortener 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ shortener ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 3 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ shortener ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ shortener ---
+[INFO] skip non existing resourceDirectory /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ shortener ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 42 source files with javac [debug parameters release 21] to target/test-classes
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java uses or overrides a deprecated API.
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.arch.AnalyticsPortBypassTest
+04:36:22.105 [main] INFO com.tngtech.archunit.core.PluginLoader -- Detected Java version 21.0.8
+[ERROR] Tests run: 5, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.615 s <<< FAILURE! -- in agentic.shortener.arch.AnalyticsPortBypassTest
+[ERROR] agentic.shortener.arch.AnalyticsPortBypassTest.onlyTheRecorderAppends -- Time elapsed: 0.017 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: these files append to the event store directly: [src/main/java/agentic/shortener/domain/shortcode/ShortCodeGenerator.java, src/main/java/agentic/shortener/domain/validation/DestinationNormalizer.java]. Every append goes through AnalyticsRecordingPort (ADR-014 Condition 2) ==> expected: <[]> but was: <[src/main/java/agentic/shortener/domain/shortcode/ShortCodeGenerator.java, src/main/java/agentic/shortener/domain/validation/DestinationNormalizer.java]>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at agentic.shortener.arch.AnalyticsPortBypassTest.onlyTheRecorderAppends(AnalyticsPortBypassTest.java:144)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running agentic.shortener.application.GetAnalyticsUseCaseTest
+[ERROR] Tests run: 10, Failures: 0, Errors: 10, Skipped: 0, Time elapsed: 0.007 s <<< FAILURE! -- in agentic.shortener.application.GetAnalyticsUseCaseTest
+[ERROR] agentic.shortener.application.GetAnalyticsUseCaseTest.anonymousRefused -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T051 not implemented
+	at agentic.shortener.application.GetAnalyticsUseCase.get(GetAnalyticsUseCase.java:23)
+	at agentic.shortener.application.GetAnalyticsUseCaseTest.anonymousRefused(GetAnalyticsUseCaseTest.java:142)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.application.GetAnalyticsUseCaseTest.expiredNonOwnedIsAlsoIndistinguishable -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T051 not implemented
+	at agentic.shortener.application.GetAnalyticsUseCase.get(GetAnalyticsUseCase.java:23)
+	at agentic.shortener.application.GetAnalyticsUseCaseTest.expiredNonOwnedIsAlsoIndistinguishable(GetAnalyticsUseCaseTest.java:177)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.application.GetAnalyticsUseCaseTest.ownerSeesEvents -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T051 not implemented
+	at agentic.shortener.application.GetAnalyticsUseCase.get(GetAnalyticsUseCase.java:23)
+	at agentic.shortener.application.GetAnalyticsUseCaseTest.ownerSeesEvents(GetAnalyticsUseCaseTest.java:115)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.application.GetAnalyticsUseCaseTest.timestampsOnly -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T051 not implemented
+	at agentic.shortener.application.GetAnalyticsUseCase.get(GetAnalyticsUseCase.java:23)
+	at agentic.shortener.application.GetAnalyticsUseCaseTest.timestampsOnly(GetAnalyticsUseCaseTest.java:227)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.application.GetAnalyticsUseCaseTest.returnedEventsAreImmutable -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T051 not implemented
+	at agentic.shortener.application.GetAnalyticsUseCase.get(GetAnalyticsUseCase.java:23)
+	at agentic.shortener.application.GetAnalyticsUseCaseTest.returnedEventsAreImmutable(GetAnalyticsUseCaseTest.java:240)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.application.GetAnalyticsUseCaseTest.blankCodeRefused -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T051 not implemented
+	at agentic.shortener.application.GetAnalyticsUseCase.get(GetAnalyticsUseCase.java:23)
+	at agentic.shortener.application.GetAnalyticsUseCaseTest.blankCodeRefused(GetAnalyticsUseCaseTest.java:213)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.application.GetAnalyticsUseCaseTest.nonOwnerRefused -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T051 not implemented
+	at agentic.shortener.application.GetAnalyticsUseCase.get(GetAnalyticsUseCase.java:23)
+	at agentic.shortener.application.GetAnalyticsUseCaseTest.nonOwnerRefused(GetAnalyticsUseCaseTest.java:130)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.application.GetAnalyticsUseCaseTest.ownerOfExpiredLinkStillSeesAnalytics -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T051 not implemented
+	at agentic.shortener.application.GetAnalyticsUseCase.get(GetAnalyticsUseCase.java:23)
+	at agentic.shortener.application.GetAnalyticsUseCaseTest.ownerOfExpiredLinkStillSeesAnalytics(GetAnalyticsUseCaseTest.java:190)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.application.GetAnalyticsUseCaseTest.noOwnershipOracle -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T051 not implemented
+	at agentic.shortener.application.GetAnalyticsUseCase.get(GetAnalyticsUseCase.java:23)
+	at agentic.shortener.application.GetAnalyticsUseCaseTest.noOwnershipOracle(GetAnalyticsUseCaseTest.java:152)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.application.GetAnalyticsUseCaseTest.zeroEventsIsNotARefusal -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T051 not implemented
+	at agentic.shortener.application.GetAnalyticsUseCase.get(GetAnalyticsUseCase.java:23)
+	at agentic.shortener.application.GetAnalyticsUseCaseTest.zeroEventsIsNotARefusal(GetAnalyticsUseCaseTest.java:202)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running agentic.shortener.analytics.AnalyticsRecorderTest
+[ERROR] Tests run: 8, Failures: 2, Errors: 5, Skipped: 0, Time elapsed: 0.010 s <<< FAILURE! -- in agentic.shortener.analytics.AnalyticsRecorderTest
+[ERROR] agentic.shortener.analytics.AnalyticsRecorderTest.acceptedMeansDurable -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T050 not implemented
+	at agentic.shortener.persistence.analytics.TransactionalAnalyticsRecorder.record(TransactionalAnalyticsRecorder.java:16)
+	at agentic.shortener.analytics.AnalyticsRecorderTest.acceptedMeansDurable(AnalyticsRecorderTest.java:132)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.analytics.AnalyticsRecorderTest.countersAreThreadSafe -- Time elapsed: 0.004 s <<< ERROR!
+java.lang.UnsupportedOperationException: T050 not implemented
+	at agentic.shortener.persistence.analytics.TransactionalAnalyticsRecorder.failed(TransactionalAnalyticsRecorder.java:26)
+	at agentic.shortener.analytics.AnalyticsRecorderTest.countersAreThreadSafe(AnalyticsRecorderTest.java:178)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.analytics.AnalyticsRecorderTest.everyFailureIsCounted -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T050 not implemented
+	at agentic.shortener.persistence.analytics.TransactionalAnalyticsRecorder.record(TransactionalAnalyticsRecorder.java:16)
+	at agentic.shortener.analytics.AnalyticsRecorderTest.everyFailureIsCounted(AnalyticsRecorderTest.java:120)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.analytics.AnalyticsRecorderTest.successCounted -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T050 not implemented
+	at agentic.shortener.persistence.analytics.TransactionalAnalyticsRecorder.record(TransactionalAnalyticsRecorder.java:16)
+	at agentic.shortener.analytics.AnalyticsRecorderTest.successCounted(AnalyticsRecorderTest.java:81)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.analytics.AnalyticsRecorderTest.failingAppendDoesNotThrow -- Time elapsed: 0 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: a recorder that threw here would fail a redirect the link had earned — which is exactly what EC-012 forbids ==> Unexpected exception thrown: java.lang.UnsupportedOperationException: T050 not implemented
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertDoesNotThrow.createAssertionFailedError(AssertDoesNotThrow.java:84)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:53)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:40)
+	at org.junit.jupiter.api.Assertions.assertDoesNotThrow(Assertions.java:3187)
+	at agentic.shortener.analytics.AnalyticsRecorderTest.failingAppendDoesNotThrow(AnalyticsRecorderTest.java:96)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T050 not implemented
+	at agentic.shortener.persistence.analytics.TransactionalAnalyticsRecorder.record(TransactionalAnalyticsRecorder.java:16)
+	at agentic.shortener.analytics.AnalyticsRecorderTest.lambda$failingAppendDoesNotThrow$0(AnalyticsRecorderTest.java:96)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:49)
+	... 6 more
+
+[ERROR] agentic.shortener.analytics.AnalyticsRecorderTest.notEvenAnErrorEscapes -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception thrown: java.lang.UnsupportedOperationException: T050 not implemented
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertDoesNotThrow.createAssertionFailedError(AssertDoesNotThrow.java:84)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:53)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:36)
+	at org.junit.jupiter.api.Assertions.assertDoesNotThrow(Assertions.java:3168)
+	at agentic.shortener.analytics.AnalyticsRecorderTest.notEvenAnErrorEscapes(AnalyticsRecorderTest.java:111)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T050 not implemented
+	at agentic.shortener.persistence.analytics.TransactionalAnalyticsRecorder.record(TransactionalAnalyticsRecorder.java:16)
+	at agentic.shortener.analytics.AnalyticsRecorderTest.lambda$notEvenAnErrorEscapes$1(AnalyticsRecorderTest.java:111)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:49)
+	... 6 more
+
+[ERROR] agentic.shortener.analytics.AnalyticsRecorderTest.countersSurviveRecovery -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T050 not implemented
+	at agentic.shortener.persistence.analytics.TransactionalAnalyticsRecorder.record(TransactionalAnalyticsRecorder.java:16)
+	at agentic.shortener.analytics.AnalyticsRecorderTest.countersSurviveRecovery(AnalyticsRecorderTest.java:145)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   AnalyticsRecorderTest.failingAppendDoesNotThrow:96 a recorder that threw here would fail a redirect the link had earned — which is exactly what EC-012 forbids ==> Unexpected exception thrown: java.lang.UnsupportedOperationException: T050 not implemented
+[ERROR]   AnalyticsRecorderTest.notEvenAnErrorEscapes:111 Unexpected exception thrown: java.lang.UnsupportedOperationException: T050 not implemented
+[ERROR]   AnalyticsPortBypassTest.onlyTheRecorderAppends:144 these files append to the event store directly: [src/main/java/agentic/shortener/domain/shortcode/ShortCodeGenerator.java, src/main/java/agentic/shortener/domain/validation/DestinationNormalizer.java]. Every append goes through AnalyticsRecordingPort (ADR-014 Condition 2) ==> expected: <[]> but was: <[src/main/java/agentic/shortener/domain/shortcode/ShortCodeGenerator.java, src/main/java/agentic/shortener/domain/validation/DestinationNormalizer.java]>
+[ERROR] Errors: 
+[ERROR]   AnalyticsRecorderTest.acceptedMeansDurable:132 » UnsupportedOperation T050 not implemented
+[ERROR]   AnalyticsRecorderTest.countersAreThreadSafe:178 » UnsupportedOperation T050 not implemented
+[ERROR]   AnalyticsRecorderTest.countersSurviveRecovery:145 » UnsupportedOperation T050 not implemented
+[ERROR]   AnalyticsRecorderTest.everyFailureIsCounted:120 » UnsupportedOperation T050 not implemented
+[ERROR]   AnalyticsRecorderTest.successCounted:81 » UnsupportedOperation T050 not implemented
+[ERROR]   GetAnalyticsUseCaseTest.anonymousRefused:142 » UnsupportedOperation T051 not implemented
+[ERROR]   GetAnalyticsUseCaseTest.blankCodeRefused:213 » UnsupportedOperation T051 not implemented
+[ERROR]   GetAnalyticsUseCaseTest.expiredNonOwnedIsAlsoIndistinguishable:177 » UnsupportedOperation T051 not implemented
+[ERROR]   GetAnalyticsUseCaseTest.noOwnershipOracle:152 » UnsupportedOperation T051 not implemented
+[ERROR]   GetAnalyticsUseCaseTest.nonOwnerRefused:130 » UnsupportedOperation T051 not implemented
+[ERROR]   GetAnalyticsUseCaseTest.ownerOfExpiredLinkStillSeesAnalytics:190 » UnsupportedOperation T051 not implemented
+[ERROR]   GetAnalyticsUseCaseTest.ownerSeesEvents:115 » UnsupportedOperation T051 not implemented
+[ERROR]   GetAnalyticsUseCaseTest.returnedEventsAreImmutable:240 » UnsupportedOperation T051 not implemented
+[ERROR]   GetAnalyticsUseCaseTest.timestampsOnly:227 » UnsupportedOperation T051 not implemented
+[ERROR]   GetAnalyticsUseCaseTest.zeroEventsIsNotARefusal:202 » UnsupportedOperation T051 not implemented
+[INFO] 
+[ERROR] Tests run: 23, Failures: 3, Errors: 15, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  2.127 s
+[INFO] Finished at: 2026-09-21T04:36:22-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project shortener: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+```

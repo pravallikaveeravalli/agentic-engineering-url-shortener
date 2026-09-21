@@ -1,5 +1,6 @@
 package agentic.shortener.delivery;
 
+import agentic.shortener.application.GetAnalyticsUseCase;
 import agentic.shortener.application.LinkService;
 import agentic.shortener.domain.link.ShortLink;
 import agentic.shortener.domain.validation.CredentialRedactor;
@@ -34,9 +35,11 @@ import java.util.Map;
 public class LinkController {
 
     private final LinkService links;
+    private final GetAnalyticsUseCase analytics;
 
-    public LinkController(LinkService links) {
+    public LinkController(LinkService links, GetAnalyticsUseCase analytics) {
         this.links = links;
+        this.analytics = analytics;
     }
 
     /**
@@ -101,20 +104,38 @@ public class LinkController {
         };
     }
 
+    /**
+     * {@code GET /v1/links/{shortCode}/analytics}. Task T051. FR-URL-011.
+     *
+     * <p><strong>There is no ownership oracle.</strong> A caller who does not own the link and a caller
+     * asking about a code that was never issued get the same 404 with the same body, because
+     * {@link GetAnalyticsUseCase} returns one shared refusal value for both. A difference between the two
+     * would let anyone enumerate the keyspace.
+     *
+     * <p><strong>The caller identity is the demonstration creator until T052.</strong> That is a scaffold
+     * and is named as one: FR-URL-011 requires this endpoint to be unreachable without creator
+     * authentication, and the authentication is T052's. What is already correct is the scoping — the use
+     * case refuses any caller that does not own the link, so wiring a real identity in is all T052 has to
+     * do here.
+     */
     @GetMapping("/v1/links/{shortCode}/analytics")
     public ResponseEntity<Map<String, Object>> analytics(@PathVariable String shortCode) {
-        return links.find(shortCode)
-                .<ResponseEntity<Map<String, Object>>>map(link -> {
-                    Map<String, Object> body = new LinkedHashMap<>();
-                    body.put("shortCode", link.shortCode());
-                    body.put("totalRedirects", links.redirectCount(link.shortCode()));
-                    // Timestamp-only events (CL-002). The walking skeleton records no redirects yet,
-                    // so the list is empty rather than fabricated.
-                    body.put("events", List.of());
-                    return ResponseEntity.ok(body);
-                })
-                .orElseGet(() -> error(HttpStatus.NOT_FOUND, "NOT_FOUND",
-                        "No link with that code."));
+        GetAnalyticsUseCase.View view = analytics.get(links.demonstrationCreator(), shortCode);
+
+        if (!view.permitted()) {
+            // Identical for a non-owner and for a code that does not exist. Not "similar" — identical.
+            return error(HttpStatus.NOT_FOUND, "NOT_FOUND", "No link with that code.");
+        }
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("shortCode", view.shortCode());
+        body.put("totalRedirects", view.totalRedirects());
+        // Timestamp only (CL-002, FR-URL-010). Each event carries exactly one field, because that is all
+        // the stored event has.
+        body.put("events", view.events().stream()
+                .map(at -> Map.<String, Object>of("occurredAt", at.toString()))
+                .toList());
+        return ResponseEntity.ok(body);
     }
 
     /**

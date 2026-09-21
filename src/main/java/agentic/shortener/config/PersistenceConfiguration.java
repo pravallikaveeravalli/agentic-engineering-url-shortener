@@ -1,9 +1,11 @@
 package agentic.shortener.config;
 
 import agentic.shortener.application.CreateLinkUseCase;
+import agentic.shortener.application.GetAnalyticsUseCase;
 import agentic.shortener.application.IdempotencyResolver;
 import agentic.shortener.application.LinkService;
 import agentic.shortener.application.ResolveLinkUseCase;
+import agentic.shortener.domain.analytics.AnalyticsRecordingPort;
 import agentic.shortener.domain.analytics.RedirectEventRepository;
 import agentic.shortener.domain.creator.CreatorRepository;
 import agentic.shortener.domain.idempotency.IdempotencyRepository;
@@ -18,6 +20,7 @@ import agentic.shortener.persistence.JdbcCreatorRepository;
 import agentic.shortener.persistence.JdbcIdempotencyRepository;
 import agentic.shortener.persistence.JdbcRedirectEventRepository;
 import agentic.shortener.persistence.JdbcShortLinkRepository;
+import agentic.shortener.persistence.analytics.TransactionalAnalyticsRecorder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -123,6 +126,24 @@ public class PersistenceConfiguration {
     @Bean
     public AbuseGuard abuseGuard(@Value("${shortener.own-hosts}") String ownHosts) {
         return new AbuseGuard(new LinkedHashSet<>(Arrays.asList(ownHosts.split(","))));
+    }
+
+    /**
+     * The single implementation of the analytics recording port (T048, T050).
+     *
+     * <p>A bean of the PORT type, not of the implementation. ADR-014's evolution ladder — the Postgres
+     * table now, a queue or a stream later — is reachable only if nothing downstream knows which rung it
+     * is on, and {@code AnalyticsPortBypassTest} keeps that true.
+     */
+    @Bean
+    public AnalyticsRecordingPort analyticsRecordingPort(RedirectEventRepository events) {
+        return new TransactionalAnalyticsRecorder(events);
+    }
+
+    @Bean
+    public GetAnalyticsUseCase getAnalyticsUseCase(ShortLinkRepository links,
+                                                  RedirectEventRepository events) {
+        return new GetAnalyticsUseCase(links, events);
     }
 
     @Bean

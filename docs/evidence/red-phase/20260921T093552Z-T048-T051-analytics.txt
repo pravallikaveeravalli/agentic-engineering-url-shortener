@@ -1,0 +1,70 @@
+# Red-phase evidence
+
+- **Label**: T048-T051-analytics
+- **Captured (UTC)**: 20260921T093552Z
+- **Command**: `./mvnw -Dtest=AnalyticsRecorderTest,GetAnalyticsUseCaseTest,AnalyticsPortBypassTest -Dit.test=AnalyticsRecordingIT -DfailIfNoTests=false verify`
+- **Exit code**: 1
+- **Requirement**: NFR-TST-002 (red phase evidenced, not asserted); CN-004
+
+## Why this file exists
+
+This is the failing run captured BEFORE the implementation that makes it pass. It is stored
+so that the red phase is readable by a reviewer rather than claimed in a commit message.
+
+## Captured output
+
+```
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< agentic:shortener >--------------------------
+[INFO] Building agentic-sdlc-url-shortener 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ shortener ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 3 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ shortener ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 44 source files with javac [debug parameters release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ shortener ---
+[INFO] skip non existing resourceDirectory /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ shortener ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 42 source files with javac [debug parameters release 21] to target/test-classes
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java uses or overrides a deprecated API.
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: Recompile with -Xlint:deprecation for details.
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/arch/AnalyticsPortBypassTest.java:[72,23] cannot find symbol
+  symbol:   method haveSimpleNameNotIn(java.lang.String[])
+  location: interface com.tngtech.archunit.lang.syntax.elements.ClassesThat<com.tngtech.archunit.lang.syntax.elements.GivenClassesConjunction>
+[INFO] 1 error
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.363 s
+[INFO] Finished at: 2026-09-21T04:35:54-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.13.0:testCompile (default-testCompile) on project shortener: Compilation failure
+[ERROR] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/arch/AnalyticsPortBypassTest.java:[72,23] cannot find symbol
+[ERROR]   symbol:   method haveSimpleNameNotIn(java.lang.String[])
+[ERROR]   location: interface com.tngtech.archunit.lang.syntax.elements.ClassesThat<com.tngtech.archunit.lang.syntax.elements.GivenClassesConjunction>
+[ERROR] 
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+```
