@@ -175,11 +175,19 @@ public final class CompensationHandler {
         String supersedingReason = "supersedes gate_decision " + supersededId
                 + ", voided by replan. The prior decision is referenced, never deleted or edited (EC-020).";
 
+        // gate_class and supersedes_gate_decision_id both arrived with T058/V8, after this method was
+        // first written. gate_class is carried forward from the row being superseded (a superseding
+        // decision answers the same gate, so it is the same class), and
+        // supersedes_gate_decision_id now carries the reference structurally — a reader or a query can
+        // follow the chain without parsing it out of `reason`, which is where the first version of this
+        // method left it as the only record.
         try (PreparedStatement ps = c.prepareStatement(
-                "INSERT INTO gate_decision (run_id, gate_id, outcome, actor_type, actor_name, reason, "
-                        + "decided_at, repository_record_path) "
-                        + "SELECT run_id, gate_id, 'REJECTED', 'human', actor_name, ?, ?, "
-                        + "repository_record_path FROM gate_decision WHERE gate_decision_id = ?")) {
+                "INSERT INTO gate_decision (run_id, gate_id, gate_class, outcome, actor_type, "
+                        + "actor_name, reason, decided_at, repository_record_path, "
+                        + "supersedes_gate_decision_id) "
+                        + "SELECT run_id, gate_id, gate_class, 'REJECTED', 'human', actor_name, ?, ?, "
+                        + "repository_record_path, gate_decision_id "
+                        + "FROM gate_decision WHERE gate_decision_id = ?")) {
             ps.setString(1, supersedingReason);
             ps.setTimestamp(2, Timestamp.from(clock.instant()));
             ps.setLong(3, Long.parseLong(supersededId));

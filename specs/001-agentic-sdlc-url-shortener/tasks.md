@@ -473,7 +473,7 @@ outcome, including deliberate silence.
 
 **Blocking**: T057 (US1 complete) and T080 (stage state machine). **Synchronization point**: T068.
 
-- [ ] T058 [US2] ApprovalGate and GateDecision entities — `src/main/java/agentic/shortener/orchestration/gates/`
+- [x] T058 [US2] ApprovalGate and GateDecision entities — `src/main/java/agentic/shortener/orchestration/gates/`
   - **Req**: **FR-ORC-013** · **Scn**: DS-A, DS-C · **ADR**: **ADR-005**, ADR-008 · **Pre**: T027, T080
   - **Deps**: T027, T080 · **Par**: no · **Artifact**: ApprovalGate(`id`, `stage_id`, `gate_class`, `wait_deadline`, `disclosed_auto_abandon_at`, `requested_at`); GateDecision(`outcome`, `actor`, `decided_at`, `reason`, `repository_record_path`, `supersedes?`)
   - **TDD**: RED-FIRST · **Validate**: schema validation against `contracts/approval.schema.json` · **Docs**: `data-model.md` KE-10/KE-11 · **Trace**: matrix FR-ORC-013, PVT-006

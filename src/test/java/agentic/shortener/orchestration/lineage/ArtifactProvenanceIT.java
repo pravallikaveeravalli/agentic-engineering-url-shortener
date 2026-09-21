@@ -274,9 +274,12 @@ class ArtifactProvenanceIT extends PostgresIntegrationTest {
     }
 
     private void recordGateDecision(UUID runId, String gateId, Instant decidedAt) throws Exception {
-        String sql = "INSERT INTO gate_decision (run_id, gate_id, outcome, actor_type, actor_name, "
-                + "reason, decided_at, repository_record_path) "
-                + "VALUES (?, ?, 'APPROVED', 'human', 'the owner', ?, ?, ?)";
+        // gate_class arrived with T058/V8, after this fixture was first written; it is NOT NULL. The
+        // specific class is arbitrary here — this test's own assertions are about decision TIMING
+        // relative to an artifact write, not about gate class.
+        String sql = "INSERT INTO gate_decision (run_id, gate_id, gate_class, outcome, actor_type, "
+                + "actor_name, reason, decided_at, repository_record_path) "
+                + "VALUES (?, ?, 'UNRESOLVED_AMBIGUITY', 'APPROVED', 'human', 'the owner', ?, ?, ?)";
         try (Connection c = connections.get(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setObject(1, runId);
             ps.setString(2, gateId);

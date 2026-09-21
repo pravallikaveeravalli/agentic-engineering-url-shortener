@@ -207,11 +207,15 @@ class CompensationHandlerIT extends PostgresIntegrationTest {
     // ==============================================================================================
 
     private long insertGateDecision(String gateId, String outcome, String reason) throws Exception {
+        // gate_class arrived with T058/V8, after this fixture was first written; it is NOT NULL, so the
+        // insert now names one. ARCHITECTURE_APPROVAL is arbitrary — this test's own assertions do not
+        // depend on which class it is, only that superseding preserves it (see CompensationHandler's own
+        // comment on why the superseding row carries the original's class forward).
         try (Connection c = connections.get();
              PreparedStatement ps = c.prepareStatement(
-                     "INSERT INTO gate_decision (run_id, gate_id, outcome, actor_type, actor_name, reason, "
-                             + "decided_at, repository_record_path) "
-                             + "VALUES (?, ?, ?, 'human', 'the owner', ?, ?, "
+                     "INSERT INTO gate_decision (run_id, gate_id, gate_class, outcome, actor_type, "
+                             + "actor_name, reason, decided_at, repository_record_path) "
+                             + "VALUES (?, ?, 'ARCHITECTURE_APPROVAL', ?, 'human', 'the owner', ?, ?, "
                              + "'docs/governance/gate-decisions/gate-x.md') "
                              + "RETURNING gate_decision_id")) {
             ps.setObject(1, runId);

@@ -1,0 +1,310 @@
+# Red-phase evidence
+
+- **Label**: T058-approval-gate-and-gate-decision
+- **Captured (UTC)**: 20260921T142054Z
+- **Command**: `./mvnw -Dtest=ShortLinkTest -Dit.test=GateEntitiesIT -Dfailsafe.failIfNoSpecifiedTests=false verify`
+- **Exit code**: 1
+- **Requirement**: NFR-TST-002 (red phase evidenced, not asserted); CN-004
+
+## Why this file exists
+
+This is the failing run captured BEFORE the implementation that makes it pass. It is stored
+so that the red phase is readable by a reviewer rather than claimed in a commit message.
+
+## Captured output
+
+```
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< agentic:shortener >--------------------------
+[INFO] Building agentic-sdlc-url-shortener 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ shortener ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 8 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ shortener ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ shortener ---
+[INFO] skip non existing resourceDirectory /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ shortener ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 87 source files with javac [debug parameters release 21] to target/test-classes
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java uses or overrides a deprecated API.
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.domain.link.ShortLinkTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.041 s -- in agentic.shortener.domain.link.ShortLinkTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- jar:3.4.2:jar (default-jar) @ shortener ---
+[INFO] Building jar: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/shortener-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- spring-boot:3.3.4:repackage (repackage) @ shortener ---
+[INFO] Replacing main artifact /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/shortener-0.1.0-SNAPSHOT.jar with repackaged archive, adding nested dependencies in BOOT-INF/.
+[INFO] The original artifact has been renamed to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/shortener-0.1.0-SNAPSHOT.jar.original
+[INFO] 
+[INFO] --- failsafe:3.2.5:integration-test (default) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.orchestration.gates.GateEntitiesIT
+09:20:58.142 [main] INFO org.testcontainers.images.PullPolicy -- Image pull policy will be performed by: DefaultPullPolicy()
+09:20:58.144 [main] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+09:20:58.157 [main] INFO org.testcontainers.DockerClientFactory -- Testcontainers version: 1.20.1
+09:20:58.323 [main] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Found Docker environment with Environment variables, system properties and defaults. Resolved dockerHost=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+09:20:58.323 [main] INFO org.testcontainers.DockerClientFactory -- Docker host IP address is localhost
+09:20:58.330 [main] INFO org.testcontainers.DockerClientFactory -- Connected to docker: 
+  Server Version: 28.3.3
+  API Version: 1.51
+  Operating System: Ubuntu 24.04.2 LTS
+  Total Memory: 3905 MB
+09:20:58.353 [main] INFO tc.testcontainers/ryuk:0.8.1 -- Creating container for image: testcontainers/ryuk:0.8.1
+09:20:58.404 [main] INFO tc.testcontainers/ryuk:0.8.1 -- Container testcontainers/ryuk:0.8.1 is starting: 51c6bec007194e7afffb1f9b13b51edfcca6cfaae50ea4560b6d89f21c5dd7e6
+09:20:58.507 [main] INFO tc.testcontainers/ryuk:0.8.1 -- Container testcontainers/ryuk:0.8.1 started in PT0.154403S
+09:20:58.509 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:33715
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+09:20:58.761 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:33715
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+09:20:59.024 [main] INFO org.testcontainers.utility.RyukResourceReaper -- Ryuk started - will monitor and terminate Testcontainers containers on JVM exit
+09:20:59.025 [main] INFO org.testcontainers.DockerClientFactory -- Checking the system...
+09:20:59.026 [main] INFO org.testcontainers.DockerClientFactory -- ✔︎ Docker server version should be at least 1.6.0
+09:20:59.027 [main] INFO tc.postgres:16-alpine -- Creating container for image: postgres:16-alpine
+09:20:59.071 [main] INFO tc.postgres:16-alpine -- Container postgres:16-alpine is starting: 6fbe98ad7fe28701b0a3a2c649a2c09303bcc36bfdbe19aebfe16d293c3fe1f2
+09:20:59.726 [main] INFO tc.postgres:16-alpine -- Container postgres:16-alpine started in PT0.699668S
+09:20:59.727 [main] INFO tc.postgres:16-alpine -- Container is started (JDBC URL: jdbc:postgresql://localhost:33716/shortener?loggerLevel=OFF)
+09:21:02.117 [main] WARN com.networknt.schema.UnknownKeywordFactory -- Unknown keyword version - you should define your own Meta Schema. If the keyword is irrelevant for validation, just use a NonValidationKeyword or if it should generate annotations AnnotationKeyword
+09:21:02.225 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33716/shortener (PostgreSQL 16.15)
+09:21:02.241 [main] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Schema history table "public"."flyway_schema_history" does not exist yet
+09:21:02.243 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.008s)
+09:21:02.249 [main] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Creating Schema History table "public"."flyway_schema_history" ...
+09:21:02.270 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": << Empty Schema >>
+09:21:02.275 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "1 - baseline"
+09:21:02.299 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "2 - domain"
+09:21:02.315 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "3 - governance"
+09:21:02.345 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "4 - orchestration graph"
+09:21:02.362 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "5 - artifact provenance"
+09:21:02.372 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "6 - join semantics all only"
+09:21:02.378 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "7 - requirement lineage"
+09:21:02.400 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "8 - approval gates"
+09:21:02.412 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 8 migrations to schema "public", now at version v8 (execution time 00:00.086s)
+09:21:02.453 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33716/shortener (PostgreSQL 16.15)
+09:21:02.460 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.004s)
+09:21:02.467 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 8
+09:21:02.467 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+09:21:02.493 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33716/shortener (PostgreSQL 16.15)
+09:21:02.499 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.003s)
+09:21:02.507 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 8
+09:21:02.507 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+09:21:02.535 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33716/shortener (PostgreSQL 16.15)
+09:21:02.540 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.003s)
+09:21:02.548 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 8
+09:21:02.548 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+09:21:02.574 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33716/shortener (PostgreSQL 16.15)
+09:21:02.581 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.003s)
+09:21:02.588 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 8
+09:21:02.588 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+09:21:02.612 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33716/shortener (PostgreSQL 16.15)
+09:21:02.618 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.003s)
+09:21:02.624 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 8
+09:21:02.625 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+09:21:02.648 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33716/shortener (PostgreSQL 16.15)
+09:21:02.653 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.003s)
+09:21:02.660 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 8
+09:21:02.660 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+09:21:02.682 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33716/shortener (PostgreSQL 16.15)
+09:21:02.687 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.002s)
+09:21:02.693 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 8
+09:21:02.693 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+09:21:02.716 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33716/shortener (PostgreSQL 16.15)
+09:21:02.721 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.003s)
+09:21:02.727 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 8
+09:21:02.728 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+09:21:02.750 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33716/shortener (PostgreSQL 16.15)
+09:21:02.755 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.002s)
+09:21:02.761 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 8
+09:21:02.761 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+09:21:02.783 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33716/shortener (PostgreSQL 16.15)
+09:21:02.793 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.005s)
+09:21:02.799 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 8
+09:21:02.800 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+09:21:02.821 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33716/shortener (PostgreSQL 16.15)
+09:21:02.827 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.003s)
+09:21:02.835 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 8
+09:21:02.835 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+09:21:02.860 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33716/shortener (PostgreSQL 16.15)
+09:21:02.865 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.002s)
+09:21:02.871 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 8
+09:21:02.871 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+09:21:02.899 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33716/shortener (PostgreSQL 16.15)
+09:21:02.903 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 8 migrations (execution time 00:00.002s)
+09:21:02.909 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 8
+09:21:02.910 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+[ERROR] Tests run: 14, Failures: 3, Errors: 7, Skipped: 0, Time elapsed: 4.876 s <<< FAILURE! -- in agentic.shortener.orchestration.gates.GateEntitiesIT
+[ERROR] agentic.shortener.orchestration.gates.GateEntitiesIT.approvalGateRoundTrips -- Time elapsed: 0.042 s <<< ERROR!
+java.lang.UnsupportedOperationException: T058 not implemented
+	at agentic.shortener.orchestration.gates.GateStore.requestGate(GateStore.java:16)
+	at agentic.shortener.orchestration.gates.GateEntitiesIT.approvalGateRoundTrips(GateEntitiesIT.java:86)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.gates.GateEntitiesIT.cannotSupersedeItself -- Time elapsed: 0.037 s <<< ERROR!
+java.lang.UnsupportedOperationException: T058 not implemented
+	at agentic.shortener.orchestration.gates.GateStore.requestGate(GateStore.java:16)
+	at agentic.shortener.orchestration.gates.GateEntitiesIT.cannotSupersedeItself(GateEntitiesIT.java:232)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.gates.GateEntitiesIT.escalatedRequiresATarget -- Time elapsed: 0.036 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown.
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:73)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3115)
+	at agentic.shortener.orchestration.gates.GateEntitiesIT.escalatedRequiresATarget(GateEntitiesIT.java:176)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.gates.GateEntitiesIT.escalatedDecisionValidates -- Time elapsed: 0.033 s <<< ERROR!
+java.lang.UnsupportedOperationException: T058 not implemented
+	at agentic.shortener.orchestration.gates.GateStore.requestGate(GateStore.java:16)
+	at agentic.shortener.orchestration.gates.GateEntitiesIT.escalatedDecisionValidates(GateEntitiesIT.java:163)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.gates.GateEntitiesIT.changesRequestedDecisionValidates -- Time elapsed: 0.033 s <<< ERROR!
+java.lang.UnsupportedOperationException: T058 not implemented
+	at agentic.shortener.orchestration.gates.GateStore.requestGate(GateStore.java:16)
+	at agentic.shortener.orchestration.gates.GateEntitiesIT.changesRequestedDecisionValidates(GateEntitiesIT.java:140)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.gates.GateEntitiesIT.approvedDecisionValidatesAgainstTheContract -- Time elapsed: 0.034 s <<< ERROR!
+java.lang.UnsupportedOperationException: T058 not implemented
+	at agentic.shortener.orchestration.gates.GateStore.requestGate(GateStore.java:16)
+	at agentic.shortener.orchestration.gates.GateEntitiesIT.approvedDecisionValidatesAgainstTheContract(GateEntitiesIT.java:127)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.gates.GateEntitiesIT.supersedingDecisionReferencesThePrior -- Time elapsed: 0.033 s <<< ERROR!
+java.lang.UnsupportedOperationException: T058 not implemented
+	at agentic.shortener.orchestration.gates.GateStore.requestGate(GateStore.java:16)
+	at agentic.shortener.orchestration.gates.GateEntitiesIT.supersedingDecisionReferencesThePrior(GateEntitiesIT.java:205)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.gates.GateEntitiesIT.timedOutIsNotConstructible -- Time elapsed: 0.037 s <<< ERROR!
+java.lang.UnsupportedOperationException: T058 not implemented
+	at agentic.shortener.orchestration.gates.GateOutcome.submittable(GateOutcome.java:10)
+	at agentic.shortener.orchestration.gates.GateEntitiesIT.timedOutIsNotConstructible(GateEntitiesIT.java:197)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.gates.GateEntitiesIT.approvedRequiresHumanActor -- Time elapsed: 0.039 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: CR-021: only a human decides a gate; APPROVED from 'system' is refused structurally ==> Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown.
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:73)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:39)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3131)
+	at agentic.shortener.orchestration.gates.GateEntitiesIT.approvedRequiresHumanActor(GateEntitiesIT.java:184)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.gates.GateEntitiesIT.changesRequestedRequiresNonEmptyList -- Time elapsed: 0.032 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: the guard: CHANGES_REQUESTED with an empty change list is invalid ==> Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown.
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:73)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:39)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3131)
+	at agentic.shortener.orchestration.gates.GateEntitiesIT.changesRequestedRequiresNonEmptyList(GateEntitiesIT.java:153)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   GateEntitiesIT.approvedRequiresHumanActor:184 CR-021: only a human decides a gate; APPROVED from 'system' is refused structurally ==> Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown.
+[ERROR]   GateEntitiesIT.changesRequestedRequiresNonEmptyList:153 the guard: CHANGES_REQUESTED with an empty change list is invalid ==> Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown.
+[ERROR]   GateEntitiesIT.escalatedRequiresATarget:176 Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown.
+[ERROR] Errors: 
+[ERROR]   GateEntitiesIT.approvalGateRoundTrips:86 » UnsupportedOperation T058 not implemented
+[ERROR]   GateEntitiesIT.approvedDecisionValidatesAgainstTheContract:127 » UnsupportedOperation T058 not implemented
+[ERROR]   GateEntitiesIT.cannotSupersedeItself:232 » UnsupportedOperation T058 not implemented
+[ERROR]   GateEntitiesIT.changesRequestedDecisionValidates:140 » UnsupportedOperation T058 not implemented
+[ERROR]   GateEntitiesIT.escalatedDecisionValidates:163 » UnsupportedOperation T058 not implemented
+[ERROR]   GateEntitiesIT.supersedingDecisionReferencesThePrior:205 » UnsupportedOperation T058 not implemented
+[ERROR]   GateEntitiesIT.timedOutIsNotConstructible:197 » UnsupportedOperation T058 not implemented
+[INFO] 
+[ERROR] Tests run: 14, Failures: 3, Errors: 7, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- failsafe:3.2.5:verify (default) @ shortener ---
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  7.740 s
+[INFO] Finished at: 2026-09-21T09:21:03-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-failsafe-plugin:3.2.5:verify (default) on project shortener: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/failsafe-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+```
