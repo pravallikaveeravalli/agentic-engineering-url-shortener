@@ -1,0 +1,329 @@
+# Red-phase evidence
+
+- **Label**: T033-T035-validation
+- **Captured (UTC)**: 20260921T083533Z
+- **Command**: `./mvnw -Dtest=UrlSyntaxValidatorTest,DestinationNormalizerTest,SchemeAllowListTest test`
+- **Exit code**: 1
+- **Requirement**: NFR-TST-002 (red phase evidenced, not asserted); CN-004
+
+## Why this file exists
+
+This is the failing run captured BEFORE the implementation that makes it pass. It is stored
+so that the red phase is readable by a reviewer rather than claimed in a commit message.
+
+## Captured output
+
+```
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< agentic:shortener >--------------------------
+[INFO] Building agentic-sdlc-url-shortener 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ shortener ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 3 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ shortener ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 33 source files with javac [debug parameters release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ shortener ---
+[INFO] skip non existing resourceDirectory /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ shortener ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 25 source files with javac [debug parameters release 21] to target/test-classes
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java uses or overrides a deprecated API.
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.domain.validation.UrlSyntaxValidatorTest
+[ERROR] Tests run: 8, Failures: 0, Errors: 8, Skipped: 0, Time elapsed: 0.020 s <<< FAILURE! -- in agentic.shortener.domain.validation.UrlSyntaxValidatorTest
+[ERROR] agentic.shortener.domain.validation.UrlSyntaxValidatorTest.wellFormedIsAccepted -- Time elapsed: 0.006 s <<< ERROR!
+java.lang.UnsupportedOperationException: T033 not implemented
+	at agentic.shortener.domain.validation.UrlSyntaxValidator.validate(UrlSyntaxValidator.java:18)
+	at agentic.shortener.domain.validation.UrlSyntaxValidatorTest.wellFormedIsAccepted(UrlSyntaxValidatorTest.java:41)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.domain.validation.UrlSyntaxValidatorTest.rejectionIsActionableWithoutEchoing -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T033 not implemented
+	at agentic.shortener.domain.validation.UrlSyntaxValidator.validate(UrlSyntaxValidator.java:18)
+	at agentic.shortener.domain.validation.UrlSyntaxValidatorTest.rejectionIsActionableWithoutEchoing(UrlSyntaxValidatorTest.java:147)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.domain.validation.UrlSyntaxValidatorTest.reasonsDoNotEchoInput -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T033 not implemented
+	at agentic.shortener.domain.validation.UrlSyntaxValidator.validate(UrlSyntaxValidator.java:18)
+	at agentic.shortener.domain.validation.UrlSyntaxValidatorTest.reasonsDoNotEchoInput(UrlSyntaxValidatorTest.java:126)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.domain.validation.UrlSyntaxValidatorTest.lengthBoundary -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T033 not implemented
+	at agentic.shortener.domain.validation.UrlSyntaxValidator.validate(UrlSyntaxValidator.java:18)
+	at agentic.shortener.domain.validation.UrlSyntaxValidatorTest.lengthBoundary(UrlSyntaxValidatorTest.java:53)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.domain.validation.UrlSyntaxValidatorTest.controlCharacters -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T033 not implemented
+	at agentic.shortener.domain.validation.UrlSyntaxValidator.validate(UrlSyntaxValidator.java:18)
+	at agentic.shortener.domain.validation.UrlSyntaxValidatorTest.controlCharacters(UrlSyntaxValidatorTest.java:99)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.domain.validation.UrlSyntaxValidatorTest.emptyAndBlank -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T033 not implemented
+	at agentic.shortener.domain.validation.UrlSyntaxValidator.validate(UrlSyntaxValidator.java:18)
+	at agentic.shortener.domain.validation.UrlSyntaxValidatorTest.emptyAndBlank(UrlSyntaxValidatorTest.java:65)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.domain.validation.UrlSyntaxValidatorTest.malformedShapes -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T033 not implemented
+	at agentic.shortener.domain.validation.UrlSyntaxValidator.validate(UrlSyntaxValidator.java:18)
+	at agentic.shortener.domain.validation.UrlSyntaxValidatorTest.malformedShapes(UrlSyntaxValidatorTest.java:76)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.domain.validation.UrlSyntaxValidatorTest.everyRejectionClassIsDistinguishable -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T033 not implemented
+	at agentic.shortener.domain.validation.UrlSyntaxValidator$Rejection.reason(UrlSyntaxValidator.java:10)
+	at agentic.shortener.domain.validation.UrlSyntaxValidatorTest.everyRejectionClassIsDistinguishable(UrlSyntaxValidatorTest.java:112)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running agentic.shortener.domain.validation.DestinationNormalizerTest
+[ERROR] Tests run: 7, Failures: 1, Errors: 6, Skipped: 0, Time elapsed: 0.006 s <<< FAILURE! -- in agentic.shortener.domain.validation.DestinationNormalizerTest
+[ERROR] agentic.shortener.domain.validation.DestinationNormalizerTest.distinctionsArePreserved -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T034 not implemented
+	at agentic.shortener.domain.validation.DestinationNormalizer.normalize(DestinationNormalizer.java:7)
+	at agentic.shortener.domain.validation.DestinationNormalizerTest.assertDistinct(DestinationNormalizerTest.java:184)
+	at agentic.shortener.domain.validation.DestinationNormalizerTest.distinctionsArePreserved(DestinationNormalizerTest.java:116)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.domain.validation.DestinationNormalizerTest.equivalentFormsCollapse -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T034 not implemented
+	at agentic.shortener.domain.validation.DestinationNormalizer.normalize(DestinationNormalizer.java:7)
+	at agentic.shortener.domain.validation.DestinationNormalizerTest.assertSame(DestinationNormalizerTest.java:178)
+	at agentic.shortener.domain.validation.DestinationNormalizerTest.equivalentFormsCollapse(DestinationNormalizerTest.java:101)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.domain.validation.DestinationNormalizerTest.unparseableInputIsPassedThrough -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T034 not implemented
+	at agentic.shortener.domain.validation.DestinationNormalizer.normalize(DestinationNormalizer.java:7)
+	at agentic.shortener.domain.validation.DestinationNormalizerTest.unparseableInputIsPassedThrough(DestinationNormalizerTest.java:171)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.domain.validation.DestinationNormalizerTest.componentsSurviveVerbatim -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T034 not implemented
+	at agentic.shortener.domain.validation.DestinationNormalizer.normalize(DestinationNormalizer.java:7)
+	at agentic.shortener.domain.validation.DestinationNormalizerTest.componentsSurviveVerbatim(DestinationNormalizerTest.java:141)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.domain.validation.DestinationNormalizerTest.credentialsAreNotSilentlyRemoved -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T034 not implemented
+	at agentic.shortener.domain.validation.DestinationNormalizer.normalize(DestinationNormalizer.java:7)
+	at agentic.shortener.domain.validation.DestinationNormalizerTest.credentialsAreNotSilentlyRemoved(DestinationNormalizerTest.java:159)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.domain.validation.DestinationNormalizerTest.totalFunction -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: threw on 'https://example.com' ==> Unexpected exception thrown: java.lang.UnsupportedOperationException: T034 not implemented
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertDoesNotThrow.createAssertionFailedError(AssertDoesNotThrow.java:84)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:75)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:62)
+	at org.junit.jupiter.api.Assertions.assertDoesNotThrow(Assertions.java:3249)
+	at agentic.shortener.domain.validation.DestinationNormalizerTest.totalFunction(DestinationNormalizerTest.java:87)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T034 not implemented
+	at agentic.shortener.domain.validation.DestinationNormalizer.normalize(DestinationNormalizer.java:7)
+	at agentic.shortener.domain.validation.DestinationNormalizerTest.lambda$totalFunction$0(DestinationNormalizerTest.java:87)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:71)
+	... 6 more
+
+[ERROR] agentic.shortener.domain.validation.DestinationNormalizerTest.idempotent -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T034 not implemented
+	at agentic.shortener.domain.validation.DestinationNormalizer.normalize(DestinationNormalizer.java:7)
+	at agentic.shortener.domain.validation.DestinationNormalizerTest.idempotent(DestinationNormalizerTest.java:71)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running agentic.shortener.domain.validation.SchemeAllowListTest
+[ERROR] Tests run: 11, Failures: 3, Errors: 6, Skipped: 0, Time elapsed: 0.022 s <<< FAILURE! -- in agentic.shortener.domain.validation.SchemeAllowListTest
+[ERROR] agentic.shortener.domain.validation.SchemeAllowListTest.everythingElseIsRefused -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T035 not implemented
+	at agentic.shortener.domain.validation.SchemeAllowList.permits(SchemeAllowList.java:12)
+	at agentic.shortener.domain.validation.SchemeAllowListTest.everythingElseIsRefused(SchemeAllowListTest.java:77)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.domain.validation.SchemeAllowListTest.smugglingShapesAreRefused -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: must refuse: //example.com ==> Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.UnsupportedOperationException>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:67)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:39)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3131)
+	at agentic.shortener.domain.validation.SchemeAllowListTest.smugglingShapesAreRefused(SchemeAllowListTest.java:96)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T035 not implemented
+	at agentic.shortener.domain.validation.SchemeAllowList.requirePermitted(SchemeAllowList.java:20)
+	at agentic.shortener.domain.validation.SchemeAllowListTest.lambda$smugglingShapesAreRefused$1(SchemeAllowListTest.java:97)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:53)
+	... 6 more
+
+[ERROR] agentic.shortener.domain.validation.SchemeAllowListTest.refusalDoesNotEchoInput -- Time elapsed: 0 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.UnsupportedOperationException>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:67)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3115)
+	at agentic.shortener.domain.validation.SchemeAllowListTest.refusalDoesNotEchoInput(SchemeAllowListTest.java:217)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T035 not implemented
+	at agentic.shortener.domain.validation.SchemeAllowList.requirePermitted(SchemeAllowList.java:20)
+	at agentic.shortener.domain.validation.SchemeAllowListTest.lambda$refusalDoesNotEchoInput$10(SchemeAllowListTest.java:218)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:53)
+	... 6 more
+
+[ERROR] agentic.shortener.domain.validation.SchemeAllowListTest.permittedDestinationPasses -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T035 not implemented
+	at agentic.shortener.domain.validation.SchemeAllowList.requirePermitted(SchemeAllowList.java:20)
+	at agentic.shortener.domain.validation.SchemeAllowListTest.permittedDestinationPasses(SchemeAllowListTest.java:235)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.domain.validation.SchemeAllowListTest.configurationCannotWiden -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T035 not implemented
+	at agentic.shortener.domain.validation.SchemeAllowList.permitted(SchemeAllowList.java:16)
+	at agentic.shortener.domain.validation.SchemeAllowListTest.configurationCannotWiden(SchemeAllowListTest.java:120)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.domain.validation.SchemeAllowListTest.theNamedThreeAreRefused -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T035 not implemented
+	at agentic.shortener.domain.validation.SchemeAllowList.permits(SchemeAllowList.java:12)
+	at agentic.shortener.domain.validation.SchemeAllowListTest.theNamedThreeAreRefused(SchemeAllowListTest.java:61)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.domain.validation.SchemeAllowListTest.theListIsStructurallyImmutable -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T035 not implemented
+	at agentic.shortener.domain.validation.SchemeAllowList.permitted(SchemeAllowList.java:16)
+	at agentic.shortener.domain.validation.SchemeAllowListTest.theListIsStructurallyImmutable(SchemeAllowListTest.java:137)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.domain.validation.SchemeAllowListTest.singleSourceOfTruth -- Time elapsed: 0.009 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: these files define a second scheme list: [src/main/java/agentic/shortener/domain/link/ShortLink.java]. There must be one allow-list, and SchemeAllowList is it ==> expected: <[]> but was: <[src/main/java/agentic/shortener/domain/link/ShortLink.java]>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+	at agentic.shortener.domain.validation.SchemeAllowListTest.singleSourceOfTruth(SchemeAllowListTest.java:206)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.domain.validation.SchemeAllowListTest.permittedSchemes -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T035 not implemented
+	at agentic.shortener.domain.validation.SchemeAllowList.permits(SchemeAllowList.java:12)
+	at agentic.shortener.domain.validation.SchemeAllowListTest.permittedSchemes(SchemeAllowListTest.java:49)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   DestinationNormalizerTest.totalFunction:87 threw on 'https://example.com' ==> Unexpected exception thrown: java.lang.UnsupportedOperationException: T034 not implemented
+[ERROR]   SchemeAllowListTest.refusalDoesNotEchoInput:217 Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.UnsupportedOperationException>
+[ERROR]   SchemeAllowListTest.singleSourceOfTruth:206 these files define a second scheme list: [src/main/java/agentic/shortener/domain/link/ShortLink.java]. There must be one allow-list, and SchemeAllowList is it ==> expected: <[]> but was: <[src/main/java/agentic/shortener/domain/link/ShortLink.java]>
+[ERROR]   SchemeAllowListTest.smugglingShapesAreRefused:96 must refuse: //example.com ==> Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.UnsupportedOperationException>
+[ERROR] Errors: 
+[ERROR]   DestinationNormalizerTest.componentsSurviveVerbatim:141 » UnsupportedOperation T034 not implemented
+[ERROR]   DestinationNormalizerTest.credentialsAreNotSilentlyRemoved:159 » UnsupportedOperation T034 not implemented
+[ERROR]   DestinationNormalizerTest.distinctionsArePreserved:116->assertDistinct:184 » UnsupportedOperation T034 not implemented
+[ERROR]   DestinationNormalizerTest.equivalentFormsCollapse:101->assertSame:178 » UnsupportedOperation T034 not implemented
+[ERROR]   DestinationNormalizerTest.idempotent:71 » UnsupportedOperation T034 not implemented
+[ERROR]   DestinationNormalizerTest.unparseableInputIsPassedThrough:171 » UnsupportedOperation T034 not implemented
+[ERROR]   SchemeAllowListTest.configurationCannotWiden:120 » UnsupportedOperation T035 not implemented
+[ERROR]   SchemeAllowListTest.everythingElseIsRefused:77 » UnsupportedOperation T035 not implemented
+[ERROR]   SchemeAllowListTest.permittedDestinationPasses:235 » UnsupportedOperation T035 not implemented
+[ERROR]   SchemeAllowListTest.permittedSchemes:49 » UnsupportedOperation T035 not implemented
+[ERROR]   SchemeAllowListTest.theListIsStructurallyImmutable:137 » UnsupportedOperation T035 not implemented
+[ERROR]   SchemeAllowListTest.theNamedThreeAreRefused:61 » UnsupportedOperation T035 not implemented
+[ERROR]   UrlSyntaxValidatorTest.controlCharacters:99 » UnsupportedOperation T033 not implemented
+[ERROR]   UrlSyntaxValidatorTest.emptyAndBlank:65 » UnsupportedOperation T033 not implemented
+[ERROR]   UrlSyntaxValidatorTest.everyRejectionClassIsDistinguishable:112 » UnsupportedOperation T033 not implemented
+[ERROR]   UrlSyntaxValidatorTest.lengthBoundary:53 » UnsupportedOperation T033 not implemented
+[ERROR]   UrlSyntaxValidatorTest.malformedShapes:76 » UnsupportedOperation T033 not implemented
+[ERROR]   UrlSyntaxValidatorTest.reasonsDoNotEchoInput:126 » UnsupportedOperation T033 not implemented
+[ERROR]   UrlSyntaxValidatorTest.rejectionIsActionableWithoutEchoing:147 » UnsupportedOperation T033 not implemented
+[ERROR]   UrlSyntaxValidatorTest.wellFormedIsAccepted:41 » UnsupportedOperation T033 not implemented
+[INFO] 
+[ERROR] Tests run: 26, Failures: 4, Errors: 20, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.794 s
+[INFO] Finished at: 2026-09-21T03:35:35-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project shortener: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+```

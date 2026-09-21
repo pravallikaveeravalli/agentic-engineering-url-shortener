@@ -1,9 +1,9 @@
 package agentic.shortener.domain.link;
 
+import agentic.shortener.domain.validation.SchemeAllowList;
+
 import java.time.Instant;
-import java.util.Locale;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -21,17 +21,6 @@ import java.util.UUID;
  * proves T014 can fail.
  */
 public final class ShortLink {
-
-    /**
-     * FR-URL-004, non-waivable under Constitution V. <strong>No configuration, override or exception
-     * may extend this</strong>, which is why it is a private constant and not a property: a
-     * configurable allow-list is not an allow-list.
-     *
-     * <p>{@code javascript} and {@code data} would turn a redirect into code execution in the
-     * follower's browser; {@code file} into a local-file read. Those three are named in FR-URL-004's
-     * evidence line for exactly that reason.
-     */
-    private static final Set<String> ALLOWED_SCHEMES = Set.of("http", "https");
 
     /** FR-URL-001. */
     private static final int MAX_DESTINATION_LENGTH = 2048;
@@ -86,7 +75,10 @@ public final class ShortLink {
             throw new IllegalArgumentException("destination exceeds " + MAX_DESTINATION_LENGTH
                     + " characters (FR-URL-001): " + destination.length());
         }
-        requireAllowedScheme(destination);
+        // FR-URL-004, non-waivable. Delegated to the one allow-list (T035) rather than kept as a
+        // second copy here: two definitions of a security control drift, and the copy nobody tests is
+        // the one that stays wrong.
+        SchemeAllowList.requirePermitted(destination);
 
         // FR-URL-009: strictly after. Equal instants would mean a link expiring the moment it
         // exists, which is the already-expired state the requirement forbids.
@@ -110,26 +102,6 @@ public final class ShortLink {
         ShortLink validated = create(shortCode, destination, creatorId, createdAt, expiresAt);
         return new ShortLink(validated.shortCode, validated.destination, validated.creatorId,
                 validated.createdAt, validated.expiresAt, Objects.requireNonNull(state, "state"));
-    }
-
-    private static void requireAllowedScheme(String destination) {
-        int colon = destination.indexOf(':');
-        if (colon <= 0) {
-            throw new IllegalArgumentException(
-                    "destination must carry an explicit allow-listed scheme (FR-URL-004): "
-                            + destination);
-        }
-        String scheme = destination.substring(0, colon).toLowerCase(Locale.ROOT);
-        if (!ALLOWED_SCHEMES.contains(scheme)) {
-            throw new IllegalArgumentException("scheme '" + scheme + "' is not allow-listed. "
-                    + "Permitted: " + ALLOWED_SCHEMES + " (FR-URL-004, non-waivable)");
-        }
-        // A scheme containing whitespace or control characters is a smuggling attempt: some parsers
-        // strip them and then see a different scheme than the one checked here.
-        if (!scheme.matches("[a-z][a-z0-9+.-]*")) {
-            throw new IllegalArgumentException(
-                    "scheme contains characters no scheme may contain (FR-URL-004): '" + scheme + "'");
-        }
     }
 
     /**

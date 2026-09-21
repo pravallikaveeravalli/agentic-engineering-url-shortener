@@ -193,4 +193,36 @@ class WalkingSkeletonIT extends PostgresIntegrationTest {
         assertFalse(String.valueOf(response.getBody()).contains("Exception"),
                 "verbose error detail is off (T018): no exception class may reach a caller");
     }
+
+    @Test
+    @DisplayName("FR-URL-002: a 400 body does not echo the submitted destination")
+    void refusalDoesNotEchoTheSubmittedDestination() {
+        // This asserts the fix to a defect that was live in the walking skeleton. ShortLink's own scheme
+        // check built its message by concatenating the raw destination, and "destination" is one of
+        // LinkController's DOMAIN_REFUSAL_MARKERS — so the submitted URL went into the 400 body intact.
+        // FR-URL-002's negative clause forbids exactly that: "MUST NOT echo the rejected input in a way
+        // that enables injection".
+        //
+        // The domain half is asserted in SchemeAllowListTest. This is the other half, and it has to be
+        // here: the vulnerability was the COMBINATION of a message that echoed and a marker list that
+        // passed it through, and neither test alone would have caught it. T035 routed the check through
+        // the single allow-list, whose messages are constants.
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String hostile = "javascript:alert(document.cookie)//marker-cnczmt.example";
+        ResponseEntity<String> response = rest.exchange(url("/v1/links"), HttpMethod.POST,
+                new HttpEntity<>("{\"destination\":\"" + hostile + "\"}", headers), String.class);
+        String body = String.valueOf(response.getBody());
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), body);
+        assertFalse(body.contains("marker-cnczmt"),
+                "the submitted destination was reflected into the refusal body: " + body);
+        assertFalse(body.contains("document.cookie"),
+                "a payload inside the destination was reflected into the refusal body: " + body);
+        assertFalse(body.contains("javascript"),
+                "even the scheme must not be echoed — 'javascript' is caller-supplied text: " + body);
+        assertTrue(body.contains("allow-listed"),
+                "the refusal must still name the rule, or it is not actionable: " + body);
+    }
 }

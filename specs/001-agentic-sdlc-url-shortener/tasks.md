@@ -314,17 +314,17 @@ resolution, and expiry outcomes.
 
 ### Validation and security foundation (must precede creation)
 
-- [ ] T033 [P] [US1] URL syntax and length validation — `src/main/java/agentic/shortener/domain/validation/UrlSyntaxValidator.java`
+- [x] T033 [P] [US1] URL syntax and length validation — `src/main/java/agentic/shortener/domain/validation/UrlSyntaxValidator.java`
   - **Req**: **FR-URL-002**, NFR-SEC-001 · **Scn**: DS-A · **ADR**: ADR-007 · **Pre**: T032
   - **Deps**: T032 · **Par**: yes · **Artifact**: rejects malformed, empty, and **over-length (> 2048)** destinations with a cause-identifying reason
   - **TDD**: RED-FIRST · **Validate**: `-Dtest=UrlSyntaxValidatorTest` covering EC-006 · **Docs**: — · **Trace**: matrix FR-URL-002
   - **Guard**: a rejected request MUST NOT persist anything, MUST NOT consume a code, and MUST NOT echo input in a way enabling injection · **Done**: each rejection class returns a distinguishable reason · **Approval**: none
-- [ ] T034 [P] [US1] Destination normalization — `src/main/java/agentic/shortener/domain/validation/DestinationNormalizer.java`
+- [x] T034 [P] [US1] Destination normalization — `src/main/java/agentic/shortener/domain/validation/DestinationNormalizer.java`
   - **Req**: **FR-URL-003**, NFR-SEC-001 · **Scn**: DS-A · **ADR**: ADR-007 · **Pre**: T032
   - **Deps**: T032 · **Par**: yes · **Artifact**: normalization applied **before** validation and storage, and **idempotent**
   - **TDD**: RED-FIRST · **Validate**: idempotency property test — `normalize(normalize(x)) == normalize(x)` · **Docs**: — · **Trace**: matrix FR-URL-003
   - **Guard**: normalization MUST NOT alter the effective destination; a test asserts round-trip equivalence · **Done**: idempotency and non-alteration both asserted · **Approval**: none
-- [ ] T035 [US1] Scheme allow-list — `src/main/java/agentic/shortener/domain/validation/SchemeAllowList.java`
+- [x] T035 [US1] Scheme allow-list — `src/main/java/agentic/shortener/domain/validation/SchemeAllowList.java`
   - **Req**: **FR-URL-004** (non-waivable), NFR-SEC-001 · **Scn**: DS-A · **ADR**: ADR-013 · **Pre**: T033, T034
   - **Deps**: T033, T034 · **Par**: no (consumes both) · **Artifact**: explicit allow-list; every other scheme refused
   - **TDD**: RED-FIRST · **Validate**: allow-list matrix test including `javascript:`, `data:`, `file:` · **Docs**: plan §8 · **Trace**: matrix FR-URL-004, `POL-SEC-001`
