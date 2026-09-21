@@ -6,9 +6,10 @@
 package (2026-09-20) — it was **not** independently gated. Changes pass through change control. Nothing in this
 guide has been executed: it is the validation design, not a record of results.
 
-How a reviewer proves the system works, without reading the source. Commands are shown in the shape
-they will take; exact invocations depend on ADR-001, which is not yet decided (CN-002). Nothing here
-has been executed — this is the validation design, not a record of results.
+How a reviewer proves the system works, without reading the source. Commands are shown in the shape they will
+take; exact invocations follow **ADR-001 — Java 21 + Spring Boot 3, Accepted 2026-09-20** — and are finalised
+when **T127** executes this guide end to end on a clean machine. Nothing here has been executed yet: this is the
+validation design, not a record of results.
 
 ---
 
@@ -167,7 +168,7 @@ curl -X POST localhost:8080/v1/links -H 'Authorization: Bearer <key>' \
 ```
 curl -i localhost:8080/<shortCode>        # no credentials — deliberately public
 ```
-→ redirect to the destination. **Note**: status code is provisional pending DF-002.
+→ redirect to the destination. **Note**: the class is **temporary, never permanent** (FR-URL-007, DF-002 resolved by CR-003); the exact code within that class is an implementation detail (CN-006).
 
 ```
 curl localhost:8080/v1/links/<shortCode>/analytics -H 'Authorization: Bearer <key>'
@@ -254,11 +255,12 @@ policy is `FAIL` or an exception is unapproved or expired.
 | Scenario | What to look for |
 |---|---|
 | **DS-A** | Stage 4 is `SKIPPED`. The run records the quality checks performed **and the explicit reason clarification was not required**. No gate fires artificially. |
-| **DS-B** | The seven-dimension impact analysis exists and its timestamp **precedes** the first code modification. Retry and compensation records present. |
+| **DS-B** | The subject is the **per-creator aggregate redirect limit** — FR-URL-016's third tier (PVT-014), deliberately deferred from the baseline, which builds only the per-creator creation tier and the per-code redirect tier. Confirm the **before-state** first: traffic spread across several links, each staying **under** the per-code limit, passes **unthrottled**. Then the seven-dimension impact analysis whose timestamp **precedes** the first code modification. Then the governed change: the same traffic is throttled, the response **names the aggregate tier without naming the creator**, the per-code tier is unregressed, and redirect latency is re-measured against PVT-001 with the ownership lookup now in the hot path. Retry and compensation records present. |
 | **DS-C** | Ambiguity detected before implementation; only the affected path suspends; a replan event lists invalidated stages and **voided approvals**; the run resumes and terminates. |
 
-Each emits an evidence bundle with per-stage **executor mode labels**. Deterministic executions are
-labelled as such and never presented as AI work.
+Each emits an evidence bundle carrying a per-node **executor-kind label** — `DETERMINISTIC`, `AI` or `HUMAN`
+(FR-ORC-029; "kind", not "mode", since **CR-001/CR-005**). Deterministic executions are labelled as such and never
+presented as AI work.
 
 ### Now run one of your own
 
@@ -284,6 +286,7 @@ session that produced them.
 3. Where did the run retry, fall back, roll back, or compensate — and which was which?
 4. Who decided what, when, and why? Is each decision materialized as a repository record?
 5. Which figures were measured, under what conditions, and which are proposed targets?
+6. What did the baseline deliberately omit, which run implemented it, and where is that run's evidence?
 
 ```
 <run> evidence export --run <runId>
@@ -303,6 +306,11 @@ measurement.
   measurement, never a production statistic** (Constitution IX, AS-009).
 - Time parameters may be compressed in demonstration runs; where they are, the evidence labels them
   (AS-007).
-- Deferred findings **DF-001** (analytics exactness), **DF-002** (redirect permanence), and **DF-003**
-  (retention boundary) are unresolved at the time of writing. Where this guide shows behavior touching
-  them, it reflects the plan's **provisional** position, not an approved decision.
+- Deferred findings **DF-001** (analytics exactness), **DF-002** (redirect permanence) and **DF-003** (retention
+  boundary) were **all resolved on 2026-09-20** — by ADR-014, CR-003 and CR-004 respectively. The behaviour this
+  guide shows reflects those **approved** decisions: the analytics append is synchronous in its own transaction with
+  failure isolated and counted (PVT-009 as an observable failure ceiling); and redirects are temporary, never
+  permanent. **Retention was then simplified**: this demonstration retains every record indefinitely, and the
+  production archival job — including CR-004's run-termination clock rule — is recorded as a **recommendation**
+  rather than built (NFR-AUD-003, CR-017). **DF-004** — the run-level retry circuit breaker and expiry notification
+  — remains open by design and out of scope.

@@ -6,7 +6,7 @@
 
 **Governing constitution**: v1.1.0 (ratified 2026-09-17, last amended 2026-09-18)
 
-**Policy version evaluated**: `policy-set-1.0.0` (defined in §9 of this plan)
+**Policy version evaluated**: `policy-set-1.1.0` (defined in §9 of this plan)
 
 **Status**: **APPROVED — 2026-09-20 by Pravallika Veeravalli**, at the Gate 4 closing package
 (`docs/governance/gate-decisions/gate-04-closing-package.md`): *"This is the Human Architecture Approval of the
@@ -64,17 +64,17 @@ each provisional position alongside its disposition, including the one that was 
 
 *GATE: must pass before Phase 0. Re-checked after Phase 1 design — see §Post-Design Re-Check.*
 
-Enumerated against **v1.1.0**, policy version `policy-set-1.0.0`, per the Amendment 001
+Enumerated against **v1.1.0**, policy version `policy-set-1.1.0`, per the Amendment 001
 carry-forward.
 
 | Principle | Outcome | Justification |
 |---|---|---|
 | I. Specification Before Implementation | **PASS** | Spec approved at Gate 2, clarified at Gate 3. No code written. Every requirement carries a stable ID; 51 FRs trace bidirectionally. |
 | II. Explicit Agentic Orchestration | **PASS** | §3 defines an explicit persisted DAG with 12 nodes, per-node entry/exit criteria, two fan-out/join points, conditional branching, replanning, and durable state. Not a call chain. |
-| III. Human Governance | **PASS** | §5 defines 8 mandatory gate classes with the five outcomes; silence produces suspension, never progression; deadline disclosed in the ask (CL-005). |
+| III. Human Governance | **PASS** | §5 defines **10** mandatory gate classes with the five outcomes; silence produces suspension, never progression; deadline disclosed in the ask (CL-005). |
 | IV. Test-Driven Engineering | **PASS** | §10 assigns red-green-refactor to domain and orchestration-transition behavior, with the red phase recorded. All seven required test categories are planned and non-empty. |
 | V. Security and Privacy by Design | **PASS** | §8 covers scheme allow-list, SSRF/internal-address handling, abuse cases, two-sided rate limiting, hashed credentials, no personal data (NFR-SEC-005), threat model. |
-| VI. Compliance and Change-Control | **PASS** | §9 defines `policy-set-1.0.0` across 7 domains with mandatory/advisory split, four outcomes, exception workflow, and the 9 release-blocking conditions. |
+| VI. Compliance and Change-Control | **PASS** | §9 defines `policy-set-1.1.0` across 7 domains, four outcomes, exception workflow, and the 9 release-blocking conditions. **Twelve checks, all mandatory**: `POL-CHG-003` added so the major-version rule is enforced rather than described (CR-013), and `POL-AUD-002` removed because with no retention path it could never meaningfully evaluate (CR-017). The mandatory/advisory split remains defined and currently has no advisory instance. |
 | VII. Architecture and Maintainability | **PASS** | §1–2 separate the seven concerns; §12 rejects Temporal/Camunda precisely to avoid unjustified complexity. Single process, single store. |
 | VIII. Reliability and Recovery | **PASS** | §6 implements CL-006's two-vote model, CL-007's compensation register, CL-005's suspension semantics, CL-009's dual-restart recovery. |
 | IX. Observability and Auditability | **PASS** | §7 defines run correlation IDs, the six mandatory audit fields, and the MTTR method with declared population and exclusions. Demonstration measurements labelled as such. |
@@ -103,9 +103,9 @@ database process, git, the human owner.
 | Link follower | Human/machine, anonymous | Follow short links only. Never authenticates (FR-URL-018). |
 | Creator | Authenticated machine client | Create links; read **own** link analytics (FR-URL-011). |
 | Operator | Human with shell access | Provision creators via local script. **Shell access is the trust boundary** (FR-URL-019). |
-| Engineer | Human | Submit requirements, create and inspect runs, trigger replanning. |
-| Reviewer / Approver | Human | Decide gates. Cannot be substituted by an agent at any autonomy setting. |
-| Release owner | Human | Release readiness. Never self-certified by an agent (FR-ORC-025). |
+| Engineer | Human | Submit requirements, create and inspect runs, trigger replanning. Reached under the **machine-access** boundary — **never a creator credential** (CN-012). |
+| Reviewer / Approver | Human | Decide gates. Cannot be substituted by an agent at any autonomy setting. Records decisions through the governance surface under the machine-access boundary; holds **no** creator credential (CN-012). |
+| Release owner | Human | Release readiness. Never self-certified by an agent (FR-ORC-025). Same boundary as Reviewer (CN-012). |
 | Assessment reviewer | Human, read-only | Reconstruct runs from artifacts alone. |
 | Stage executor | Agent (AI-capable or deterministic) | Bounded per declaration; proposes, never rules (CL-006). |
 
@@ -121,7 +121,8 @@ database process, git, the human owner.
 ### Trust boundaries
 
 1. **Public internet → redirect endpoint.** Unauthenticated by design. Input is a short code only.
-2. **Creator client → creation/analytics API.** API key presented; validated against stored hash.
+2. **Creator client → creation/analytics API.** API key presented; validated against stored hash. **This boundary
+   covers the shortener only.** A creator credential grants nothing in the control plane (CN-012).
 3. **Operator shell → provisioning script.** The ability to run commands on the host *is* the
    boundary; no HTTP issuance surface exists.
 4. **Orchestrator → stage executor.** Executors are the governed party. They propose classifications
@@ -129,6 +130,12 @@ database process, git, the human owner.
    autonomy violation (CL-007).
 5. **Service → AI provider.** Untrusted output. AI text is never executed; stage 7 patches are applied
    on a branch and verified by the real test suite before anything is accepted (FR-ORC-031).
+6. **Operator/engineer/reviewer shell → orchestrator governance surfaces.** Run creation, run inspection and
+   gate-decision recording carry **no credential**: the ability to reach the process *is* the boundary, the same one
+   drawn for creator provisioning (FR-URL-019). The two identity models are provably separate — an architecture test
+   asserts no control-plane package reads a creator credential — and the boundary itself is enforced by deployment,
+   not by code. Stated in `docs/LIMITATIONS.md` in exactly those terms: **separation is proven, reachability is
+   not.** A reviewer credential class is the production answer and is recorded as future work (CN-012).
 
 ### Data ownership
 
@@ -197,9 +204,9 @@ Produced in Phase 1 (`contracts/`), all under explicit version control:
 
 | Deliverable | Artifact | Version | Validation |
 |---|---|---|---|
-| API contract | `contracts/openapi.yaml` (OpenAPI 3.1) | `v1` path prefix; document `info.version` semver | Executable: live responses validated against the document in contract tests |
+| API contract | `contracts/openapi.yaml` (OpenAPI 3.1) | `v1` path prefix; `info.version` **2.0.0** (CR-013) | Executable: live responses validated against the document in contract tests |
 | Request/response/error schemas | Components within the OpenAPI document | With document | Same |
-| Workflow-state schema | `contracts/workflow-state.schema.json` | semver | JSON Schema validation test over persisted snapshots |
+| Workflow-state schema | `contracts/workflow-state.schema.json` | semver, **2.0.0** (CR-013) | JSON Schema validation test over persisted snapshots; the fan-out node model's key uniqueness and join invariant are asserted by T074's test, which JSON Schema cannot express |
 | Approval schema | `contracts/approval.schema.json` | semver | Schema test + gate-record cross-check |
 | Audit-event schema | `contracts/audit-event.schema.json` | semver | Schema test asserting all six mandatory fields present |
 | Policy-evaluation schema | `contracts/policy-evaluation.schema.json` | semver | Schema test over the four outcome values |
@@ -276,7 +283,7 @@ S1 Ingestion
                                                     ┌──── FAN-OUT per task ────┐
                                                     ▼         ▼         ▼
                                               S7.1 Impl   S7.2 Impl  S7.n Impl
-                                                    └──── JOIN (all must succeed) ──┐
+                                                    └──► S7.join (ALL must succeed) ──┐
                                                                                     ▼
                                                                             S8 Testing (real suite)
                                                                                     │
@@ -290,6 +297,13 @@ S1 Ingestion
                                                         S12 Final engineering summary
 ```
 
+**Node identity.** Nodes are keyed by string, not by stage number (CR-011/CR-013): `"S1".."S12"` for a singleton or
+fan-out-parent stage, `"S7.1".."S7.n"` for fan-out children, `"S7.join"` for the join that gates S8. A freshly
+materialised run holds thirteen nodes — eleven singletons, the S7 parent, and its join — and children are appended
+when S6 yields tasks, so **there is no fixed node count per run**. Edges address node keys, which is what makes a
+replanned instance's topology queryable and lets a replan invalidate one fan-out child while leaving its siblings
+intact (FR-ORC-019). The S9∥S10 pair needs no join node: S11 simply carries two incoming `ALL` edges.
+
 Two fan-out/join points: task-level parallelism in S7, and the S9∥S10 pair. One conditional branch at
 S3 — **S4 fires only on material ambiguity**, which is DS-A's explicit requirement that a well-formed
 requirement must not meet an artificial gate.
@@ -300,22 +314,26 @@ Common to all nodes: **audit events** `STAGE_ENTERED`, `STAGE_EXITED`, `CRITERIA
 `EXECUTOR_DISPATCHED`, `FAILURE_CLASSIFIED`, `RETRY_RULED`, plus node-specific events named below.
 Every event carries the six mandatory fields (actor type, action, timestamp, affected artifact/state,
 result, reason). Default retry policy is PVT-007 (3 attempts, exponential from 1 s) gated by the
-two-vote rule; default timeout is per-stage and classified per CL-006 rule 4.
+two-vote rule. Per-node elapsed-time **escalation thresholds** are **PVT-016**'s schedule. Breaching one does not
+fail the node: it **escalates to the human** with elapsed-versus-expected and last-observed activity, offering **keep
+waiting** or **kill the node** (FR-ORC-014 rule 6). A kill fails the node by overrun, after which CL-006 rule 4 and
+the node's design-time idempotency declaration decide retry eligibility — **the threshold sets duration, never
+eligibility** — and an unanswered escalation follows the gate-wait deadline to suspension.
 
 | # | Node | Purpose | Inputs → Outputs | Pre / Post | Actor | Timeout & retry | Failure class | Fallback |
 |---|---|---|---|---|---|---|---|---|
-| S1 | Ingestion | Admit a requirement, create the run | raw requirement → `WorkflowRun`, correlation ID | Pre: well-formed submission. Post: run persisted with ID | Deterministic engine | Short; `INTERNAL` permanent | Permanent on malformed input | None — refuse |
-| S2 | Normalization | Identified, testable, typed requirements | raw → `RequirementRecord[]` | Pre: S1 ok. Post: every requirement has ID + type + testable statement | AI-capable | PVT-007; `TIMEOUT` retryable (idempotent) | Per envelope | Deterministic structural normalizer |
-| S3 | Ambiguity detection | Find incompleteness, conflict, untestability | requirements → `AmbiguityRecord[]` + quality-check record | Pre: S2 ok. Post: checks recorded; if none, the **reason clarification was not required** is recorded | AI-capable | PVT-007; retryable | Per envelope | Deterministic rule checks |
-| S4 | Human clarification | Resolve material ambiguity | ambiguities → `ClarificationDecision[]` | Pre: ≥1 material ambiguity. Post: every material item answered | **Human** | Gate wait PVT-006 → `SAFE_STOP`; no retry | N/A | None — suspension only |
-| S5 | Decomposition | Dependency-ordered tasks | requirements → `TaskRecord[]` + edges | Pre: no unresolved material ambiguity. Post: every task traces to ≥1 requirement; no orphans | AI-capable | PVT-007; retryable | Per envelope | Deterministic template decomposition |
-| S6 | Architecture & design | Design + API/schema impact | tasks → design doc, contract deltas | Pre: S5 ok. Post: impacted contracts identified | AI-capable | PVT-007; retryable | Per envelope | Deterministic impact analyzer |
-| S7 | Implementation (fan-out) | Author and apply change per task | task + design → branch commit | Pre: task approved, design ok. Post: patch applied on branch, buildable | AI-capable, or **`HUMAN`** under no-plan gate option 2 | PVT-007; `TIMEOUT` **not** retryable (non-idempotent git effect) | Per envelope; conflict = permanent | Deterministic **plan-applying**; where **no change plan exists**, suspends at the no-plan gate — never no-ops forward (CR-001) |
-| S8 | Testing | Execute the real suite | branch → test results | Pre: S7 join complete. Post: results recorded with pass/fail per test | Deterministic, **real** | Long timeout; retry only on `UNAVAILABLE` | Test failure = permanent (routes back to S7 within bound) | None — real results only |
-| S9 | Documentation | Update docs with behavior | change + results → doc updates | Pre: S8 ok. Post: docs reflect delivered behavior | AI-capable | PVT-007; retryable | Per envelope | Deterministic doc stub generator |
-| S10 | Security & policy | Evaluate `policy-set-1.0.0` | change + deps → `PolicyCheckResult[]` | Pre: S8 ok. Post: every applicable policy has one of four outcomes | Deterministic, **real** | Retry on `UNAVAILABLE` only | Unevaluable = **not** `PASS` (EC-025) | None — verdicts must be repeatable |
-| S11 | Release readiness | Evaluate 9 blocking conditions, then human decision | all evidence → `ReleaseReadinessReport` + `GateDecision` | Pre: S9∥S10 join complete. Post: recorded human decision | Deterministic eval + **Human** | Gate wait PVT-006 → `SAFE_STOP` | N/A | None |
-| S12 | Final summary | Assemble from recorded evidence only | evidence → summary artifact | Pre: S11 approved. Post: every claim traceable | Deterministic assembler | Short | Missing evidence = permanent | None — never invent content |
+| S1 | Ingestion | Admit a requirement, create the run | raw requirement → `WorkflowRun`, correlation ID | Pre: well-formed submission. Post: run persisted with ID | Deterministic engine | **PVT-016: 5 s**; `INTERNAL` permanent | Permanent on malformed input | None — refuse |
+| S2 | Normalization | Identified, testable, typed requirements | raw → `RequirementRecord[]` | Pre: S1 ok. Post: every requirement has ID + type + testable statement | AI-capable | **PVT-016: 120 s**; PVT-007 attempts; `TIMEOUT` retryable (idempotent) | Per envelope | Deterministic structural normalizer |
+| S3 | Ambiguity detection | Find incompleteness, conflict, untestability | requirements → `AmbiguityRecord[]` + quality-check record | Pre: S2 ok. Post: checks recorded; if none, the **reason clarification was not required** is recorded | AI-capable | **PVT-016: 120 s**; PVT-007 attempts; retryable | Per envelope | Deterministic rule checks |
+| S4 | Human clarification | Resolve material ambiguity | ambiguities → `ClarificationDecision[]` | Pre: ≥1 material ambiguity. Post: every material item answered | **Human** | **No execution threshold** (PVT-016: N/A) — already waiting on a human; its threshold *is* the gate wait PVT-006 → `SAFE_STOP`; no retry | N/A | None — suspension only |
+| S5 | Decomposition | Dependency-ordered tasks | requirements → `TaskRecord[]` + edges | Pre: no unresolved material ambiguity. Post: every task traces to ≥1 requirement; no orphans | AI-capable | **PVT-016: 180 s**; PVT-007 attempts; retryable | Per envelope | Deterministic template decomposition |
+| S6 | Architecture & design | Design + API/schema impact | tasks → design doc, contract deltas | Pre: S5 ok. Post: impacted contracts identified | AI-capable | **PVT-016: 300 s**; PVT-007 attempts; retryable | Per envelope | Deterministic impact analyzer |
+| S7 | Implementation (fan-out) | Author and apply change per task | task + design → branch commit | Pre: task approved, design ok. Post: patch applied on branch, buildable | AI-capable, or **`HUMAN`** under no-plan gate option 2 | **PVT-016: 600 s per node**; PVT-007 attempts; `TIMEOUT` **not** retryable (non-idempotent git effect) | Per envelope; conflict = permanent | Deterministic **plan-applying**; where **no change plan exists**, suspends at the no-plan gate — never no-ops forward (CR-001) |
+| S8 | Testing | Execute the real suite | branch → test results | Pre: S7 join complete. Post: results recorded with pass/fail per test | Deterministic, **real** | **PVT-016: 1800 s** threshold — the real suite plus Testcontainers startup; retry only on `UNAVAILABLE` | Test failure = permanent (routes back to S7 within bound) | None — real results only |
+| S9 | Documentation | Update docs with behavior | change + results → doc updates | Pre: S8 ok. Post: docs reflect delivered behavior | AI-capable | **PVT-016: 180 s**; PVT-007 attempts; retryable | Per envelope | Deterministic doc stub generator |
+| S10 | Security & policy | Evaluate `policy-set-1.1.0` | change + deps → `PolicyCheckResult[]` | Pre: S8 ok. Post: every applicable policy has one of four outcomes | Deterministic, **real** | **PVT-016: 600 s** — dominated by the dependency-vulnerability scan; retry on `UNAVAILABLE` only | Unevaluable = **not** `PASS` (EC-025) | None — verdicts must be repeatable |
+| S11 | Release readiness | Evaluate 9 blocking conditions, then human decision | all evidence → `ReleaseReadinessReport` + `GateDecision` | Pre: S9∥S10 join complete. Post: recorded human decision | Deterministic eval + **Human** | **PVT-016: 30 s** evaluation, then gate wait PVT-006 → `SAFE_STOP` | N/A | None |
+| S12 | Final summary | Assemble from recorded evidence only | evidence → summary artifact | Pre: S11 approved. Post: every claim traceable | Deterministic assembler | **PVT-016: 60 s** | Missing evidence = permanent | None — never invent content |
 
 ### Replanning
 
@@ -336,7 +354,7 @@ reconstructable without the originating session (FR-ORC-023, NFR-OBS-002):
 
 | Preserved | Where | Notes |
 |---|---|---|
-| Workflow instance state | `workflow_run`, `stage_node`, `dependency_edge` | Current state + full transition history |
+| Workflow instance state | `workflow_run`, `stage_node` (node-keyed), `dependency_edge` (node-to-node) | Current state + full transition history. Node keys, not stage numbers, so a replanned topology and a per-task fan-out are both queryable (CR-011/CR-013) |
 | Normalized requirements | `requirement_record` | With type and testable statement |
 | Task decomposition + dependencies | `task_record`, `task_edge` | Every task → ≥1 requirement |
 | Decisions and assumptions | `clarification_decision`, `assumption_record` | Actor, question, answer, timestamp |
@@ -348,6 +366,7 @@ reconstructable without the originating session (FR-ORC-023, NFR-OBS-002):
 | Correlation identifiers | Every table + every log/metric/trace | Propagated end to end |
 | Terminal status | `workflow_run.terminal_state` | Null while suspended — a suspended run has no terminal outcome (KE-04) |
 | Failure/recovery events | `failure_event` | The MTTR population (§7) |
+| Retention | **No tables.** Every record is retained indefinitely; there is no purge, archival or deletion path anywhere (NFR-AUD-003, CR-017). Production archival is a recorded recommendation, not a component |
 
 ---
 
@@ -362,6 +381,7 @@ reconstructable without the originating session (FR-ORC-023, NFR-OBS-002):
 | Constitutional exception | Any principle check not `PASS` | Downstream progression | five standard |
 | Material risk acceptance | Residual risk above declared threshold | Release readiness | five standard |
 | **No change plan at implementation** | Deterministic S7 reached with no change plan for the requirement | S8 onward | five standard, plus three named choices: governance-only / human-implemented / abandon (CR-001) |
+| **Node overrun** | A node's PVT-016 escalation threshold is breached | That node only; siblings and unaffected paths continue | five standard, plus two named choices: **keep waiting** (re-arm the threshold) / **kill the node** (fail by overrun, then normal classification and idempotency-gated retry) |
 | Release readiness | S11 | Submission | five standard |
 | Final submission | Post-S12 | Submission | five standard |
 
@@ -371,6 +391,11 @@ which the run suspends, and the computed `auto-abandon-at` (CL-005 addendum). `T
 it never advances. Every decision is materialized as a repository record before the work it authorizes
 begins (Constitution §Gate semantics, v1.1.0). An agent cannot take any of these actions at any
 autonomy setting (FR-ORC-021).
+
+The **node-overrun** class is the one gate the orchestrator raises about itself rather than about an artifact. It
+exists because a slow node is not a failed node: the orchestrator can observe that expected progress has not
+happened, but only a human can decide whether that means *wait* or *stop*. Killing on a timer would be the
+orchestrator deciding, which is the authority boundary this whole design keeps on the other side of the line.
 
 ---
 
@@ -384,7 +409,7 @@ Implements CL-006, CL-007, CL-005, CL-009 directly.
 | Transient vs permanent | `retries = stage's declared retryable set ∩ executor proposal`. Either side vetoes. Executor has veto, never grant. |
 | Unknown / malformed | **Permanent.** Default-deny, matching EC-025. Suspension path. |
 | Retry bounds & backoff | PVT-007 (3 attempts, exponential from 1 s), per stage, individually recorded with a **two-signature** ruling (executor proposal + orchestrator ruling). |
-| Timeout | Per-stage. Retryable **only** where the stage's design-time contract declares the effect idempotent/repeat-safe — never executor self-certification (S7 is explicitly not retryable on timeout). |
+| Timeout / overrun | Per-node **escalation thresholds** are **PVT-016**'s schedule (§3). A breach **asks the human** — keep waiting, or kill the node — and never kills on the orchestrator's own authority (FR-ORC-014 rule 6). Liveness comes from existing state-transition, trace and audit records; **no watchdog component is introduced**. A kill fails the node by overrun; retry is then gated exactly as before — retryable **only** where the design-time contract declares the effect idempotent/repeat-safe, never executor self-certification (S7 is explicitly not retryable). Duration and eligibility stay separate decisions: PVT-016 sets the first, CL-006 rule 4 the second. An unanswered escalation suspends. |
 | Idempotency | Application plane: marker-based, three semantics (CL-008). Control plane: stage effects keyed so resumption cannot re-apply a committed effect. |
 | Duplicate execution protection | Resumption reads persisted effect records before re-dispatch; concurrent resumption of one run is prevented by a run-level lease (EC-026). |
 | Fallback | Declared per stage (table §3). Recorded **as fallback**, never as primary success. A failing fallback escalates to suspension (EC-023). |
@@ -475,7 +500,7 @@ Each `failure_event` row captures: `failure_detected_at`, `recovery_started_at`,
 
 ## 9. Compliance and Change Control
 
-### `policy-set-1.0.0`
+### `policy-set-1.1.0`
 
 | ID | Domain | Mandatory? | Evaluation input → output |
 |---|---|---|---|
@@ -484,16 +509,19 @@ Each `failure_event` row captures: `failure_detected_at`, `recovery_started_at`,
 | `POL-SEC-003` | Security | **Mandatory** | Dependency vulnerability scan → PASS/FAIL |
 | `POL-PRIV-001` | Privacy | **Mandatory** | Stored schema contains no personal-data field → PASS/FAIL |
 | `POL-AUD-001` | Audit retention | **Mandatory** | Every audit record has all six fields → PASS/FAIL |
-| `POL-AUD-002` | Audit retention | Advisory | Retention configured within declared bounds → PASS/FAIL |
 | `POL-DEP-001` | Approved dependencies | **Mandatory** | All dependencies on the approved list → PASS/FAIL |
 | `POL-LIC-001` | Licensing | **Mandatory** | All dependency licences on the permitted list → PASS/FAIL |
 | `POL-CHG-001` | Change control | **Mandatory** | Contract/schema change has a change-control record → PASS/FAIL |
 | `POL-CHG-002` | Change control | **Mandatory** | Every mandatory gate has a materialized repository record → PASS/FAIL |
 | `POL-TST-001` | Compliance | **Mandatory** | Required test categories non-empty and executed → PASS/FAIL |
 | `POL-TRC-001` | Compliance | **Mandatory** | Zero traceability orphans → PASS/FAIL |
+| `POL-CHG-003` | Change control | **Mandatory** | A contract or schema change classified MAJOR carries a new major version → PASS/FAIL. Evaluated against the served baseline recorded in `contracts/README.md`; `NOT-APPLICABLE` before first service, **armed during scenario demonstrations** (CR-013) |
 
 Outcomes are exactly `PASS`, `FAIL`, `EXCEPTION-REQUESTED`, `NOT-APPLICABLE`. **Unevaluable is never
-`PASS`** (EC-025). Every run records the policy set version it evaluated.
+`PASS`** (EC-025). Every run records the policy set version it evaluated. **v1.1.0 adds `POL-CHG-003`** (CR-013) and
+**removes `POL-AUD-002`** (CR-017); `v1.0.0` remains the version of record for any run executed before this
+amendment — an amended policy set is **never applied retroactively** to claim compliance (Constitution §Amendment
+procedure).
 
 ### Workflows
 
@@ -577,24 +605,61 @@ network. The reliability suite must pass with **no AI key and no network** (NFR-
 
 ### DS-B — Brownfield
 
-- **Input**: a change against existing shortener code — proposed: *"Redirect analytics must not lose
-  events under concurrent load"* (defect/enhancement against FR-URL-010, and the natural home for
-  DF-001's resolution).
-- **Interpretation**: S2 normalizes; S3 finds no material ambiguity **if** DF-001 is disposed of
-  first — otherwise this scenario legitimately becomes ambiguous, which is a useful property, not a
-  problem.
+- **Subject provenance**: **neither the assignment nor the interviewer guide names a brownfield subject.** The owner
+  verified that before choosing, so the subject is ours to select — and it is selected to be something the baseline
+  genuinely lacks, **from inside already-approved scope** rather than invented for the demonstration.
+- **Input**: a change against existing shortener code — **"A creator's redirect traffic must be limited in aggregate
+  across all their links, not only per link."** This is FR-URL-016's third tier — **PVT-014, 3,000 requests/minute per
+  creator aggregated** — the noisy-neighbour control.
+- **Why this subject**: the baseline deliberately builds **two of the three** rate-limit tiers — per-creator creation
+  (PVT-012) and per-code redirect (PVT-013) — and **defers the per-creator aggregate redirect tier**. FR-URL-016
+  remains **binding in full**; the deferral is disclosed in the baseline-omissions record and is satisfied at release
+  readiness by this run's evidence.
+- **Why it is a genuine brownfield change rather than a contrivance**: the redirect path is **public and anonymous** by
+  requirement (FR-URL-018), so counting traffic per *creator* means resolving code → owning creator **inside the hot
+  path**. That is a real design question with real consequences, in components that already exist, against a latency
+  budget that is already a binding target.
+- **Interpretation**: S2 normalizes to one functional requirement (the third tier) plus its non-functional latency
+  constraint; S3 finds no material ambiguity — FR-URL-016 already states the tier, its limit and its negative criteria,
+  so the absence of ambiguity is genuine rather than suppressed.
 - **Decomposition**: impact analysis precedes any code change.
-- **Path**: as DS-A, with S6 producing the **seven-dimension impact analysis** (components,
-  interfaces, data flows, tests, documentation, regression risks, rollout/rollback) whose timestamp
-  **precedes** the first modification, and with an injected transient fault in S7 exercising retry and
-  a compensation case exercising the register.
-- **Approvals**: architecture, security-sensitive (analytics path), release readiness.
-- **Failure paths**: transient `UNAVAILABLE` → two-vote retry → success; one irreversible effect →
-  compensation, labelled as compensation.
-- **Validation**: pre-existing tests detect the regression; new concurrency test proves the fix.
-- **Evidence**: impact analysis with ordering proof, retry two-signature records, compensation record,
-  before/after test results.
+- **Path**: as DS-A, with S6 producing the **seven-dimension impact analysis** whose timestamp **precedes** the first
+  modification, and with an injected transient fault in S7 exercising retry and a compensation case exercising the
+  register.
+- **The impact analysis has real content**, which is what makes the seven dimensions worth a reviewer's time:
+  - **Impacted components and interfaces**: the redirect controller and the rate-limit module; code → creator
+    resolution added to the resolution path.
+  - **Impacted data flows**: the ownership lookup enters the hot path; counters keyed per creator as well as per code.
+  - **Latency**: the added lookup sits inside PVT-001's redirect budget and must be **measured, not assumed**.
+  - **Limiter failure posture**: when the counter store is unavailable, does the tier fail **open** (serve, unlimited)
+    or **closed** (throttle)? A decision with a security consequence, taken explicitly rather than by default.
+  - **Disclosure**: the throttled response must name the tier that was exceeded **without disclosing the owning
+    creator to a public follower** — FR-URL-016's own negative criterion.
+  - **Impacted tests**: the per-code tier's tests are the regression surface; the multi-link aggregate case is the new
+    one.
+  - **Documentation and rollout/rollback**: the threat model's noisy-neighbour accepted trade-off (NFR-SEC-003), and
+    the tier being disableable without redeploying the redirect path.
+- **Approvals**: architecture; **security-sensitive** — this is an abuse control, which is precisely what §5's
+  security-sensitive class covers; release readiness.
+- **Failure paths**: transient `UNAVAILABLE` → two-vote retry → success; one irreversible effect → compensation,
+  labelled as compensation.
+- **Validation**: **before-state** — FR-URL-016's own multi-link case: traffic spread across several links, each
+  staying **under** PVT-013, passes **unthrottled** in the baseline, captured as evidence **before** the impact
+  analysis. **After-state** — the same traffic is throttled and the response **names the aggregate tier** without
+  naming the creator. The per-code and per-creator-creation tiers are proven **unregressed**. Redirect latency is
+  **re-measured** against PVT-001 with the ownership lookup in place.
+- **Evidence**: impact analysis with ordering proof, retry two-signature records, compensation record, before/after
+  throttling results, the unregressed per-code tier, and the re-measured latency.
 - **Terminal outcome**: `COMPLETED`.
+- **Superseded candidate subjects, all retained for provenance** — recorded because the path to this subject is part of
+  the reasoning, and hiding it would make the final choice look easier than it was:
+  1. *"Redirect analytics must not lose events under concurrent load."* **Voided by its own resolution** — ADR-014
+     decided it and Slice 3 (T050) implements it, so by Phase 8 there would have been no defect left to analyse.
+  2. *Archival retention of records past their bounds.* **Withdrawn** when the owner simplified retention to
+     indefinite retention with a documented production recommendation (CR-017, Decision H): with no archival job in
+     scope, the subject had nothing to implement.
+  3. *Custom short aliases.* **Rejected as out of scope** — EX-002 and AS-002 exclude vanity codes, so building one
+     would have expanded approved scope rather than filled a gap inside it.
 
 ### DS-C — Ambiguous requirement
 
@@ -617,10 +682,15 @@ network. The reliability suite must pass with **no AI key and no network** (NFR-
 
 ---
 
-## 12. Technology Decisions — PROPOSED, pending ADR gate
+## 12. Technology Decisions — the evaluation that produced ADR-001..005 *(historical record)*
 
-Presented as candidate ADRs. **None is selected.** `DECISION-LOG` entry #1's Java intent is treated as
-a candidate, not settled, per Gate 1's explicit carry-forward.
+**All of these were decided at Gate 4, 2026-09-20**, and the decisions of record are ADR-001..ADR-014 in
+`docs/governance/adr/`, not this section. It is retained **unaltered below** as the evaluation the ADRs came from —
+the options, criteria and counter-cases as they stood before the gate — because an ADR that cites its evaluation is
+weaker if the evaluation is edited afterwards to agree with it.
+
+Read the section in that light: where the text below says *"recommended"* or *"pending"*, it is describing the state
+at authoring time. **Nothing here should be read as an open question.**
 
 ### ADR-001 — Language and framework
 
@@ -744,17 +814,25 @@ executed tests and committed evidence, never with unverified code.
 |---|---|---|---|
 | 1 Engineering baseline | Build, layout, Flyway, OpenAPI skeleton, contract-test harness, CI-equivalent local script | **Day 1 AM** | Yes |
 | 2 Walking skeleton | One endpoint + health + real store round-trip, end to end | **Day 1 AM** | Yes |
-| 3 Core URL behavior | TDD: validation, scheme list, code gen + uniqueness, redirect, expiry, idempotency (3 semantics), analytics, rate limiting, provisioning script | **Day 1 PM** | Yes |
+| 3 Core URL behavior | TDD: validation, scheme list, code gen + uniqueness, redirect, expiry, idempotency (3 semantics), analytics, provisioning script, and **two of the three rate-limit tiers** — per-creator creation (PVT-012) and per-code redirect (PVT-013). **The per-creator aggregate redirect tier (PVT-014) is deliberately deferred to the brownfield scenario** | **Day 1 PM** | Yes |
 | 4 Orchestration state model | Persisted DAG, 12 nodes, transitions, prohibited-transition enforcement, inspection | **Day 2 AM** | Yes |
 | 5 Approval governance | Gates, five outcomes, deadline-in-ask, silence→suspension, retention/auto-abandon | **Day 2 midday** | Yes |
 | 6 Reliability controls | Envelope, two-vote retry, timeout gating, fallback, Compensation Register, resume across both restart classes | **Day 2 PM** | Yes |
-| 7 Observability | Audit events, correlation IDs, metrics, `failure_event` capture, MTTR calculation | **Day 3 AM** | Yes |
+| 7 Observability | Audit events, correlation IDs, metrics, `failure_event` capture, MTTR calculation. **No retention work: this demonstration retains everything indefinitely** (NFR-AUD-003, CR-017) | **Day 3 AM** | Yes |
 | 8 Three scenarios | DS-A, DS-B, DS-C executed with evidence | **Day 3 midday** | Yes |
 | 9 Release readiness | Policy evaluation, 9 blocking conditions with negative tests, final engineering summary | **Day 3 PM** | Yes |
 
 **Critical path**: 1 → 2 → 4 → 5 → 6 → 8 → 9. Slice 3 is required as DS-B's subject matter. Slice 7 is
 partially parallelizable with 6 but its `failure_event` capture must exist before Slice 8 runs, or the
 scenarios produce no MTTR population.
+
+**Deliberate baseline omission.** Slice 3 builds **two of the three** rate-limit tiers and **defers the per-creator
+aggregate redirect tier** (PVT-014). That deferred tier is **the brownfield scenario's subject**, implemented under
+governance in Slice 8.
+
+This is a scheduled omission with a named closure, not deferred scope: **FR-URL-016 is binding in full and is
+satisfied at release readiness by the brownfield run's evidence.** If that run does not happen, the omission becomes a
+real gap and release readiness must report it as one — it may not be relabelled as a design choice after the fact.
 
 **Scope-control checkpoints** — at each, compare progress to the milestone. **A checkpoint observes and escalates
 with options; it does not itself cut.** A scope reduction happens **only on the owner's recorded order at that
@@ -772,6 +850,14 @@ anyone.
 breaker (DF-004); email/webhook expiry notification (DF-004); the Anthropic SDK transport adapter (ADR-004-A1);
 `redirect_event` time-partitioning (ADR-014); custom aliases, link deletion/editing, multi-region (EX-001..003);
 analytics beyond time series.
+
+**The aggregate redirect tier is NOT a backlog item.** It is deliberately deferred from the baseline and implemented
+by the brownfield run in Slice 8. Listing it as backlog would be exactly the artifacts-disagreeing defect CHK228 exists
+to catch, and would let a scheduled omission read as an accepted one.
+
+**Retention is not a backlog item either, for a different reason**: there is no retention work at all. This
+demonstration retains every record indefinitely, and production archival is a **recorded recommendation** rather than
+deferred scope (NFR-AUD-003, CR-017).
 
 **AI wiring for all six AI-capable stages is in scope from the outset** (`tasks.md` T073a–T073f). It is *not* a
 backlog item. The owner overruled an earlier pre-emptive reduction on the ground that its estimate priced
@@ -833,7 +919,7 @@ src/main/
 │   ├── reliability/     # Envelope, two-vote ruling, retry, fallback, compensation register
 │   ├── gates/           # Gate definitions, outcomes, deadlines, retention
 │   └── replan/          # Impact computation, invalidation, approval voiding
-├── policy/              # policy-set-1.0.0 evaluation, exceptions, release readiness
+├── policy/              # policy-set-1.1.0 evaluation, exceptions, release readiness
 ├── audit/               # Append-only audit, failure_event, MTTR calculation
 └── config/              # Secure defaults, mode selection
 
@@ -861,7 +947,7 @@ Constitution VII forbids complexity the requirements do not demand.
 ## Post-Design Re-Check (Constitution, after Phase 1)
 
 Re-evaluated against v1.1.0 after `research.md`, `data-model.md`, `contracts/`, and `quickstart.md`:
-**all twelve principles remain `PASS`.** The design introduced no new component whose complexity is
+**all eleven principles remain `PASS`, as does the CN-002 technology-neutrality row** (twelve rows, eleven principles). The design introduced no new component whose complexity is
 unjustified by a requirement; the single deliberate build-versus-adopt decision (ADR-003) is justified
 by the orchestration model being the graded artifact rather than by preference.
 
