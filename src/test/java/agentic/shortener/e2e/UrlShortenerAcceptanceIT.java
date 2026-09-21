@@ -66,11 +66,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * exists to prevent. <strong>A recorded partial is a legal matrix state and a silent partial is not</strong>
  * (owner ruling, 2026-09-20).
  *
- * <h2>Orchestration is switched off</h2>
+ * <h2>Orchestration is wired, but idle, on the US1 path</h2>
  *
- * <p>T057's guard: US1 must be demonstrable with the orchestration engine off, and this sweep must not
- * depend on Phase 5. Nothing here touches it — {@link #noOrchestrationOnThisPath} asserts the application
- * has no orchestration package at all yet, so the independence is structural rather than a claim.
+ * <p>T057's original guard was "no orchestration bean is wired into the context that serves US1." T067
+ * wires {@code OrchestrationConfiguration} into that same application context, which was always going to
+ * make that zero-bean assertion fire — on purpose, as a forced decision point, per this class's own
+ * (git-historical) comments on the guard test. The decision taken here is the one those comments
+ * pre-authorized: not a loosening of the old assertion, but its replacement with the harder property —
+ * US1 must still pass, and must create zero orchestration runs, with the beans PRESENT BUT IDLE. That is
+ * what {@link #noOrchestrationOnThisPath} now asserts. The static half of the guard —
+ * {@link #us1PackagesDoNotImportOrchestration}, backed by {@code DependencyDirectionTest} — is untouched
+ * and remains the stronger of the two, since it holds whether or not a bean exists.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
@@ -602,27 +608,31 @@ class UrlShortenerAcceptanceIT extends PostgresIntegrationTest {
     // ==============================================================================================
 
     @Test
-    @DisplayName("GUARD: US1 is demonstrable with the orchestration engine switched off")
-    void noOrchestrationOnThisPath() {
-        // THIS GUARD HAS NOW CHANGED FORM ONCE, AS PLANNED.
+    @DisplayName("GUARD: US1 is demonstrable with the orchestration engine present but IDLE")
+    void noOrchestrationOnThisPath() throws Exception {
+        // THIS GUARD HAS NOW CHANGED FORM A SECOND TIME, AS PLANNED.
         //
-        // Slice 3 asserted the orchestration package held no classes, and said in its commit message
-        // that when Phase 5 put code there this test MUST fail and force someone to decide consciously
-        // whether US1 had acquired a dependency on the engine. Slice 4 built the state model and it did
-        // fail, naming all fifteen new files.
+        // Slice 3 asserted the orchestration package held no classes. Slice 4 built the state model and
+        // the guard became "no orchestration bean is wired into the context that serves US1" — a
+        // behavioural assertion, since code could exist without being wired in.
         //
-        // The decision: US1 has NOT acquired a dependency. The engine's state model exists and nothing
-        // on the US1 path touches it. So the guard becomes behavioural, which is what T057's wording
-        // asked for all along — "demonstrable with the orchestration engine switched off".
+        // T067 wires OrchestrationConfiguration (RunInspectionController, RunInspectionQuery) into this
+        // same context, for the FIRST time, and the zero-bean assertion below would now fail permanently
+        // on every run — not a regression, but the forced decision point this class's own prior comments
+        // named in advance. The decision: US1 has NOT acquired a dependency on the engine. Nothing on the
+        // US1 path constructs a workflow run, and that is now asserted directly rather than inferred from
+        // bean absence — a stronger and more concrete claim than "the beans don't exist" ever was.
         //
-        // "Switched off" for a Spring application means no orchestration bean is wired into the context
-        // that serves US1. That is asserted directly below. The static direction — that no shortener
-        // package may even IMPORT orchestration — is DependencyDirectionTest's, and it is the stronger
-        // of the two because it holds whether or not a bean exists.
+        // So this guard has two parts: (1) the orchestration beans ARE present, proving Phase 5 wiring is
+        // real rather than accidentally absent from this test's premise, and (2) driving the SAME US1
+        // requests this sweep exercises elsewhere (create, follow, read analytics) creates ZERO rows in
+        // workflow_run — orchestration's own root table. That is "present but idle" made falsifiable: an
+        // interceptor or filter that secretly started a run on the US1 path would show up here as a
+        // nonzero delta, not as a bean that happens to exist.
         //
-        // WHEN PHASE 5 WIRES ORCHESTRATION BEANS this assertion will fail again, and the decision then
-        // is a different one: US1 must be shown to still pass with those beans PRESENT BUT IDLE. That is
-        // a harder property and it needs its own test rather than a loosening of this one.
+        // The static direction — that no shortener package may even IMPORT orchestration — is
+        // DependencyDirectionTest's (and this.us1PackagesDoNotImportOrchestration's), and remains the
+        // stronger of the two guards because it holds whether or not a bean exists.
         List<String> orchestrationBeans = new ArrayList<>();
         for (String name : context.getBeanDefinitionNames()) {
             Class<?> type = context.getType(name);
@@ -630,16 +640,29 @@ class UrlShortenerAcceptanceIT extends PostgresIntegrationTest {
                 orchestrationBeans.add(name + " (" + type.getName() + ")");
             }
         }
+        assertFalse(orchestrationBeans.isEmpty(),
+                "expected T067's OrchestrationConfiguration to be wired into this context; if this is "
+                        + "empty, the premise of this guard (beans PRESENT but idle) no longer holds and "
+                        + "the guard must be reconsidered again rather than left passing vacuously");
 
-        assertEquals(List.of(), orchestrationBeans,
-                "the engine is wired into the context that serves US1: " + orchestrationBeans
-                        + ". US1 must be demonstrable with it switched off (T057 guard)");
+        long runsBefore = countWorkflowRuns();
 
-        // And no bean is named for it either, which catches a wiring class that holds the engine without
-        // exposing its type.
-        for (String bean : context.getBeanDefinitionNames()) {
-            assertFalse(bean.toLowerCase(java.util.Locale.ROOT).contains("orchestrat"),
-                    "bean '" + bean + "' puts orchestration on the US1 path");
+        String code = codeOf(create("https://example.com/orchestration-idle-check"));
+        ResponseEntity<String> followed = rest.getForEntity(url("/" + code), String.class);
+        assertEquals(307, followed.getStatusCode().value(), "the US1 path itself must still work");
+        JSON.readTree(analytics(code, demo.header()).getBody());
+
+        long runsAfter = countWorkflowRuns();
+        assertEquals(runsBefore, runsAfter,
+                "creating a link, following its redirect, and reading its analytics must not create an "
+                        + "orchestration run — the engine is present on this path but IDLE");
+    }
+
+    private long countWorkflowRuns() throws Exception {
+        try (Connection c = connection(); Statement s = c.createStatement();
+             ResultSet rs = s.executeQuery("SELECT COUNT(*) FROM workflow_run")) {
+            rs.next();
+            return rs.getLong(1);
         }
     }
 

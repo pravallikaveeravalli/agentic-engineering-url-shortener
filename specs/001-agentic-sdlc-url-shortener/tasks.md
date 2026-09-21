@@ -530,7 +530,7 @@ outcome, including deliberate silence.
   - **Deps**: T065 · **Par**: yes · **Artifact**: `DETERMINISTIC` | `AI` | `HUMAN`; `HUMAN` **never selectable by any caller or configuration**, only a no-plan-gate outcome
   - **TDD**: RED-FIRST · **Validate**: test asserting `HUMAN` is recorded **only** as a no-plan-gate outcome and cannot be requested by any caller or configuration · **Docs**: `contracts/workflow-state.schema.json` `executorKindUsed` · **Trace**: matrix FR-ORC-029, KE-25
   - **Guard**: `executorClass` (design-time declaration) deliberately does **not** include `HUMAN` — confirmed by the owner. Adding it would let a stage be declared human-implemented up front · **Done**: three kinds; `HUMAN` unrequestable by any caller · **Approval**: none
-- [ ] T067 [P] [US2] Gate inspection view — `src/main/java/agentic/shortener/orchestration/api/RunInspectionController.java`
+- [x] T067 [P] [US2] Gate inspection view — `src/main/java/agentic/shortener/orchestration/api/RunInspectionController.java`
   - **Req**: FR-ORC-008, FR-ORC-013 · **Scn**: DS-C · **ADR**: ADR-008 · **Pre**: T060
   - **Deps**: T060 · **Par**: yes · **Artifact**: reviewer sees stage, artifacts awaiting decision, supporting evidence, policy outcomes, **consequences of each decision and of no decision**
   - **TDD**: RED-FIRST · **Validate**: conformance against `RunInspection` schema; `pendingGate` carries both deadlines · **Docs**: `contracts/openapi.yaml` · **Trace**: matrix FR-ORC-008, US-2 scenario 1
