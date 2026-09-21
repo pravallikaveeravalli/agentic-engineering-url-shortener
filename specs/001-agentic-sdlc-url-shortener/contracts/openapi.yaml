@@ -637,12 +637,24 @@ components:
           type: array
           items: { type: string, minLength: 1 }
           description: Required and non-empty when outcome is CHANGES_REQUESTED; the changes are enumerated, never implied.
+        escalationTarget:
+          type: string
+          minLength: 1
+          description: >
+            Required when outcome is ESCALATED: what decision exceeds the current owner's authority (CR-041).
+            A recorded string, declared by the submitting actor the same way actorName is — there is no user
+            registry this is verified against. The system records and surfaces it (run inspection, the audit
+            trail) but does not notify or deliver it to anyone; a production deployment would wire a notifier
+            on top of this field, which this system does not do.
         noPlanOption:
           type: string
           enum: [GOVERNANCE_ONLY, HUMAN_IMPLEMENTED, ABANDON]
           description: >
             Required only on the no-change-plan gate class (FR-ORC-031, CR-001). HUMAN_IMPLEMENTED records
             executorKindUsed HUMAN on the implementation node.
+      allOf:
+        - if: { properties: { outcome: { const: ESCALATED } } }
+          then: { required: [escalationTarget] }
 
     CreateLinkRequest:
       type: object

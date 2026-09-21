@@ -1,0 +1,168 @@
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+12:00:25.393 [main] INFO org.testcontainers.images.PullPolicy -- Image pull policy will be performed by: DefaultPullPolicy()
+12:00:25.395 [main] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+12:00:25.408 [main] INFO org.testcontainers.DockerClientFactory -- Testcontainers version: 1.20.1
+12:00:25.578 [main] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Found Docker environment with Environment variables, system properties and defaults. Resolved dockerHost=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+12:00:25.579 [main] INFO org.testcontainers.DockerClientFactory -- Docker host IP address is localhost
+12:00:25.585 [main] INFO org.testcontainers.DockerClientFactory -- Connected to docker: 
+  Server Version: 28.3.3
+  API Version: 1.51
+  Operating System: Ubuntu 24.04.2 LTS
+  Total Memory: 3905 MB
+12:00:25.615 [main] INFO tc.testcontainers/ryuk:0.8.1 -- Creating container for image: testcontainers/ryuk:0.8.1
+12:00:25.665 [main] INFO tc.testcontainers/ryuk:0.8.1 -- Container testcontainers/ryuk:0.8.1 is starting: 01b136ddd3e20042600acc9d56745af6d05e686d49d21eb2ae20087d9870ee25
+12:00:25.760 [main] INFO tc.testcontainers/ryuk:0.8.1 -- Container testcontainers/ryuk:0.8.1 started in PT0.144546S
+12:00:25.762 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:34360
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+12:00:26.024 [main] INFO org.testcontainers.utility.RyukResourceReaper -- Ryuk started - will monitor and terminate Testcontainers containers on JVM exit
+12:00:26.024 [main] INFO org.testcontainers.DockerClientFactory -- Checking the system...
+12:00:26.025 [main] INFO org.testcontainers.DockerClientFactory -- ✔︎ Docker server version should be at least 1.6.0
+12:00:26.026 [main] INFO tc.postgres:16-alpine -- Creating container for image: postgres:16-alpine
+12:00:26.067 [main] INFO tc.postgres:16-alpine -- Container postgres:16-alpine is starting: 5f127060979c9e3c892a2a995330b0a920ec7d8f861c1f994dfa2ccac69e32bd
+12:00:26.703 [main] INFO tc.postgres:16-alpine -- Container postgres:16-alpine started in PT0.676631S
+12:00:26.703 [main] INFO tc.postgres:16-alpine -- Container is started (JDBC URL: jdbc:postgresql://localhost:34361/shortener?loggerLevel=OFF)
+12:00:26.737 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [agentic.shortener.orchestration.api.GateDecisionControllerIT]: GateDecisionControllerIT does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+12:00:26.789 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration agentic.shortener.ShortenerApplication for test class agentic.shortener.orchestration.api.GateDecisionControllerIT
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.4)
+
+2026-09-21T12:00:29.287-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] a.s.o.api.GateDecisionControllerIT       : Starting GateDecisionControllerIT using Java 21.0.8 with PID 48069 (started by pravallikaveeravalli in /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener)
+2026-09-21T12:00:29.288-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] a.s.o.api.GateDecisionControllerIT       : No active profile set, falling back to 1 default profile: "default"
+2026-09-21T12:00:29.576-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-21T12:00:29.587-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 8 ms. Found 0 JPA repository interfaces.
+2026-09-21T12:00:29.826-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 0 (http)
+2026-09-21T12:00:29.831-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-09-21T12:00:29.832-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.30]
+2026-09-21T12:00:29.847-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-09-21T12:00:29.852-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 555 ms
+2026-09-21T12:00:29.979-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-09-21T12:00:30.044-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@29d81c22
+2026-09-21T12:00:30.045-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-09-21T12:00:30.056-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:34361/shortener (PostgreSQL 16.15)
+2026-09-21T12:00:30.070-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table "public"."flyway_schema_history" does not exist yet
+2026-09-21T12:00:30.071-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 9 migrations (execution time 00:00.007s)
+2026-09-21T12:00:30.076-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table "public"."flyway_schema_history" ...
+2026-09-21T12:00:30.110-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": << Empty Schema >>
+2026-09-21T12:00:30.114-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "1 - baseline"
+2026-09-21T12:00:30.136-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "2 - domain"
+2026-09-21T12:00:30.152-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "3 - governance"
+2026-09-21T12:00:30.184-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "4 - orchestration graph"
+2026-09-21T12:00:30.202-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "5 - artifact provenance"
+2026-09-21T12:00:30.212-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "6 - join semantics all only"
+2026-09-21T12:00:30.219-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "7 - requirement lineage"
+2026-09-21T12:00:30.246-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "8 - approval gates"
+2026-09-21T12:00:30.260-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "9 - executor kind used"
+2026-09-21T12:00:30.266-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.f.core.internal.command.DbMigrate      : Successfully applied 9 migrations to schema "public", now at version v9 (execution time 00:00.095s)
+2026-09-21T12:00:30.302-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-09-21T12:00:30.326-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.3.Final
+2026-09-21T12:00:30.339-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-09-21T12:00:30.443-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-21T12:00:30.583-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-21T12:00:30.584-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-21T12:00:30.880-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-09-21T12:00:30.978-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 50727 (http) with context path '/'
+2026-09-21T12:00:30.987-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [           main] a.s.o.api.GateDecisionControllerIT       : Started GateDecisionControllerIT in 1.798 seconds (process running for 5.835)
+WARNING: A Java agent has been loaded dynamically (/Users/pravallikaveeravalli/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.19/byte-buddy-agent-1.14.19.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+2026-09-21T12:00:31.384-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-21T12:00:31.384-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-09-21T12:00:31.384-05:00  INFO 48069 --- [agentic-sdlc-url-shortener] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+[ERROR] Tests run: 11, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 6.399 s <<< FAILURE! -- in agentic.shortener.orchestration.api.GateDecisionControllerIT
+[ERROR] agentic.shortener.orchestration.api.GateDecisionControllerIT.secondDecisionOnTheSameGateIs409 -- Time elapsed: 0.096 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: {"code":"INVALID_INPUT","message":"ESCALATED requires an escalation target: what decision exceeds the current owner's authority. Recording only that something exceeded it leaves the escalation unactionable"} ==> expected: <200> but was: <400>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at agentic.shortener.orchestration.api.GateDecisionControllerIT.secondDecisionOnTheSameGateIs409(GateDecisionControllerIT.java:237)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.api.GateDecisionControllerIT.eachSubmittableOutcomeIsRecorded(String)[4] -- Time elapsed: 0.023 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: {"code":"INVALID_INPUT","message":"ESCALATED requires an escalation target: what decision exceeds the current owner's authority. Recording only that something exceeded it leaves the escalation unactionable"} ==> expected: <200> but was: <400>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at agentic.shortener.orchestration.api.GateDecisionControllerIT.eachSubmittableOutcomeIsRecorded(GateDecisionControllerIT.java:150)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at java.base/java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at java.base/java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276)
+	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] Failures: 
+[ERROR]   GateDecisionControllerIT.eachSubmittableOutcomeIsRecorded:150 {"code":"INVALID_INPUT","message":"ESCALATED requires an escalation target: what decision exceeds the current owner's authority. Recording only that something exceeded it leaves the escalation unactionable"} ==> expected: <200> but was: <400>
+[ERROR]   GateDecisionControllerIT.secondDecisionOnTheSameGateIs409:237 {"code":"INVALID_INPUT","message":"ESCALATED requires an escalation target: what decision exceeds the current owner's authority. Recording only that something exceeded it leaves the escalation unactionable"} ==> expected: <200> but was: <400>
+[ERROR] Tests run: 11, Failures: 2, Errors: 0, Skipped: 0
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project shortener: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

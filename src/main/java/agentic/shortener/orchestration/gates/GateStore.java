@@ -77,6 +77,28 @@ public final class GateStore {
         }
     }
 
+    /**
+     * Whether ANY decision already exists for this (run, gate) pair — the HTTP surface's own 409 check
+     * (T067a). Deliberately not "any still-standing decision": a human resubmitting to this endpoint is a
+     * duplicate, not the internal superseding path {@code GateOutcomeHandler.voidApprovalIfAny} uses when a
+     * downstream replan invalidates an earlier approval.
+     */
+    public boolean decisionRecorded(UUID runId, String gateId) {
+        Objects.requireNonNull(runId, "runId");
+        Objects.requireNonNull(gateId, "gateId");
+        String sql = "SELECT 1 FROM gate_decision WHERE run_id = ? AND gate_id = ? LIMIT 1";
+        try (Connection c = connections.get(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setObject(1, runId);
+            ps.setString(2, gateId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                    "failed to check for an existing decision on gate '" + gateId + "'", e);
+        }
+    }
+
     // ==============================================================================================
     // GateDecision
     // ==============================================================================================

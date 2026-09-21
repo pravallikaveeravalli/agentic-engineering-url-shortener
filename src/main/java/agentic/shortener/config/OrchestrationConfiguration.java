@@ -1,9 +1,14 @@
 package agentic.shortener.config;
 
 import agentic.shortener.orchestration.api.RunInspectionQuery;
+import agentic.shortener.orchestration.gates.GateOutcomeHandler;
+import agentic.shortener.orchestration.gates.GateStore;
+import agentic.shortener.orchestration.store.JdbcRunStore;
 import agentic.shortener.persistence.ConnectionSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.time.Clock;
 
 /**
  * Control-plane wiring. Task T067.
@@ -26,5 +31,21 @@ public class OrchestrationConfiguration {
     @Bean
     public RunInspectionQuery runInspectionQuery(ConnectionSource connections) {
         return new RunInspectionQuery(connections);
+    }
+
+    @Bean
+    public JdbcRunStore jdbcRunStore(ConnectionSource connections, Clock clock) {
+        return new JdbcRunStore(connections, clock);
+    }
+
+    @Bean
+    public GateStore gateStore(ConnectionSource connections, Clock clock) {
+        return new GateStore(connections, clock);
+    }
+
+    @Bean
+    public GateOutcomeHandler gateOutcomeHandler(JdbcRunStore jdbcRunStore, GateStore gateStore,
+                                                 ConnectionSource connections) {
+        return new GateOutcomeHandler(jdbcRunStore, gateStore, connections);
     }
 }
