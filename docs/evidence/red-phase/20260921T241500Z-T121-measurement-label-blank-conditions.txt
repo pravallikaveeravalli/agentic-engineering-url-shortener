@@ -1,0 +1,18 @@
+Sabotage: MeasurementLabel's compact constructor — the blank-conditions guard `if (conditions.isBlank())`
+was replaced with `if (false)`, disabling it entirely.
+
+[INFO] Running agentic.shortener.audit.MeasurementLabelTest
+[ERROR] Tests run: 6, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 0.020 s <<< FAILURE! -- in agentic.shortener.audit.MeasurementLabelTest
+[ERROR] agentic.shortener.audit.MeasurementLabelTest.blankConditionsRejectedForMeasured -- Time elapsed: 0.003 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown.
+	at agentic.shortener.audit.MeasurementLabelTest.blankConditionsRejectedForMeasured(MeasurementLabelTest.java:44)
+[ERROR] agentic.shortener.audit.MeasurementLabelTest.blankBasisRejectedForProposed -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown.
+	at agentic.shortener.audit.MeasurementLabelTest.blankBasisRejectedForProposed(MeasurementLabelTest.java:50)
+
+[ERROR] Tests run: 6, Failures: 2, Errors: 0, Skipped: 0
+
+Fix: restored the blank-conditions guard. Without it, `MeasurementLabel.measured(value, "")` would
+construct a label carrying a MEASURED status with nothing said about how the figure was obtained — a bare
+number wearing a status field, exactly what T121's own Guard clause (condition 9, release-blocking) exists
+to make structurally impossible rather than a discipline to remember at each call site.

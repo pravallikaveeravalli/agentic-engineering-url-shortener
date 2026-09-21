@@ -937,17 +937,17 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
   - **Deps**: T118 · **Par**: yes · **Artifact**: `recovered = false` rows excluded from the denominator **and counted separately**
   - **TDD**: EVIDENCE · **Validate**: seeded population with unrecovered rows; denominator asserted; separate count reported · **Docs**: plan §7 · **Trace**: matrix FR-ORC-024
   - **Guard**: **folding unrecovered failures into MTTR would flatter the number** — the mandated method forbids it and the report must show the separate count · **Done**: exclusion and separate count both asserted · **Approval**: none
-- [ ] T120 [P] [US5] Measurement population and exclusion declaration — `docs/evidence/mttr-method.md`
+- [x] T120 [P] [US5] Measurement population and exclusion declaration — `docs/evidence/mttr-method.md`
   - **Req**: plan §7, Constitution IX · **Scn**: DS-A, DS-B, DS-C · **ADR**: ADR-010 · **Pre**: T118
   - **Deps**: T118 · **Par**: yes · **Artifact**: declared population (DS-A/B/C plus the reliability suite), declared exclusions (human wait), and declared limitations
   - **TDD**: N/A-DOC · **Validate**: document states population, exclusions, and limitations before any figure is quoted · **Docs**: new file · **Trace**: NFR-AUT-003
   - **Guard**: every figure must state **whether it was measured and under what conditions**; a bare number is not reportable · **Done**: population, exclusions, limitations all stated · **Approval**: none
-- [ ] T121 [P] [US5] Demonstration-data labelling — `src/main/java/agentic/shortener/audit/MeasurementLabel.java`
+- [x] T121 [P] [US5] Demonstration-data labelling — `src/main/java/agentic/shortener/audit/MeasurementLabel.java`
   - **Req**: **NFR-AUT-003**, Constitution IX · **Scn**: all · **ADR**: ADR-010 · **Pre**: T118
   - **Deps**: T118 · **Par**: yes · **Artifact**: every emitted figure carries `MEASURED` (with conditions) or `PROPOSED`; demonstration measurements labelled as such
   - **TDD**: RED-FIRST · **Validate**: **zero unlabelled figures** across the demonstration corpus (SC-012) · **Docs**: plan §7 · **Trace**: matrix FR-ORC-024, KE-20, SC-012
   - **Guard**: **a demonstration measurement presented as a production statistic is a release-blocking condition** (condition 9). Single developer machine, injected faults, small populations, possibly compressed time parameters — all disclosed · **Done**: zero unlabelled figures · **Approval**: none
-- [ ] T122 [P] [US5] Reliability and orchestration measurement exposure — `src/main/java/agentic/shortener/audit/RunMetrics.java`
+- [x] T122 [P] [US5] Reliability and orchestration measurement exposure — `src/main/java/agentic/shortener/audit/RunMetrics.java`
   - **Req**: **FR-ORC-024** · **Scn**: DS-B · **ADR**: ADR-010 · **Pre**: T121
   - **Deps**: T121 · **Par**: yes · **Artifact**: workflow success rate, failure rate, retry frequency, rollback and compensation frequencies **counted separately**, end-to-end latency with suspended time reported separately, unrecovered failure count
   - **TDD**: RED-FIRST · **Validate**: retrievable per run and in aggregate; **PVT-001's measured value comes from T145b**, with the analytics-append component from **T145d** — this task exposes the measures, it does not produce the load · **Docs**: plan §7 · **Trace**: matrix FR-ORC-024

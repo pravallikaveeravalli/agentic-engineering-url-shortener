@@ -1,0 +1,16 @@
+Sabotage: RunMetrics.expose — avgLatency was computed from
+`input.totalEndToEndLatency().plus(input.totalSuspendedTime())` instead of `input.totalEndToEndLatency()`
+alone, silently folding suspended time back into the end-to-end latency figure it is supposed to be
+reported separately from.
+
+[INFO] Running agentic.shortener.audit.RunMetricsTest
+[ERROR] Tests run: 4, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.019 s <<< FAILURE! -- in agentic.shortener.audit.RunMetricsTest
+[ERROR] agentic.shortener.audit.RunMetricsTest.handComputedSixMeasures -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 200s / 10 samples ==> expected: <PT20S> but was: <PT25S>
+	at agentic.shortener.audit.RunMetricsTest.handComputedSixMeasures(RunMetricsTest.java:38)
+
+Fix: restored avgLatency to average totalEndToEndLatency alone, unmixed with totalSuspendedTime. plan §7
+requires "end-to-end latency with suspended time reported separately" precisely so a reviewer can see how
+much of a run's wall-clock time was waiting on a human versus doing work — a merged figure would hide that
+split behind one number, the same failure mode T119 already refused for the MTTR denominator and T116
+already refused for rollback/compensation.
