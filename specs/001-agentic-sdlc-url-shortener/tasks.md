@@ -560,7 +560,7 @@ and replan records, driven entirely by **injected scriptable executors** — no 
 
 ### Orchestration domain and executors
 
-- [ ] T069 [US3] Executor interface — `src/main/java/agentic/shortener/orchestration/executor/StageExecutor.java`
+- [x] T069 [US3] Executor interface — `src/main/java/agentic/shortener/orchestration/executor/StageExecutor.java`
   - **Req**: **FR-ORC-028** · **Scn**: all · **ADR**: **ADR-004**, **ADR-006** · **Pre**: T020
   - **Deps**: T020 · **Par**: no (every executor depends on it) · **Artifact**: one interface for all twelve stages; input is workflow data
   - **TDD**: RED-FIRST · **Validate**: `-Dtest=StageExecutorContractTest` — the contract every implementation must satisfy · **Docs**: spec §Stage Executor Model · **Trace**: matrix FR-ORC-028
@@ -714,7 +714,7 @@ from the response JSON. Each is `[P]` because each touches its own files and dep
   - **Guard**: **moved into Phase 5 by CR-016** — this is the orchestration impact-analysis model, its file already lives under `orchestration/impact/`, and it never needed the change-request model it was previously chained to; that spurious dependency is what pushed T073d behind a Phase-6 synchronization point. Implementation MUST NOT begin on a brownfield change before the analysis is recorded, and the analysis MUST NOT be reconstructed afterwards · **Done**: seven dimensions enforced; ordering asserted · **Approval**: none
 ### Reliability: retry, timeout, fallback
 
-- [ ] T083 [US3] Standard failure envelope — `src/main/java/agentic/shortener/orchestration/reliability/FailureEnvelope.java`
+- [x] T083 [US3] Standard failure envelope — `src/main/java/agentic/shortener/orchestration/reliability/FailureEnvelope.java`
   - **Req**: **FR-ORC-014** (CL-006) · **Scn**: DS-B · **ADR**: **ADR-003** · **Pre**: T069
   - **Deps**: T069 · **Par**: no (consumed by T084–T087) · **Artifact**: closed category set `TIMEOUT` | `UNAVAILABLE` | `RATE_LIMITED` | `INVALID_INPUT` | `INTERNAL` | `UNKNOWN`, plus the executor's **proposed** classification and detail
   - **TDD**: RED-FIRST · **Validate**: executors translate provider errors into the envelope; a stage's declared retryable set is expressed over **standard categories only** · **Docs**: plan §6 · **Trace**: matrix FR-ORC-014, KE-26
