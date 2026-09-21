@@ -68,10 +68,18 @@ public record GateDecision(String decisionId, UUID runId, String gateId, Integer
                             + "owner's authority. Recording only that something exceeded it leaves the "
                             + "escalation unactionable");
         }
-        if (outcome == GateOutcome.APPROVED && !"human".equals(actor.actorType())) {
+        if (!"human".equals(actor.actorType())) {
+            // Unconditional, not narrowed to APPROVED: gate_decision_actor_is_human requires a human on
+            // EVERY row regardless of outcome, and the first version of this guard only matched APPROVED
+            // — a REJECTED, CHANGES_REQUESTED or ESCALATED decision from 'system' would have built
+            // successfully here and failed only later, at GateStore.recordDecision's INSERT, against the
+            // DB CHECK. T063 (EC-024) is what a 'system' actor has recorded authority for NOTHING that
+            // goes through a GateDecision at all — its only authority anywhere is deadline expiry and
+            // retention-driven abandonment, neither of which is a GateDecision.
             throw new IllegalArgumentException(
-                    "CR-021: only a human decides a gate. APPROVED from actorType='" + actor.actorType()
-                            + "' is refused structurally, before it ever reaches the store");
+                    "CR-021, EC-024: only a human decides a gate, for any outcome. actorType='"
+                            + actor.actorType() + "' is refused structurally, before it ever reaches the "
+                            + "store");
         }
     }
 
