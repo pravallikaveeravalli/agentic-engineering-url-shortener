@@ -100,7 +100,7 @@ artifact, no test) · `EVIDENCE` (task's output *is* executed evidence).
 | — | Orchestration governance surfaces | T063a, T067a, T082a |
 | — | Synchronization (concurrent downstream write) | T076a |
 | — | Node-overrun escalation | T086a |
-| — | Deferred aggregate redirect tier (brownfield subject) | T055 defers · T136a implements |
+| — | Deferred aggregate redirect tier (brownfield subject) | T055 defers · **T055a discloses** · T136a implements |
 
 ---
 
@@ -137,7 +137,7 @@ register rather than improvised under pressure.
   - **TDD**: N/A-DOC · **Validate**: each checkpoint names what it cuts *from the backlog* and what it may never cut · **Docs**: new file · **Trace**: — 
   - **Guard**: a checkpoint MUST NOT authorise cutting mandatory validation or reviewer evidence; stated explicitly. **A checkpoint observes and reports; it does not itself cut.** Under the Gate 5 time-attitude amendment, **a scope cut happens only if the owner orders one at a checkpoint, on the record** — the checkpoint's output is an escalation with options, not an executed reduction. **AI wiring reduction is the first option the owner would be offered** (plan §14), never a default the worker applies. The file must state that distinction, because it is the difference between a controlled cut and a quietly narrowed scope · **Done**: four checkpoints present, each stating its observation, the options it escalates, and what it may never cut · **Approval**: none
 - [ ] T006 [P] Stop-conditions register — `docs/delivery/stop-conditions.md`
-  - **Req**: CN-007, Constitution X · **Scn**: — · **ADR**: — · **Pre**: T001
+  - **Req**: CN-007, CN-005, Constitution X · **Scn**: — · **ADR**: — · **Pre**: T001
   - **Deps**: T001 · **Par**: yes · **Artifact**: four stop conditions, each with the required report
   - **TDD**: N/A-DOC · **Validate**: fabrication-pressure condition present and marked non-waivable; each condition classified **HALT** or **ESCALATE** per the table below · **Docs**: new file · **Trace**: — 
   - **Guard**: a stop condition halts and reports; it never authorises silent scope reduction. Under the Gate 5 amendment the four conditions are **classified by what the trigger does**, because two of them are time-based and the owner ruled that time must not freeze work on its own:
@@ -167,7 +167,7 @@ register rather than improvised under pressure.
 - [ ] T008 Build, root package, and layer directories — `pom.xml`, `src/main/java/agentic/shortener/`, `src/test/java/agentic/shortener/`
   - **Req**: NFR-MNT-001 · **Scn**: — · **ADR**: **ADR-001** (Accepted) · **Pre**: T007
   - **Deps**: T007 · **Par**: no (root artifact) · **Artifact**: Java 21 + Spring Boot 3 build; packages `domain`, `application`, `delivery`, `persistence`, `orchestration`, `policy`, `audit`, `config`
-  - **TDD**: N/A-DOC · **Validate**: `./mvnw -q compile` succeeds on an empty tree · **Docs**: `README.md` build section · **Trace**: declares root package for every later path
+  - **TDD**: N/A-DOC · **Validate**: `./mvnw -q compile` succeeds on an empty tree · **Docs**: `README.md` build section · **Trace**: declares root package for every later path; CN-002, CN-003
   - **Guard**: implementation MUST NOT start on an unapproved stack — ADR-001 is Accepted, so this is unblocked · **Done**: compile passes; eight packages exist · **Approval**: none
 - [ ] T009 [P] Store-only Docker Compose and reviewer prerequisites — `docker-compose.yml`
   - **Req**: FR-ORC-004, CL-009 · **Scn**: — · **ADR**: **ADR-002**, **ADR-012** · **Pre**: T008
@@ -227,7 +227,7 @@ register rather than improvised under pressure.
 - [ ] T020 Red-phase evidence capture mechanism — `scripts/record-red.sh`, `docs/evidence/red-phase/`
   - **Req**: **NFR-TST-002** · **Scn**: — · **ADR**: **ADR-011** · **Pre**: T017
   - **Deps**: T017 · **Par**: no (every later RED-FIRST task depends on it) · **Artifact**: script storing a failing run's output as a dated evidence artifact
-  - **TDD**: N/A-DOC · **Validate**: script run against a deliberately failing test produces a stored artifact naming the test and the failure reason · **Docs**: `quickstart.md` evidence section · **Trace**: NFR-TST-002's "evidenced, not asserted"
+  - **TDD**: N/A-DOC · **Validate**: script run against a deliberately failing test produces a stored artifact naming the test and the failure reason · **Docs**: `quickstart.md` evidence section · **Trace**: NFR-TST-002's "evidenced, not asserted"; CN-004
   - **Guard**: the red phase must be observed to fail **for the expected reason**; a compile error does not satisfy it, and the captured output must show which · **Done**: one captured artifact exists · **Approval**: none
 
 ---
@@ -256,7 +256,7 @@ register rather than improvised under pressure.
 - [ ] T024 [P] RedirectEvent entity — `src/main/java/agentic/shortener/domain/analytics/RedirectEvent.java`
   - **Req**: **FR-URL-010**, NFR-SEC-005 · **Scn**: DS-B · **ADR**: **ADR-014** · **Pre**: T020
   - **Deps**: T020 · **Par**: yes · **Artifact**: `id`, `short_code`, `occurred_at` — **and nothing else**
-  - **TDD**: RED-FIRST · **Validate**: schema-assertion test proving no IP, user agent, referrer, device identifier, or geolocation field exists · **Docs**: `data-model.md` KE-02 · **Trace**: matrix FR-URL-010, `POL-PRIV-001`
+  - **TDD**: RED-FIRST · **Validate**: schema-assertion test proving no IP, user agent, referrer, device identifier, or geolocation field exists · **Docs**: `data-model.md` KE-02 · **Trace**: matrix FR-URL-010, `POL-PRIV-001`, CL-002
   - **Guard**: **absence is the requirement.** A test asserts the absence; a reviewer can read it · **Done**: absence test passes · **Approval**: none
 - [ ] T025 Repository interfaces — `src/main/java/agentic/shortener/domain/**/[X]Repository.java`
   - **Req**: **NFR-MNT-002** · **Scn**: — · **ADR**: **ADR-002** · **Pre**: T021–T024
@@ -373,7 +373,7 @@ resolution, and expiry outcomes.
 - [ ] T043 [US1] Resolution use case, temporary class — `src/main/java/agentic/shortener/application/ResolveLinkUseCase.java`
   - **Req**: **FR-URL-007** · **Scn**: DS-A · **ADR**: **ADR-014** · **Pre**: T026, T046
   - **Deps**: T026, T046 · **Par**: no (core read path) · **Artifact**: resolves code → exact stored destination; **temporary-class** redirect
-  - **TDD**: RED-FIRST · **Validate**: round-trip byte-equality test; response asserted temporary-class · **Docs**: `contracts/openapi.yaml` 307 · **Trace**: matrix FR-URL-007, CR-003
+  - **TDD**: RED-FIRST · **Validate**: round-trip byte-equality test; response asserted temporary-class · **Docs**: `contracts/openapi.yaml` 307 · **Trace**: matrix FR-URL-007, CR-003, CN-006
   - **Guard**: **permanent-class redirect is prohibited** — a cached permanent redirect defeats both analytics counting and expiry enforcement (CR-003). Target MUST come from storage, never from request input · **Done**: byte-equality and temporary-class both asserted · **Approval**: none
 - [ ] T044 [P] [US1] Public unauthenticated redirect path — `src/main/java/agentic/shortener/delivery/RedirectController.java`
   - **Req**: **FR-URL-018** · **Scn**: DS-A · **ADR**: **ADR-013** · **Pre**: T043, T052
@@ -427,7 +427,7 @@ resolution, and expiry outcomes.
 - [ ] T052 [US1] Bearer authentication filter — `src/main/java/agentic/shortener/delivery/auth/CreatorAuthFilter.java`
   - **Req**: **FR-URL-018**, FR-URL-019 · **Scn**: DS-A · **ADR**: **ADR-013** · **Pre**: T022
   - **Deps**: T022 · **Par**: no (guards create and analytics) · **Artifact**: `Authorization: Bearer <key>`; SHA-256 of the full presented string; **constant-time comparison**; expired and revoked refused with the **same response shape**
-  - **TDD**: RED-FIRST · **Validate**: authenticated vs anonymous create; **EC-041** expired-vs-revoked byte-identity; constant-time unit test · **Docs**: `contracts/openapi.yaml` `creatorApiKey` · **Trace**: matrix FR-URL-018, EC-041
+  - **TDD**: RED-FIRST · **Validate**: authenticated vs anonymous create; **EC-041** expired-vs-revoked byte-identity; constant-time unit test · **Docs**: `contracts/openapi.yaml` `creatorApiKey` · **Trace**: matrix FR-URL-018, EC-041, CL-001
   - **Guard**: bearer transport chosen because proxies and scrubbers redact `Authorization` **by default** — a custom header would forfeit that. Redirects never enter this filter · **Done**: all four tests pass · **Approval**: none
 - [ ] T053 [US1] Operator provisioning script with required expiry — `ops/scripts/provision-creator.sh`
   - **Req**: **FR-URL-019** · **Scn**: — · **ADR**: **ADR-013**, ADR-012 · **Pre**: T052
@@ -442,9 +442,15 @@ resolution, and expiry outcomes.
   - **Guard**: throttling MUST NOT be silently disabled by default configuration (T018 asserts on-by-default) · **Done**: limit enforced; tier named in the response · **Approval**: none
 - [ ] T055 [US1] Two-tier redirect rate limiting — `src/main/java/agentic/shortener/delivery/ratelimit/RedirectRateLimiter.java`
   - **Req**: **FR-URL-016** · **Scn**: DS-B · **ADR**: ADR-013 · **Pre**: T044, T054
-  - **Deps**: T044, T054 · **Par**: no (shares the limiter module) · **Artifact**: **per short code — PVT-013, 600/min** (hotspot). The **per-creator aggregate tier (PVT-014) is deliberately deferred** to the brownfield scenario (T136a) and disclosed in the baseline-omissions record
+  - **Deps**: T044, T054 · **Par**: no (shares the limiter module) · **Artifact**: **per short code — PVT-013, 600/min** (hotspot). The **per-creator aggregate tier (PVT-014) is deliberately deferred** to the brownfield scenario (T136a) and disclosed in the baseline-omissions record (**T055a**)
   - **TDD**: RED-FIRST · **Validate**: per-code tier tests at and above the limit. **The multi-link aggregate case is NOT tested here** — it is the brownfield scenario's **before-state**, where it must pass **unthrottled** · **Docs**: plan §8 · **Trace**: matrix FR-URL-016
   - **Guard**: **FR-URL-016 remains binding in full**; deferring the third tier is a scheduled omission with a named closure (T136a), never an accepted gap. PVT-014 sits deliberately **below** the sum of per-code limits, which is what makes the tier bite. A throttled response MUST NOT disclose the owning creator to a public follower. **Accepted trade-off**: followers of a popular creator may be throttled through no fault of their own — document it in the threat model · **Done**: two tiers proven; the third deferred and disclosed · **Approval**: none
+- [ ] T055a [P] [US1] Baseline-omissions register — `docs/delivery/baseline-omissions.md`
+  - **Req**: **FR-URL-016**, **PVT-014**, CN-007 · **Scn**: **DS-B** (its before-state presumes this is written) · **ADR**: ADR-013 · **Pre**: T055
+  - **Deps**: T055 · **Par**: yes (own file) · **Artifact**: the written record of every **deliberate** baseline omission — currently exactly **one**: the per-creator aggregate redirect tier (**PVT-014**), deferred from Slice 3. Each entry names five things: **what is omitted**, **which requirement it belongs to**, **that the requirement remains binding in full**, **the run that closes it**, and **what release readiness must report if that run does not happen**
+  - **TDD**: N/A-DOC · **Validate**: the entry exists **before T057's acceptance sweep** records the multi-link case as passing unthrottled — otherwise the sweep documents a gap with no disclosure behind it; a reviewer can read the register in one page and answer *"what is missing, and who closes it"*; cross-checked against `docs/LIMITATIONS.md` (T147) so the two cannot disagree
+  - **Docs**: new file; referenced by T055's guard, T136a, T147 and plan §14 · **Trace**: FR-URL-016, PVT-014, DS-B
+  - **Guard**: **the whole defence of deferring a binding requirement is that the omission is written down with a named closure** — without this file the deferral is indistinguishable from an oversight, and plan §14's promise that release readiness reports the gap has no artifact behind it. It MUST NOT become a general backlog: `docs/delivery/backlog.md` (T002) holds items deferred **indefinitely**, this holds **scheduled omissions with closures**, and an entry that loses its closing run belongs in neither — it is a gap, and must be reported as one · **Done**: the aggregate-tier entry present with all five fields; **no entry without a named closing run** · **Approval**: none
 - [ ] T056 [P] [US1] Health and readiness separation — `src/main/java/agentic/shortener/delivery/HealthController.java`
   - **Req**: **FR-URL-015** · **Scn**: DS-B · **ADR**: ADR-012 · **Pre**: T032
   - **Deps**: T032 · **Par**: yes · **Artifact**: liveness independent of the store; readiness dependent on it and **failing closed**
@@ -470,7 +476,7 @@ outcome, including deliberate silence.
 - [ ] T058 [US2] ApprovalGate and GateDecision entities — `src/main/java/agentic/shortener/orchestration/gates/`
   - **Req**: **FR-ORC-013** · **Scn**: DS-A, DS-C · **ADR**: **ADR-005**, ADR-008 · **Pre**: T027, T080
   - **Deps**: T027, T080 · **Par**: no · **Artifact**: ApprovalGate(`id`, `stage_id`, `gate_class`, `wait_deadline`, `disclosed_auto_abandon_at`, `requested_at`); GateDecision(`outcome`, `actor`, `decided_at`, `reason`, `repository_record_path`, `supersedes?`)
-  - **TDD**: RED-FIRST · **Validate**: schema validation against `contracts/approval.schema.json` · **Docs**: `data-model.md` KE-10/KE-11 · **Trace**: matrix FR-ORC-013
+  - **TDD**: RED-FIRST · **Validate**: schema validation against `contracts/approval.schema.json` · **Docs**: `data-model.md` KE-10/KE-11 · **Trace**: matrix FR-ORC-013, PVT-006
   - **Guard**: `repository_record_path` is **required** — a decision existing only in workflow state does not satisfy the gate · **Done**: entities validate against the contract, including its conditional rules · **Approval**: none
 - [ ] T059 [US2] Five gate outcomes and their workflow effects — `src/main/java/agentic/shortener/orchestration/gates/GateOutcomeHandler.java`
   - **Req**: **FR-ORC-013** · **Scn**: DS-A, DS-C · **ADR**: ADR-008 · **Pre**: T058
@@ -515,7 +521,7 @@ outcome, including deliberate silence.
 - [ ] T066 [P] [US2] HUMAN executor kind recorded — `src/main/java/agentic/shortener/orchestration/executor/ExecutorKind.java`
   - **Req**: **FR-ORC-029** (CR-001) · **Scn**: DS-A · **ADR**: ADR-004 · **Pre**: T065
   - **Deps**: T065 · **Par**: yes · **Artifact**: `DETERMINISTIC` | `AI` | `HUMAN`; `HUMAN` **never flag-selectable**, only a no-plan-gate outcome
-  - **TDD**: RED-FIRST · **Validate**: test asserting `HUMAN` cannot be selected by the `ai` flag · **Docs**: `contracts/workflow-state.schema.json` `executorKindUsed` · **Trace**: matrix FR-ORC-029
+  - **TDD**: RED-FIRST · **Validate**: test asserting `HUMAN` cannot be selected by the `ai` flag · **Docs**: `contracts/workflow-state.schema.json` `executorKindUsed` · **Trace**: matrix FR-ORC-029, KE-25
   - **Guard**: `executorClass` (design-time declaration) deliberately does **not** include `HUMAN` — confirmed by the owner. Adding it would let a stage be declared human-implemented up front · **Done**: three kinds; flag-selection of `HUMAN` refused · **Approval**: none
 - [ ] T067 [P] [US2] Gate inspection view — `src/main/java/agentic/shortener/delivery/RunInspectionController.java`
   - **Req**: FR-ORC-008, FR-ORC-013 · **Scn**: DS-C · **ADR**: ADR-008 · **Pre**: T060
@@ -616,7 +622,7 @@ deterministic counterpart.
   - **Req**: FR-ORC-020, FR-ORC-029 · **Scn**: DS-A, DS-B · **ADR**: ADR-004, **ADR-006** · **Pre**: T073, T071, T107
   - **Deps**: T071, T073, T107 · **Par**: yes · **Artifact**: prompt producing a design output plus **contract and schema impact identification**; for brownfield, the seven-dimension impact analysis
   - **TDD**: RED-FIRST · **Validate**: all **seven** impact dimensions present or the output is rejected; demo verification recorded
-  - **Docs**: plan §9 · **Trace**: matrix FR-ORC-020
+  - **Docs**: plan §9 · **Trace**: matrix FR-ORC-020, KE-13
   - **Guard**: **T107 sits in this phase deliberately** — see the parallelism note; this adapter is the one of the six with a same-phase prerequisite beyond the transport. An impact analysis omitting a dimension MUST be rejected rather than accepted partially — the parser enforces completeness so a silent omission cannot reach the gate · **Done**: seven-dimension enforcement proven; demo run recorded · **Approval**: none
 - [ ] T073e [P] [US3] S7 implementation AI adapter — AI authors, engine applies, real suite judges — `src/main/java/agentic/shortener/orchestration/executor/ai/stages/ImplementationAiExecutor.java`
   - **Req**: **FR-ORC-031**, FR-ORC-029 · **Scn**: DS-B · **ADR**: **ADR-004**, ADR-004-A1 · **Pre**: T073, T071, T065
@@ -687,7 +693,7 @@ deterministic counterpart.
 - [ ] T082 [P] [US3] Requirement, ambiguity, clarification, and task records — `src/main/java/agentic/shortener/orchestration/lineage/`
   - **Req**: FR-ORC-009, FR-ORC-010, FR-ORC-011, FR-ORC-012 · **Scn**: DS-A, DS-C · **ADR**: ADR-008 · **Pre**: T080
   - **Deps**: T080 · **Par**: yes · **Artifact**: RequirementRecord(`external_id`, `type`, `statement`, `status`); AmbiguityRecord(`ambiguity_class`, `affected_path`, `resolution_state`, `quality_checks_performed`, **`no_clarification_reason?`**); ClarificationDecision(`actor`, `question`, `answer`, `decided_at`); TaskRecord(`requirement_ids` **≥ 1, enforced**)
-  - **TDD**: RED-FIRST · **Validate**: orphan-task test — a TaskRecord with zero requirement IDs is rejected · **Docs**: `data-model.md` KE-07..KE-12 · **Trace**: matrix FR-ORC-009..012
+  - **TDD**: RED-FIRST · **Validate**: orphan-task test — a TaskRecord with zero requirement IDs is rejected · **Docs**: `data-model.md` KE-07..KE-12 · **Trace**: matrix FR-ORC-009..012, KE-08, KE-09
   - **Guard**: `no_clarification_reason` is what DS-A requires recorded when a well-formed requirement correctly skips S4 · **Done**: orphan task rejected; normalization preserves every submitted requirement · **Approval**: none
 - [ ] T082a [US3] Run creation and requirement submission surface — `src/main/java/agentic/shortener/delivery/RunSubmissionController.java`
   - **Req**: **FR-ORC-007**, FR-ORC-001, NFR-OBS-001, **CN-012**, SC-016 · **Scn**: all · **ADR**: **ADR-005**, ADR-008 · **Pre**: T074, T077, T080, T012, T063a
@@ -705,17 +711,17 @@ deterministic counterpart.
 - [ ] T083 [US3] Standard failure envelope — `src/main/java/agentic/shortener/orchestration/reliability/FailureEnvelope.java`
   - **Req**: **FR-ORC-014** (CL-006) · **Scn**: DS-B · **ADR**: **ADR-003** · **Pre**: T069
   - **Deps**: T069 · **Par**: no (consumed by T084–T087) · **Artifact**: closed category set `TIMEOUT` | `UNAVAILABLE` | `RATE_LIMITED` | `INVALID_INPUT` | `INTERNAL` | `UNKNOWN`, plus the executor's **proposed** classification and detail
-  - **TDD**: RED-FIRST · **Validate**: executors translate provider errors into the envelope; a stage's declared retryable set is expressed over **standard categories only** · **Docs**: plan §6 · **Trace**: matrix FR-ORC-014
+  - **TDD**: RED-FIRST · **Validate**: executors translate provider errors into the envelope; a stage's declared retryable set is expressed over **standard categories only** · **Docs**: plan §6 · **Trace**: matrix FR-ORC-014, KE-26
   - **Guard**: provider knowledge stays in the plugin; the core never learns a vendor taxonomy (this is why the repaired static-list option was rejected) · **Done**: six categories; translation tested for at least two provider error shapes · **Approval**: none
 - [ ] T084 [US3] Two-vote retry ruling — `src/main/java/agentic/shortener/orchestration/reliability/RetryRuling.java`
   - **Req**: **FR-ORC-014** (CL-006), NFR-REL-002 · **Scn**: DS-B · **ADR**: **ADR-003** · **Pre**: T083, T070
   - **Deps**: T070, T083 · **Par**: no · **Artifact**: `retries = declared retryable set ∩ executor proposal`; **executor holds veto, never grant**; every ruling recorded with **both signatures**
-  - **TDD**: RED-FIRST · **Validate**: four-case matrix — both yes → retry; declared-only → no retry; executor-only → no retry; `UNKNOWN` or malformed → **permanent** (EC-031, EC-032) · **Docs**: plan §6 · **Trace**: matrix FR-ORC-014
+  - **TDD**: RED-FIRST · **Validate**: four-case matrix — both yes → retry; declared-only → no retry; executor-only → no retry; `UNKNOWN` or malformed → **permanent** (EC-031, EC-032) · **Docs**: plan §6 · **Trace**: matrix FR-ORC-014, KE-27
   - **Guard**: **default-deny.** An unrecognized failure never defaults to retryable, mirroring EC-025's rule for policy checks. The executor diagnoses; the orchestrator rules, because only it holds attempts consumed, compensation already issued, replan invalidation, and blocking state · **Done**: four cases pass; two-signature record present · **Approval**: none
 - [ ] T085 [P] [US3] Bounded retry with backoff — `src/main/java/agentic/shortener/orchestration/reliability/RetryPolicy.java`
   - **Req**: FR-ORC-014 · **Scn**: DS-B · **ADR**: ADR-003 · **Pre**: T084, T072
   - **Deps**: T072, T084 · **Par**: yes · **Artifact**: **PVT-007 — 3 attempts, exponential from 1 s**; each attempt individually recorded
-  - **TDD**: EVIDENCE · **Validate**: `fail twice then succeed` script → two recorded attempts then success; bound exhaustion → **failure, never success** · **Docs**: plan §6 · **Trace**: matrix FR-ORC-014
+  - **TDD**: EVIDENCE · **Validate**: `fail twice then succeed` script → two recorded attempts then success; bound exhaustion → **failure, never success** · **Docs**: plan §6 · **Trace**: matrix FR-ORC-014, KE-15
   - **Guard**: **retries MUST NOT be unbounded**; a run-level circuit breaker is deferred to backlog, so per-stage bounds plus run-level blocks are the in-scope controls · **Done**: bounded retry and exhaustion behaviour proven · **Approval**: none
 - [ ] T086 [P] [US3] Timeout gating on idempotency — `src/main/java/agentic/shortener/orchestration/reliability/TimeoutPolicy.java`
   - **Req**: FR-ORC-014 rule 4, FR-ORC-018 · **Scn**: DS-B · **ADR**: ADR-003 · **Pre**: T084, T070
@@ -739,17 +745,17 @@ deterministic counterpart.
 - [ ] T088 [US3] Compensation register — `src/main/java/agentic/shortener/orchestration/reliability/CompensationRegister.java`
   - **Req**: **FR-ORC-016** (CL-007) · **Scn**: DS-B · **ADR**: **ADR-003** · **Pre**: T070, T027
   - **Deps**: T027, T070 · **Par**: no (consumed by T089–T090) · **Artifact**: the seven confirmed effect classes — working-tree writes and local un-pushed commits **erasable**; gate decisions, audit records, short links, redirect events **compensate-only**; AI invocations **nothing to compensate**
-  - **TDD**: RED-FIRST · **Validate**: structural default derived from where the effect lands; unclassified → **compensate-only**; `ROLLING_BACK` on an immutable-store effect refused · **Docs**: spec §Compensation Register · **Trace**: matrix FR-ORC-016
+  - **TDD**: RED-FIRST · **Validate**: structural default derived from where the effect lands; unclassified → **compensate-only**; `ROLLING_BACK` on an immutable-store effect refused · **Docs**: spec §Compensation Register · **Trace**: matrix FR-ORC-016, KE-28
   - **Guard**: **an unwanted short link is corrected by setting it to expired, never deleted** — links are never deleted (T-13, EX-003). Where no compensating action is known: touch nothing and suspend · **Done**: seven rows encoded; unclassified default proven · **Approval**: none
 - [ ] T089 [P] [US3] Rollback of erasable effects — `src/main/java/agentic/shortener/orchestration/reliability/RollbackHandler.java`
   - **Req**: FR-ORC-016 · **Scn**: DS-B · **ADR**: ADR-003 · **Pre**: T088
   - **Deps**: T088 · **Par**: yes · **Artifact**: working-tree discard and local branch reset, labelled **`ROLLBACK`**
-  - **TDD**: EVIDENCE · **Validate**: rollback run history labelled rollback, distinct from compensation · **Docs**: plan §6 · **Trace**: matrix FR-ORC-016
+  - **TDD**: EVIDENCE · **Validate**: rollback run history labelled rollback, distinct from compensation · **Docs**: plan §6 · **Trace**: matrix FR-ORC-016, CL-004, CN-009
   - **Guard**: **local un-pushed work is the only erasable class.** Rollback on anything else is an invalid rollback claim · **Done**: rollback applied and labelled; immutable-store attempt refused · **Approval**: none
 - [ ] T090 [P] [US3] Compensation of irreversible effects — `src/main/java/agentic/shortener/orchestration/reliability/CompensationHandler.java`
   - **Req**: FR-ORC-016 · **Scn**: DS-B · **ADR**: ADR-003 · **Pre**: T088
   - **Deps**: T088 · **Par**: yes · **Artifact**: superseding gate record, appended audit correction, link set to expired — each labelled **`COMPENSATION`**
-  - **TDD**: EVIDENCE · **Validate**: **EC-022** — at most one correction per effect, **even when a later retry succeeds** · **Docs**: plan §6 · **Trace**: matrix FR-ORC-016, EC-022
+  - **TDD**: EVIDENCE · **Validate**: **EC-022** — at most one correction per effect, **even when a later retry succeeds** · **Docs**: plan §6 · **Trace**: matrix FR-ORC-016, KE-16, EC-022
   - **Guard**: compensation MUST NOT be described as rollback or vice versa; the run history must let a reviewer tell which occurred · **Done**: three compensating actions proven; double-compensation prevented · **Approval**: none
 - [ ] T091 [US3] Safe-stop suspension — `src/main/java/agentic/shortener/orchestration/state/SafeStopHandler.java`
   - **Req**: **FR-ORC-017** · **Scn**: DS-C · **ADR**: ADR-008 · **Pre**: T077, T084, T088
@@ -780,7 +786,7 @@ deterministic counterpart.
   - **Req**: **FR-ORC-019**, NFR-CHG-002, SC-007 · **Scn**: DS-C · **ADR**: **ADR-009** · **Pre**: T074, T075, T058
   - **Deps**: T058, T074, T075 · **Par**: no (**synchronization point**) · **Artifact**: **transitive downstream closure** over persisted `dependency_edge` rows from the changed artifact's producing stage; affected **nodes** → `INVALIDATED`; approvals voided by **superseding gate record**; `ReplanEvent` recording cause, **`invalidatedNodes` as node keys**, voided approvals — node-level, so a replan may invalidate one fan-out child and leave its siblings intact
   - **TDD**: EVIDENCE · **Validate**: affected set equals the computed closure; **unaffected parallel branches untouched**; **EC-020** — a voided approval cannot satisfy the re-planned stage; **EC-019** — in-flight stage not corrupted; **EC-030** — cycle-introducing replan rejected
-  - **Docs**: plan §3, §9 · **Trace**: matrix FR-ORC-019, EC-019, EC-020, EC-030
+  - **Docs**: plan §3, §9 · **Trace**: matrix FR-ORC-019, KE-14, EC-019, EC-020, EC-030
   - **Guard**: **the affected set decides which human approvals are voided, so it must be deterministic and independently recomputable by a reviewer.** An AI-determined set is disqualified: the governed component proposes, it never rules on governance scope. Closure over declared edges errs toward over-invalidation — a human-attention cost, never a surviving stale artifact · **Done**: five assertions pass; replan event queryable · **Approval**: none
 
 ---
@@ -813,7 +819,7 @@ names it.
 - [ ] T100 [US4] Compliance evaluation stage (S10) — `src/main/java/agentic/shortener/policy/PolicyEvaluationStage.java`
   - **Req**: **FR-ORC-022** · **Scn**: DS-B · **ADR**: **ADR-004** · **Pre**: T099, T069
   - **Deps**: T069, T099 · **Par**: no · **Artifact**: deterministic, **real** evaluation producing one outcome per applicable policy
-  - **TDD**: RED-FIRST · **Validate**: repeatable verdicts across runs on identical input · **Docs**: plan §9 · **Trace**: matrix FR-ORC-022
+  - **TDD**: RED-FIRST · **Validate**: repeatable verdicts across runs on identical input · **Docs**: plan §9 · **Trace**: matrix FR-ORC-022, KE-17
   - **Guard**: **verdicts must be repeatable**, which is why this stage is deterministic and never AI-capable · **Done**: identical input yields identical verdicts · **Approval**: none
 - [ ] T101 [P] [US4] Unevaluable check never defaults to PASS — `src/test/java/agentic/shortener/policy/UnevaluableCheckTest.java`
   - **Req**: FR-ORC-022 · **Scn**: — · **ADR**: — · **Pre**: T100
@@ -828,7 +834,7 @@ names it.
 - [ ] T103 [P] [US4] Policy exception workflow with seven fields — `src/main/java/agentic/shortener/policy/PolicyException.java`
   - **Req**: Constitution §Exception procedure · **Scn**: — · **ADR**: — · **Pre**: T100
   - **Deps**: T100 · **Par**: yes · **Artifact**: policy, **precise clause**, reason, scope, approving authority, **compensating control**, residual risk, approval timestamp, expiry or review condition — plus `repositoryRecordPath` under `docs/governance/exceptions/`
-  - **TDD**: RED-FIRST · **Validate**: schema rejects an exception missing any field, especially the **compensating control** · **Docs**: `CLAUDE.md` exceptions location · **Trace**: matrix FR-ORC-022
+  - **TDD**: RED-FIRST · **Validate**: schema rejects an exception missing any field, especially the **compensating control** · **Docs**: `CLAUDE.md` exceptions location · **Trace**: matrix FR-ORC-022, KE-18
   - **Guard**: **a missing compensating control is a detection target**; the schema is the control · **Done**: all seven required; omission rejected · **Approval**: none
 - [ ] T104 [P] [US4] Unapproved exception treated as FAIL — `src/test/java/agentic/shortener/policy/UnapprovedExceptionTest.java`
   - **Req**: FR-ORC-022 · **Scn**: — · **ADR**: — · **Pre**: T103
@@ -853,7 +859,7 @@ names it.
 - [ ] T109 [US4] Release-readiness evaluator — `src/main/java/agentic/shortener/policy/ReleaseReadinessEvaluator.java`
   - **Req**: **FR-ORC-025** · **Scn**: DS-A · **ADR**: **ADR-011** · **Pre**: T102, T105, T107
   - **Deps**: T102, T105, T107 · **Par**: no · **Artifact**: all **nine** constitutional blocking conditions evaluated; report **names every unmet condition**
-  - **TDD**: RED-FIRST · **Validate**: report is blocking when any condition holds and names it · **Docs**: plan §9 · **Trace**: matrix FR-ORC-025
+  - **TDD**: RED-FIRST · **Validate**: report is blocking when any condition holds and names it · **Docs**: plan §9 · **Trace**: matrix FR-ORC-025, KE-21
   - **Guard**: **readiness MUST NOT be self-certified by an agent** — the evaluator produces a recommendation requiring the release owner's recorded decision. Generated-but-unexecuted tests never count as passing · **Done**: nine conditions evaluated; recommendation-not-certification asserted · **Approval**: none
 - [ ] T110 [US4] Nine negative release-readiness tests — `src/test/java/agentic/shortener/policy/ReleaseBlockingConditionsIT.java`
   - **Req**: FR-ORC-025, **SC-009** · **Scn**: DS-A · **ADR**: ADR-011 · **Pre**: T109
@@ -882,7 +888,7 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
 - [ ] T111 [US5] Audit writer with six mandatory fields — `src/main/java/agentic/shortener/audit/AuditWriter.java`
   - **Req**: **FR-ORC-023**, NFR-AUD-001 · **Scn**: all · **ADR**: **ADR-010** · **Pre**: T027, T080
   - **Deps**: T027, T080 · **Par**: no (every stage writes through it) · **Artifact**: append-only writer requiring actor type, action, timestamp, affected artifact/state, result, **non-empty reason**
-  - **TDD**: RED-FIRST · **Validate**: every record validated against `contracts/audit-event.schema.json`; a record missing any field rejected; `POL-AUD-001` passes · **Docs**: plan §7 · **Trace**: matrix FR-ORC-023
+  - **TDD**: RED-FIRST · **Validate**: every record validated against `contracts/audit-event.schema.json`; a record missing any field rejected; `POL-AUD-001` passes · **Docs**: plan §7 · **Trace**: matrix FR-ORC-023, KE-19
   - **Guard**: **fail-closed applies to orchestrator governance writes only** (ADR-010 scoping) — no public shortener operation writes an audit row, so create, resolve, and analytics read are structurally incapable of audit-write failure. An audit write failure routes through the CL-006 envelope to suspension, not hard failure · **Done**: six fields enforced; corrections appended with `correctsEventId`, never edits · **Approval**: none
 - [ ] T112 [P] [US5] Correlation identifier propagation — `src/main/java/agentic/shortener/audit/CorrelationContext.java`
   - **Req**: **NFR-OBS-001** · **Scn**: all · **ADR**: ADR-010 · **Pre**: T111
@@ -935,7 +941,7 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
 - [ ] T121 [P] [US5] Demonstration-data labelling — `src/main/java/agentic/shortener/audit/MeasurementLabel.java`
   - **Req**: **NFR-AUT-003**, Constitution IX · **Scn**: all · **ADR**: ADR-010 · **Pre**: T118
   - **Deps**: T118 · **Par**: yes · **Artifact**: every emitted figure carries `MEASURED` (with conditions) or `PROPOSED`; demonstration measurements labelled as such
-  - **TDD**: RED-FIRST · **Validate**: **zero unlabelled figures** across the demonstration corpus (SC-012) · **Docs**: plan §7 · **Trace**: matrix FR-ORC-024, SC-012
+  - **TDD**: RED-FIRST · **Validate**: **zero unlabelled figures** across the demonstration corpus (SC-012) · **Docs**: plan §7 · **Trace**: matrix FR-ORC-024, KE-20, SC-012
   - **Guard**: **a demonstration measurement presented as a production statistic is a release-blocking condition** (condition 9). Single developer machine, injected faults, small populations, possibly compressed time parameters — all disclosed · **Done**: zero unlabelled figures · **Approval**: none
 - [ ] T122 [P] [US5] Reliability and orchestration measurement exposure — `src/main/java/agentic/shortener/audit/RunMetrics.java`
   - **Req**: **FR-ORC-024** · **Scn**: DS-B · **ADR**: ADR-010 · **Pre**: T121
@@ -948,7 +954,7 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
 - [ ] T123 [US5] Traceability report generator — `src/main/java/agentic/shortener/audit/TraceabilityReporter.java`
   - **Req**: **FR-ORC-027**, `POL-TRC-001` · **Scn**: all · **ADR**: **ADR-006** · **Pre**: T111
   - **Deps**: T111 · **Par**: no · **Artifact**: report over the ten-link chain — requirement → scenario → design → ADR → task → code → test → validation → documentation → evidence
-  - **TDD**: RED-FIRST · **Validate**: report generated **mechanically**, not by hand · **Docs**: plan §13 · **Trace**: matrix FR-ORC-027
+  - **TDD**: RED-FIRST · **Validate**: report generated **mechanically**, not by hand · **Docs**: plan §13 · **Trace**: matrix FR-ORC-027, KE-22
   - **Guard**: the chain now has ten populated columns after CR-006 added Design and ADR — a requirement with no Design or ADR reference is an orphan in the same sense as one with no test · **Done**: report covers all ten links · **Approval**: none
 - [ ] T124 [P] [US5] Zero-orphan bidirectional assertion — `src/test/java/agentic/shortener/audit/ZeroOrphanTest.java`
   - **Req**: FR-ORC-027, **SC-010** · **Scn**: all · **ADR**: — · **Pre**: T123
@@ -978,7 +984,7 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
 - [ ] T129 [US5] Final engineering summary assembler — `src/main/java/agentic/shortener/orchestration/summary/SummaryAssembler.java`, `docs/ENGINEERING-SUMMARY.md`
   - **Req**: **FR-ORC-026** · **Scn**: all · **ADR**: **ADR-010** · **Pre**: T121, T124, T126
   - **Deps**: T121, T124, T126 · **Par**: no · **Artifact**: deterministic assembly **from recorded evidence only** — what was built, decisions and rejected alternatives, executed validation and results, residual risks and limitations, and the AI-assisted process **including deviations from plan**
-  - **TDD**: RED-FIRST · **Validate**: every claim in the summary traces to a recorded artifact; a claim without a trace fails the build · **Docs**: new file · **Trace**: matrix FR-ORC-026
+  - **TDD**: RED-FIRST · **Validate**: every claim in the summary traces to a recorded artifact; a claim without a trace fails the build · **Docs**: new file · **Trace**: matrix FR-ORC-026, CN-001
   - **Guard**: **creativity is a liability here** — the assembler is deterministic precisely so it cannot invent. No unverifiable claims, no fabricated metrics, no undisclosed limitations · **Done**: zero untraceable claims · **Approval**: none
 - [ ] T130 [US5] US5 adversarial reconstruction — `docs/evidence/reconstruction-report.md`
   - **Req**: **FR-ORC-023**, SC-004 · **Scn**: DS-A, DS-B, DS-C · **ADR**: ADR-010 · **Pre**: T111–T129
@@ -1120,7 +1126,7 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
   - **Guard**: **if any mandatory policy remains `FAIL`, this task reports blocked rather than weakening the check** — stop condition 2 · **Done**: report produced with a determination and named conditions · **Approval**: none
 - [ ] T147 [P] Limitations and residual-risk disclosure — `docs/LIMITATIONS.md`
   - **Req**: Constitution XI · **Scn**: — · **ADR**: — · **Pre**: T146
-  - **Deps**: T146 · **Par**: yes · **Artifact**: every known limitation and residual risk, including single-host measurement, compressed time parameters, meta-schema lint status, deferred backlog items, **the deliberately deferred per-creator aggregate redirect tier and which run closed it**, the **retention posture** — indefinite retention, unbounded table growth by design, production archival recorded as a recommendation (NFR-AUD-003, CR-017) — the **governance-surface posture** (*separation of the two identity models is proven by test; reachability of the governance surfaces is not, because they are unauthenticated by design*), and **PVT-016**'s values as engineering judgement rather than measurement, with the accepted consequence that an unattended run stalls and then suspends
+  - **Deps**: T146 · **Par**: yes · **Artifact**: every known limitation and residual risk, including single-host measurement, compressed time parameters, meta-schema lint status, deferred backlog items, **the deliberately deferred per-creator aggregate redirect tier and which run closed it** (cross-checked against the baseline-omissions register, T055a), the **retention posture** — indefinite retention, unbounded table growth by design, production archival recorded as a recommendation (NFR-AUD-003, CR-017) — the **governance-surface posture** (*separation of the two identity models is proven by test; reachability of the governance surfaces is not, because they are unauthenticated by design*), and **PVT-016**'s values as engineering judgement rather than measurement, with the accepted consequence that an unattended run stalls and then suspends
   - **TDD**: N/A-DOC · **Validate**: cross-checked against every ADR's Risks section and every DF entry · **Docs**: new file · **Trace**: Constitution XI point 8
   - **Guard**: **undisclosed limitations are a release-blocking condition** (condition 8). Disclosure is cheaper than discovery · **Done**: no ADR risk or DF item absent · **Approval**: none
 - [ ] T148 [P] Governance-evidence index — `docs/evidence/governance-index.md`
