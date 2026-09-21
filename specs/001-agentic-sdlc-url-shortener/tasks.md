@@ -258,7 +258,7 @@ register rather than improvised under pressure.
   - **Deps**: T020 · **Par**: yes · **Artifact**: `id`, `short_code`, `occurred_at` — **and nothing else**
   - **TDD**: RED-FIRST · **Validate**: schema-assertion test proving no IP, user agent, referrer, device identifier, or geolocation field exists · **Docs**: `data-model.md` KE-02 · **Trace**: matrix FR-URL-010, `POL-PRIV-001`, CL-002
   - **Guard**: **absence is the requirement.** A test asserts the absence; a reviewer can read it · **Done**: absence test passes · **Approval**: none
-- [ ] T025 Repository interfaces — `src/main/java/agentic/shortener/domain/**/[X]Repository.java`
+- [x] T025 Repository interfaces — `src/main/java/agentic/shortener/domain/**/[X]Repository.java`
   - **Req**: **NFR-MNT-002** · **Scn**: — · **ADR**: **ADR-002** · **Pre**: T021–T024
   - **Deps**: T021, T022, T023, T024 · **Par**: no (spans all entities) · **Artifact**: interfaces owned by the domain; no framework or JPA type in a signature
   - **TDD**: TEST-WITH · **Validate**: T014 confirms no outward dependency from `domain` · **Docs**: `data-model.md` · **Trace**: NFR-MNT-002
