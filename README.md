@@ -106,4 +106,6 @@ decisions in [`docs/governance/adr/`](docs/governance/adr/), change requests in
 [`docs/governance/change-control/`](docs/governance/change-control/), and human gate decisions in
 [`docs/governance/gate-decisions/`](docs/governance/gate-decisions/). See
 [`specs/001-agentic-sdlc-url-shortener/quickstart.md`](specs/001-agentic-sdlc-url-shortener/quickstart.md)
-for how to run and reconstruct any of it yourself.
+for how to run and reconstruct any of it yourself, or
+[`docs/REVIEWER-GUIDE.md`](docs/REVIEWER-GUIDE.md) for a reviewer-oriented map of where every artifact
+lives and how to answer the quickstart's own reconstruction questions from committed artifacts alone.

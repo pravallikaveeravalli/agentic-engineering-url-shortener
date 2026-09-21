@@ -980,7 +980,7 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
   - **Deps**: T110 · **Par**: yes · **Artifact**: every command in the guide executed; both restart demonstrations performed
   - **TDD**: EVIDENCE · **Validate**: the **fast and integration tiers** run with no AI key and no network; the orchestration run requires an authenticated CLI, and the guide says so before any run instruction · **Docs**: `quickstart.md` corrections applied · **Trace**: FR-ORC-030
   - **Guard**: if a reviewer cannot run it, they cannot verify it — setup burden is a governance concern, not a convenience · **Done**: guide executes clean; corrections committed · **Approval**: none
-- [ ] T128 [P] [US5] Reviewer navigation guide — `docs/REVIEWER-GUIDE.md`
+- [x] T128 [P] [US5] Reviewer navigation guide — `docs/REVIEWER-GUIDE.md`
   - **Req**: US-5, SC-004 · **Scn**: all · **ADR**: — · **Pre**: T124, T127
   - **Deps**: T124, T127 · **Par**: yes · **Artifact**: where each artifact lives, which gate approved what, how to answer each reconstruction question, **what the baseline deliberately omitted, which run closed it, and where that run's committed evidence is**, and **what ambiguity detection is** — semantic, AI-backed, with declared variability and a recorded reason when nothing is found
   - **TDD**: N/A-DOC · **Validate**: a reader who did not run the project answers the `quickstart.md` §5 questions using only this guide · **Docs**: new file · **Trace**: SC-004
