@@ -294,7 +294,7 @@ register rather than improvised under pressure.
   - **TDD**: N/A-DOC · **Validate**: record names owner, version impact, compatibility impact, affected consumers, tests, docs, rollout, approval · **Docs**: change-control record · **Trace**: `POL-CHG-001`
   - **Guard**: a contract change without this record is a **mandatory release-blocking FAIL** · **Approval**: **REQUIRED — human owner**
   - **Done**: record materialized and approved before any contract-dependent implementation proceeds
-- [ ] T032 Walking skeleton — `src/main/java/agentic/shortener/delivery/HealthController.java`, one create endpoint, one repository call
+- [x] T032 Walking skeleton — `src/main/java/agentic/shortener/delivery/HealthController.java`, one create endpoint, one repository call
   - **Req**: FR-URL-015 · **Scn**: DS-A · **ADR**: **ADR-001**, ADR-012 · **Pre**: T026, T031
   - **Deps**: T026, T031 · **Par**: no (**synchronization point**) · **Artifact**: one endpoint + liveness + readiness + a real store round-trip, end to end
   - **TDD**: RED-FIRST · **Validate**: `./mvnw -q verify` — skeleton IT passes against Testcontainers · **Docs**: `quickstart.md` · **Trace**: matrix FR-URL-015
