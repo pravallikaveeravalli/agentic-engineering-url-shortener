@@ -3,14 +3,14 @@
 Feature 001 — Agentic Software Engineering System: URL Shortener.
 Governing constitution v1.1.0. Created 2026-09-19.
 
-**All fourteen ADRs are `Accepted`** — 2026-09-20, by Pravallika Veeravalli at Gate 4. Decision record:
+**All fourteen ADRs and one amendment record are `Accepted`** — 2026-09-20, by Pravallika Veeravalli at Gate 4. Decision record:
 [`gate-04-adr.md`](../gate-decisions/gate-04-adr.md), which carries the acceptance grounds, the owner's
 interventions and revision histories, and the provenance of the adopted grounds.
 
 Three were accepted with qualification: **ADR-005** with a count fix, **ADR-010** as amended by the owner's
 scoping of the fail-closed rule, **ADR-014** with three conditions. **ADR-013** incorporates three owner
-refinements, one of which ( required credential expiry ) has an open specification impact routed through
-**CR-002**.
+refinements, one of which (required credential expiry) had a specification impact, **applied and closed through
+CR-002** on 2026-09-20.
 
 ## Inventory
 
@@ -30,6 +30,7 @@ refinements, one of which ( required credential expiry ) has an open specificati
 | [012](./ADR-012-deployment-and-local-execution.md) | Deployment and local execution model | Accepted | High | Compose for store only; app on host |
 | [013](./ADR-013-authentication-and-authorization-mechanism.md) | Authentication and authorization mechanism | Accepted | High | Opaque 256-bit key, SHA-256, constant-time compare |
 | [014](./ADR-014-analytics-consistency.md) | Analytics consistency model — **resolves DF-001** | Accepted | High | Synchronous append, separate transaction, failure isolated |
+| [004-A1](./ADR-004-amendment-01-transport-claude-code-cli.md) | `StageAiProvider` transport — successor record amending ADR-004 | Accepted | High | Local Claude Code CLI subprocess, headless |
 
 ## Evaluated and judged NOT to require an ADR
 
@@ -77,11 +78,15 @@ ADR-011 (testing)             ── depends on ADR-002 and ADR-004
   position of same-transaction analytics append. That position violates FR-URL-010's negative criterion
   (EC-012): a failed append in the redirect's transaction fails the redirect. ADR-014 corrects it and, on
   approval, the plan and research should be updated.
-- **ADR-005 discloses an unverified artifact.** The Phase 1 contract files have not been parse-validated —
-  execution was refused by the environment's permission layer during authoring. Validating them is the first
-  Slice 1 task.
-- **DF-002 and DF-003 remain open** and are not resolved by any ADR here. DF-002 (redirect permanence) interacts
-  with ADR-014; DF-003 (audit vs idle retention boundary) interacts with ADR-010.
-- **CLAUDE.md does not define an ADR location.** These records are filed at `docs/governance/adr/` following the
-  plan's §Project Structure. Constitution §Runtime guidance (as amended in v1.1.0) requires `CLAUDE.md` to define
-  record locations, and ADRs are currently absent from it — worth a one-line addition.
+- **ADR-005 discloses an unverified artifact.** The Phase 1 contract files were **parse-validated 2026-09-20**,
+  finding and fixing one real defect (`RunInspection.ai` coerced to `[true, false]` by YAML 1.1). **Meta-schema lint
+  remains owed** and is T011, the first Slice 1 task. Both files were **re-parsed after CR-013** changed them to
+  v2.0.0.
+- **DF-002 and DF-003 were resolved at the Gate 4 closing package, 2026-09-20** — DF-002 by CR-003 (redirects are
+  temporary, never permanent) and DF-003 by CR-004 (the audit retention clock starts at run termination). Neither was
+  resolved *by* an ADR; both interact with ones here — DF-002 with ADR-014, DF-003 with ADR-010. **Retention was then
+  simplified further** by CR-017: this demonstration retains all records indefinitely and production archival is a
+  recorded recommendation, with CR-004's clock rule preserved inside it.
+- **`CLAUDE.md` defines the ADR location** — `docs/governance/adr/`, one file per decision named
+  `ADR-NNN-<slug>.md`, with this index — added under §Other governance records after checklist finding CHK239. An
+  ADR's `Status` is set to `Accepted` only by a recorded human decision, never by the acting agent.
