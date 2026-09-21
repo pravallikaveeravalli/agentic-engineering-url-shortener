@@ -645,17 +645,17 @@ from the response JSON. Each is `[P]` because each touches its own files and dep
 
 ### Dependency graph
 
-- [ ] T074 [US3] Graph tables and per-run materialization — `V4__orchestration_graph.sql`, `src/main/java/agentic/shortener/orchestration/graph/`
+- [x] T074 [US3] Graph tables and per-run materialization — `V4__orchestration_graph.sql`, `src/main/java/agentic/shortener/orchestration/graph/`
   - **Req**: **FR-ORC-002**, FR-ORC-003 · **Scn**: all · **ADR**: **ADR-008** · **Pre**: T027
   - **Deps**: T027 · **Par**: no (schema) · **Artifact**: `stage_node` with **node-keyed identity** — `node_key`, `stage_number`, `node_role`, `parent_node_key` — and `dependency_edge` with `from_node_key`/`to_node_key` and `join_semantics` (`ALL` | `ANY`); **edges materialized per run** from a static template (CR-011/CR-013)
   - **TDD**: RED-FIRST · **Validate**: schema validation against `contracts/workflow-state.schema.json`; **thirteen** nodes on a fresh run (eleven singletons, the S7 fan-out parent, its join); node keys unique; every stage 1–12 present exactly once as `SINGLETON` or `FAN_OUT_PARENT`; **`stage_number` read from the column, never parsed from the key** — asserted with a node whose key and column deliberately disagree · **Docs**: `data-model.md` KE-05/KE-06 · **Trace**: matrix FR-ORC-002
   - **Guard**: **edges are declared data, never inferred from call order.** Per-run materialization is what lets a replanned instance's topology differ and stay queryable — a code-only graph makes replan history unreconstructable · **Done**: graph persisted and queryable per run · **Approval**: none
-- [ ] T075 [P] [US3] Cycle detection before commit — `src/main/java/agentic/shortener/orchestration/graph/CycleDetector.java`
+- [x] T075 [P] [US3] Cycle detection before commit — `src/main/java/agentic/shortener/orchestration/graph/CycleDetector.java`
   - **Req**: FR-ORC-002, FR-ORC-019 · **Scn**: DS-C · **ADR**: ADR-008 · **Pre**: T074
   - **Deps**: T074 · **Par**: yes · **Artifact**: rejection of a cycle in the **instance** topology **before** a replanned subgraph is committed
   - **TDD**: RED-FIRST · **Validate**: EC-030 test — cycle-introducing replan rejected, nothing committed · **Docs**: — · **Trace**: matrix FR-ORC-002, EC-030
   - **Guard**: detection must run pre-commit; a post-commit check leaves a corrupt graph persisted · **Done**: EC-030 rejected pre-commit · **Approval**: none
-- [ ] T076 [P] [US3] Fan-out, join, and conditional-branch topology — `src/main/java/agentic/shortener/orchestration/graph/StageTemplate.java`
+- [x] T076 [P] [US3] Fan-out, join, and conditional-branch topology — `src/main/java/agentic/shortener/orchestration/graph/StageTemplate.java`
   - **Req**: **FR-ORC-003**, FR-ORC-001 · **Scn**: DS-A · **ADR**: ADR-003 · **Pre**: T074
   - **Deps**: T074 · **Par**: yes · **Artifact**: S7 per-task fan-out — children `S7.1..S7.n` with an explicit `S7.join` (`ALL`) gating S8; the S9∥S10 pair expressed as **two incoming `ALL` edges on S11, no join node**; S3→S4 conditional with `SKIPPED` as the not-taken state
   - **TDD**: RED-FIRST · **Validate**: **EC-018** — a join does not proceed while any required branch is incomplete or failed; overlap observable in run history · **Docs**: plan §3 topology · **Trace**: matrix FR-ORC-003, EC-018
@@ -668,22 +668,22 @@ from the response JSON. Each is `[P]` because each touches its own files and dep
 
 ### Workflow state machine
 
-- [ ] T077 [US3] Run state machine — `src/main/java/agentic/shortener/orchestration/state/RunState.java`
+- [x] T077 [US3] Run state machine — `src/main/java/agentic/shortener/orchestration/state/RunState.java`
   - **Req**: **FR-ORC-017** (CL-005), NFR-REL-001 · **Scn**: all · **ADR**: **ADR-008** · **Pre**: T074
   - **Deps**: T074 · **Par**: no (state root) · **Artifact**: `PENDING`, `RUNNING`, `SAFE_STOP`, `COMPLETED`, `REJECTED`, `ABANDONED`; **terminal set is exactly the last three**; `SAFE_STOP` non-terminal
   - **TDD**: RED-FIRST · **Validate**: state-machine test asserting `SAFE_STOP` is non-terminal and the terminal set is exactly three; schema conditionals — `terminalState` non-null **iff** terminal, `autoAbandonAt` non-null **iff** `SAFE_STOP` · **Docs**: `data-model.md` KE-04 · **Trace**: matrix FR-ORC-017
   - **Guard**: **a state cannot be both terminal and resumable.** This was a contradiction in the approved spec until CL-005 resolved it; the test is what keeps it resolved · **Done**: both schema conditionals enforced · **Approval**: none
-- [ ] T078 [US3] Stage state machine and allowed transitions — `src/main/java/agentic/shortener/orchestration/state/StageState.java`
+- [x] T078 [US3] Stage state machine and allowed transitions — `src/main/java/agentic/shortener/orchestration/state/StageState.java`
   - **Req**: FR-ORC-006 · **Scn**: all · **ADR**: ADR-008 · **Pre**: T077
   - **Deps**: T077 · **Par**: no · **Artifact**: twelve stage states with entry/exit criteria evaluated before execution and before completion
   - **TDD**: RED-FIRST · **Validate**: a stage with unmet entry criteria does not execute; one with unmet exit criteria is not marked complete · **Docs**: plan §3 · **Trace**: matrix FR-ORC-006
   - **Guard**: a stage reporting success with **no output artifact** must fail its exit criteria (EC-029) · **Done**: both directions asserted; EC-029 covered · **Approval**: none
-- [ ] T079 [US3] **Prohibited**-transition rejection tests — `src/test/java/agentic/shortener/orchestration/state/ProhibitedTransitionTest.java`
+- [x] T079 [US3] **Prohibited**-transition rejection tests — `src/test/java/agentic/shortener/orchestration/state/ProhibitedTransitionTest.java`
   - **Req**: FR-ORC-006, FR-ORC-013 · **Scn**: all · **ADR**: **ADR-003**, ADR-008 · **Pre**: T078
   - **Deps**: T078 · **Par**: no · **Artifact**: each prohibited transition asserted **rejected**, not merely absent
   - **TDD**: EVIDENCE · **Validate**: `RUNNING→SUCCEEDED` without exit criteria; `AWAITING_APPROVAL→SUCCEEDED` without a recorded decision; `RETRY_WAIT→RUNNING` with an exhausted bound or a missing vote; `FAILED→SUCCEEDED`; leaving `SAFE_STOP` other than by human decision or retention; `COMPENSATING` on an erasable effect; `ROLLING_BACK` on an immutable-store effect
   - **Docs**: plan §3 · **Trace**: matrix FR-ORC-006 · **Guard**: **building the engine means owning transition correctness** — this suite is the control that makes ADR-003's build decision defensible · **Done**: seven prohibited transitions each rejected · **Approval**: none
-- [ ] T080 [US3] Atomic state-plus-transition write — `src/main/java/agentic/shortener/orchestration/state/TransitionWriter.java`
+- [x] T080 [US3] Atomic state-plus-transition write — `src/main/java/agentic/shortener/orchestration/state/TransitionWriter.java`
   - **Req**: FR-ORC-004, NFR-AUD-001 · **Scn**: all · **ADR**: **ADR-008** · **Pre**: T079, T027
   - **Deps**: T027, T079 · **Par**: no (**synchronization point — unblocks Phase 4**) · **Artifact**: current state and its append-only `state_transition` row written in **one transaction**
   - **TDD**: RED-FIRST · **Validate**: test asserting a state change **cannot commit** without its transition row · **Docs**: `data-model.md` · **Trace**: matrix FR-ORC-004

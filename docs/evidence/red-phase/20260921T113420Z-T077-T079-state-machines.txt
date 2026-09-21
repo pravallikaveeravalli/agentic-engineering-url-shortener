@@ -1,0 +1,369 @@
+# Red-phase evidence
+
+- **Label**: T077-T079-state-machines
+- **Captured (UTC)**: 20260921T113420Z
+- **Command**: `./mvnw -Dtest=RunStateTest,StageStateTest,ProhibitedTransitionTest test`
+- **Exit code**: 1
+- **Requirement**: NFR-TST-002 (red phase evidenced, not asserted); CN-004
+
+## Why this file exists
+
+This is the failing run captured BEFORE the implementation that makes it pass. It is stored
+so that the red phase is readable by a reviewer rather than claimed in a commit message.
+
+## Captured output
+
+```
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< agentic:shortener >--------------------------
+[INFO] Building agentic-sdlc-url-shortener 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ shortener ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 4 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ shortener ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 61 source files with javac [debug parameters release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ shortener ---
+[INFO] skip non existing resourceDirectory /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ shortener ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 60 source files with javac [debug parameters release 21] to target/test-classes
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java uses or overrides a deprecated API.
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.orchestration.state.RunStateTest
+[ERROR] Tests run: 10, Failures: 0, Errors: 8, Skipped: 0, Time elapsed: 0.082 s <<< FAILURE! -- in agentic.shortener.orchestration.state.RunStateTest
+[ERROR] agentic.shortener.orchestration.state.RunStateTest.terminalSetIsExactlyThree -- Time elapsed: 0.008 s <<< ERROR!
+java.lang.UnsupportedOperationException: T077 not implemented
+	at agentic.shortener.orchestration.state.RunState.terminal(RunState.java:8)
+	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:178)
+	at java.base/java.util.Iterator.forEachRemaining(Iterator.java:133)
+	at java.base/java.util.Spliterators$IteratorSpliterator.forEachRemaining(Spliterators.java:1939)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+	at agentic.shortener.orchestration.state.RunStateTest.terminalSetIsExactlyThree(RunStateTest.java:55)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.RunStateTest.safeStopIsNotTerminal -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T077 not implemented
+	at agentic.shortener.orchestration.state.RunState.terminal(RunState.java:8)
+	at agentic.shortener.orchestration.state.RunStateTest.safeStopIsNotTerminal(RunStateTest.java:64)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.RunStateTest.terminalStateIffTerminal -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T077 not implemented
+	at agentic.shortener.orchestration.state.RunState.terminal(RunState.java:8)
+	at agentic.shortener.orchestration.state.RunStateTest.terminalStateIffTerminal(RunStateTest.java:93)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.RunStateTest.safeStopIsTheOnlySuspendedState -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T077 not implemented
+	at agentic.shortener.orchestration.state.RunState.suspended(RunState.java:12)
+	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:178)
+	at java.base/java.util.Iterator.forEachRemaining(Iterator.java:133)
+	at java.base/java.util.Spliterators$IteratorSpliterator.forEachRemaining(Spliterators.java:1939)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:575)
+	at java.base/java.util.stream.AbstractPipeline.evaluateToArrayNode(AbstractPipeline.java:260)
+	at java.base/java.util.stream.ReferencePipeline.toArray(ReferencePipeline.java:616)
+	at java.base/java.util.stream.ReferencePipeline.toArray(ReferencePipeline.java:622)
+	at java.base/java.util.stream.ReferencePipeline.toList(ReferencePipeline.java:627)
+	at agentic.shortener.orchestration.state.RunStateTest.safeStopIsTheOnlySuspendedState(RunStateTest.java:74)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.RunStateTest.autoAbandonIffSuspended -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T077 not implemented
+	at agentic.shortener.orchestration.state.RunState.suspended(RunState.java:12)
+	at agentic.shortener.orchestration.state.RunStateTest.autoAbandonIffSuspended(RunStateTest.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.RunStateTest.enumMatchesTheContract -- Time elapsed: 0.057 s <<< ERROR!
+java.lang.UnsupportedOperationException: T077 not implemented
+	at agentic.shortener.orchestration.state.RunState.terminal(RunState.java:8)
+	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:178)
+	at java.base/java.util.Iterator.forEachRemaining(Iterator.java:133)
+	at java.base/java.util.Spliterators$IteratorSpliterator.forEachRemaining(Spliterators.java:1939)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:575)
+	at java.base/java.util.stream.AbstractPipeline.evaluateToArrayNode(AbstractPipeline.java:260)
+	at java.base/java.util.stream.ReferencePipeline.toArray(ReferencePipeline.java:616)
+	at java.base/java.util.stream.ReferencePipeline.toArray(ReferencePipeline.java:622)
+	at java.base/java.util.stream.ReferencePipeline.toList(ReferencePipeline.java:627)
+	at agentic.shortener.orchestration.state.RunStateTest.enumMatchesTheContract(RunStateTest.java:127)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.RunStateTest.liveStatesAreLive -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T077 not implemented
+	at agentic.shortener.orchestration.state.RunState.terminal(RunState.java:8)
+	at agentic.shortener.orchestration.state.RunStateTest.liveStatesAreLive(RunStateTest.java:149)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.RunStateTest.noStateIsBoth -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T077 not implemented
+	at agentic.shortener.orchestration.state.RunState.terminal(RunState.java:8)
+	at agentic.shortener.orchestration.state.RunStateTest.noStateIsBoth(RunStateTest.java:84)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running agentic.shortener.orchestration.state.ProhibitedTransitionTest
+[ERROR] Tests run: 11, Failures: 1, Errors: 10, Skipped: 0, Time elapsed: 0.008 s <<< FAILURE! -- in agentic.shortener.orchestration.state.ProhibitedTransitionTest
+[ERROR] agentic.shortener.orchestration.state.ProhibitedTransitionTest.runningToSucceededWithoutExitCriteria -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T079 not implemented
+	at agentic.shortener.orchestration.state.TransitionRules.permits(TransitionRules.java:10)
+	at agentic.shortener.orchestration.state.ProhibitedTransitionTest.runningToSucceededWithoutExitCriteria(ProhibitedTransitionTest.java:48)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.ProhibitedTransitionTest.requirePermittedThrows -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalStateException> but was: <java.lang.UnsupportedOperationException>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:67)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3115)
+	at agentic.shortener.orchestration.state.ProhibitedTransitionTest.requirePermittedThrows(ProhibitedTransitionTest.java:182)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T079 not implemented
+	at agentic.shortener.orchestration.state.TransitionRules.requirePermitted(TransitionRules.java:14)
+	at agentic.shortener.orchestration.state.ProhibitedTransitionTest.lambda$requirePermittedThrows$0(ProhibitedTransitionTest.java:183)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:53)
+	... 6 more
+
+[ERROR] agentic.shortener.orchestration.state.ProhibitedTransitionTest.wrongRecoveryForTheEffectKind -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T079 not implemented
+	at agentic.shortener.orchestration.state.TransitionRules.permits(TransitionRules.java:10)
+	at agentic.shortener.orchestration.state.ProhibitedTransitionTest.wrongRecoveryForTheEffectKind(ProhibitedTransitionTest.java:137)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.ProhibitedTransitionTest.retryWaitToRunningWithExhaustedBound -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T079 not implemented
+	at agentic.shortener.orchestration.state.TransitionRules.permits(TransitionRules.java:10)
+	at agentic.shortener.orchestration.state.ProhibitedTransitionTest.retryWaitToRunningWithExhaustedBound(ProhibitedTransitionTest.java:78)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.ProhibitedTransitionTest.awaitingApprovalToSucceededWithoutDecision -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T079 not implemented
+	at agentic.shortener.orchestration.state.TransitionRules.permits(TransitionRules.java:10)
+	at agentic.shortener.orchestration.state.ProhibitedTransitionTest.awaitingApprovalToSucceededWithoutDecision(ProhibitedTransitionTest.java:65)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.ProhibitedTransitionTest.retryWaitToRunningWithMissingVote -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T079 not implemented
+	at agentic.shortener.orchestration.state.TransitionRules.permits(TransitionRules.java:10)
+	at agentic.shortener.orchestration.state.ProhibitedTransitionTest.retryWaitToRunningWithMissingVote(ProhibitedTransitionTest.java:94)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.ProhibitedTransitionTest.leavingSafeStopWithoutAuthority -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T079 not implemented
+	at agentic.shortener.orchestration.state.TransitionRules.permits(TransitionRules.java:10)
+	at agentic.shortener.orchestration.state.ProhibitedTransitionTest.leavingSafeStopWithoutAuthority(ProhibitedTransitionTest.java:117)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.ProhibitedTransitionTest.failedToSucceeded -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T079 not implemented
+	at agentic.shortener.orchestration.state.TransitionRules.permits(TransitionRules.java:10)
+	at agentic.shortener.orchestration.state.ProhibitedTransitionTest.failedToSucceeded(ProhibitedTransitionTest.java:106)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.ProhibitedTransitionTest.allSevenTogether -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T079 not implemented
+	at agentic.shortener.orchestration.state.TransitionRules.permits(TransitionRules.java:10)
+	at agentic.shortener.orchestration.state.ProhibitedTransitionTest.allSevenTogether(ProhibitedTransitionTest.java:174)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.ProhibitedTransitionTest.refusalsAreActionable -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T079 not implemented
+	at agentic.shortener.orchestration.state.TransitionRules.permits(TransitionRules.java:10)
+	at agentic.shortener.orchestration.state.ProhibitedTransitionTest.refusalsAreActionable(ProhibitedTransitionTest.java:195)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.ProhibitedTransitionTest.legitimateTransitionsArePermitted -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T079 not implemented
+	at agentic.shortener.orchestration.state.TransitionRules.permits(TransitionRules.java:10)
+	at agentic.shortener.orchestration.state.ProhibitedTransitionTest.legitimateTransitionsArePermitted(ProhibitedTransitionTest.java:213)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running agentic.shortener.orchestration.state.StageStateTest
+[ERROR] Tests run: 9, Failures: 0, Errors: 8, Skipped: 0, Time elapsed: 0.006 s <<< FAILURE! -- in agentic.shortener.orchestration.state.StageStateTest
+[ERROR] agentic.shortener.orchestration.state.StageStateTest.terminalStageStates -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T078 not implemented
+	at agentic.shortener.orchestration.state.StageState.terminal(StageState.java:9)
+	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:178)
+	at java.base/java.util.Iterator.forEachRemaining(Iterator.java:133)
+	at java.base/java.util.Spliterators$IteratorSpliterator.forEachRemaining(Spliterators.java:1939)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+	at agentic.shortener.orchestration.state.StageStateTest.terminalStageStates(StageStateTest.java:63)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.StageStateTest.entryCriteriaBlockExecution -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T078 not implemented
+	at agentic.shortener.orchestration.state.StageCriteria.mayEnter(StageCriteria.java:9)
+	at agentic.shortener.orchestration.state.StageStateTest.entryCriteriaBlockExecution(StageStateTest.java:86)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.StageStateTest.skippingNeedsNoArtifact -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T078 not implemented
+	at agentic.shortener.orchestration.state.StageCriteria.maySkip(StageCriteria.java:17)
+	at agentic.shortener.orchestration.state.StageStateTest.skippingNeedsNoArtifact(StageStateTest.java:129)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.StageStateTest.fallbackIsRetainedButUnreachable -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T078 not implemented
+	at agentic.shortener.orchestration.state.StageState.terminal(StageState.java:9)
+	at agentic.shortener.orchestration.state.StageStateTest.fallbackIsRetainedButUnreachable(StageStateTest.java:160)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.StageStateTest.onlyARunningStageCanComplete -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T078 not implemented
+	at agentic.shortener.orchestration.state.StageCriteria.mayComplete(StageCriteria.java:13)
+	at agentic.shortener.orchestration.state.StageStateTest.onlyARunningStageCanComplete(StageStateTest.java:116)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.StageStateTest.bothDirections -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T078 not implemented
+	at agentic.shortener.orchestration.state.StageCriteria.mayEnter(StageCriteria.java:9)
+	at agentic.shortener.orchestration.state.StageStateTest.bothDirections(StageStateTest.java:141)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.StageStateTest.ec029NoArtifactNoCompletion -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T078 not implemented
+	at agentic.shortener.orchestration.state.StageCriteria.mayComplete(StageCriteria.java:13)
+	at agentic.shortener.orchestration.state.StageStateTest.ec029NoArtifactNoCompletion(StageStateTest.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.state.StageStateTest.skippedSatisfiesAJoin -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T078 not implemented
+	at agentic.shortener.orchestration.state.StageState.satisfiesJoin(StageState.java:13)
+	at agentic.shortener.orchestration.state.StageStateTest.skippedSatisfiesAJoin(StageStateTest.java:70)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   ProhibitedTransitionTest.requirePermittedThrows:182 Unexpected exception type thrown, expected: <java.lang.IllegalStateException> but was: <java.lang.UnsupportedOperationException>
+[ERROR] Errors: 
+[ERROR]   ProhibitedTransitionTest.allSevenTogether:174 » UnsupportedOperation T079 not implemented
+[ERROR]   ProhibitedTransitionTest.awaitingApprovalToSucceededWithoutDecision:65 » UnsupportedOperation T079 not implemented
+[ERROR]   ProhibitedTransitionTest.failedToSucceeded:106 » UnsupportedOperation T079 not implemented
+[ERROR]   ProhibitedTransitionTest.leavingSafeStopWithoutAuthority:117 » UnsupportedOperation T079 not implemented
+[ERROR]   ProhibitedTransitionTest.legitimateTransitionsArePermitted:213 » UnsupportedOperation T079 not implemented
+[ERROR]   ProhibitedTransitionTest.refusalsAreActionable:195 » UnsupportedOperation T079 not implemented
+[ERROR]   ProhibitedTransitionTest.retryWaitToRunningWithExhaustedBound:78 » UnsupportedOperation T079 not implemented
+[ERROR]   ProhibitedTransitionTest.retryWaitToRunningWithMissingVote:94 » UnsupportedOperation T079 not implemented
+[ERROR]   ProhibitedTransitionTest.runningToSucceededWithoutExitCriteria:48 » UnsupportedOperation T079 not implemented
+[ERROR]   ProhibitedTransitionTest.wrongRecoveryForTheEffectKind:137 » UnsupportedOperation T079 not implemented
+[ERROR]   RunStateTest.autoAbandonIffSuspended:103 » UnsupportedOperation T077 not implemented
+[ERROR]   RunStateTest.enumMatchesTheContract:127 » UnsupportedOperation T077 not implemented
+[ERROR]   RunStateTest.liveStatesAreLive:149 » UnsupportedOperation T077 not implemented
+[ERROR]   RunStateTest.noStateIsBoth:84 » UnsupportedOperation T077 not implemented
+[ERROR]   RunStateTest.safeStopIsNotTerminal:64 » UnsupportedOperation T077 not implemented
+[ERROR]   RunStateTest.safeStopIsTheOnlySuspendedState:74 » UnsupportedOperation T077 not implemented
+[ERROR]   RunStateTest.terminalSetIsExactlyThree:55 » UnsupportedOperation T077 not implemented
+[ERROR]   RunStateTest.terminalStateIffTerminal:93 » UnsupportedOperation T077 not implemented
+[ERROR]   StageStateTest.bothDirections:141 » UnsupportedOperation T078 not implemented
+[ERROR]   StageStateTest.ec029NoArtifactNoCompletion:104 » UnsupportedOperation T078 not implemented
+[ERROR]   StageStateTest.entryCriteriaBlockExecution:86 » UnsupportedOperation T078 not implemented
+[ERROR]   StageStateTest.fallbackIsRetainedButUnreachable:160 » UnsupportedOperation T078 not implemented
+[ERROR]   StageStateTest.onlyARunningStageCanComplete:116 » UnsupportedOperation T078 not implemented
+[ERROR]   StageStateTest.skippedSatisfiesAJoin:70 » UnsupportedOperation T078 not implemented
+[ERROR]   StageStateTest.skippingNeedsNoArtifact:129 » UnsupportedOperation T078 not implemented
+[ERROR]   StageStateTest.terminalStageStates:63 » UnsupportedOperation T078 not implemented
+[INFO] 
+[ERROR] Tests run: 30, Failures: 1, Errors: 26, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  2.211 s
+[INFO] Finished at: 2026-09-21T06:34:23-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project shortener: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+```

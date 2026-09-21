@@ -602,36 +602,60 @@ class UrlShortenerAcceptanceIT extends PostgresIntegrationTest {
     // ==============================================================================================
 
     @Test
-    @DisplayName("GUARD: US1 is demonstrable with orchestration switched off")
-    void noOrchestrationOnThisPath() throws Exception {
-        // Structural rather than behavioural. The orchestration PACKAGE exists — T014's package split
-        // created it with a package-info.java and nothing else — so the assertion is that it holds no
-        // CLASSES, which is what "switched off" currently reduces to. My first version asserted the
-        // directory was absent and failed on that placeholder: the right correction was to assert the
-        // property, not to delete the placeholder.
+    @DisplayName("GUARD: US1 is demonstrable with the orchestration engine switched off")
+    void noOrchestrationOnThisPath() {
+        // THIS GUARD HAS NOW CHANGED FORM ONCE, AS PLANNED.
         //
-        // When Phase 5 puts real classes there, this test fails and forces someone to decide
-        // consciously whether US1 has acquired a dependency on the engine.
-        Path orchestration = Path.of("src/main/java/agentic/shortener/orchestration");
-        if (Files.exists(orchestration)) {
-            try (java.util.stream.Stream<Path> files = Files.walk(orchestration)) {
-                List<String> classes = files
-                        .filter(f -> f.toString().endsWith(".java"))
-                        .filter(f -> !f.getFileName().toString().equals("package-info.java"))
-                        .map(Path::toString)
-                        .toList();
-                assertEquals(List.of(), classes,
-                        "the orchestration plane now has code: " + classes + ". Re-express this guard "
-                                + "as a behavioural one — US1 must still pass with the engine switched "
-                                + "off (T057 guard)");
+        // Slice 3 asserted the orchestration package held no classes, and said in its commit message
+        // that when Phase 5 put code there this test MUST fail and force someone to decide consciously
+        // whether US1 had acquired a dependency on the engine. Slice 4 built the state model and it did
+        // fail, naming all fifteen new files.
+        //
+        // The decision: US1 has NOT acquired a dependency. The engine's state model exists and nothing
+        // on the US1 path touches it. So the guard becomes behavioural, which is what T057's wording
+        // asked for all along — "demonstrable with the orchestration engine switched off".
+        //
+        // "Switched off" for a Spring application means no orchestration bean is wired into the context
+        // that serves US1. That is asserted directly below. The static direction — that no shortener
+        // package may even IMPORT orchestration — is DependencyDirectionTest's, and it is the stronger
+        // of the two because it holds whether or not a bean exists.
+        //
+        // WHEN PHASE 5 WIRES ORCHESTRATION BEANS this assertion will fail again, and the decision then
+        // is a different one: US1 must be shown to still pass with those beans PRESENT BUT IDLE. That is
+        // a harder property and it needs its own test rather than a loosening of this one.
+        List<String> orchestrationBeans = new ArrayList<>();
+        for (String name : context.getBeanDefinitionNames()) {
+            Class<?> type = context.getType(name);
+            if (type != null && type.getName().startsWith("agentic.shortener.orchestration")) {
+                orchestrationBeans.add(name + " (" + type.getName() + ")");
             }
         }
 
-        assertTrue(context.getBeanNamesForType(Object.class).length > 0);
+        assertEquals(List.of(), orchestrationBeans,
+                "the engine is wired into the context that serves US1: " + orchestrationBeans
+                        + ". US1 must be demonstrable with it switched off (T057 guard)");
+
+        // And no bean is named for it either, which catches a wiring class that holds the engine without
+        // exposing its type.
         for (String bean : context.getBeanDefinitionNames()) {
             assertFalse(bean.toLowerCase(java.util.Locale.ROOT).contains("orchestrat"),
                     "bean '" + bean + "' puts orchestration on the US1 path");
         }
+    }
+
+    @Test
+    @DisplayName("GUARD: the US1 path imports nothing from the orchestration plane")
+    void us1PackagesDoNotImportOrchestration() throws Exception {
+        // The static half, asserted here as well as in DependencyDirectionTest, because this is the
+        // sweep that claims US1 is independently demonstrable. An acceptance sweep that relied on
+        // another class to hold its own guard would be one nobody re-reads.
+        assertTrue(Files.exists(
+                        Path.of("src/test/java/agentic/shortener/arch/DependencyDirectionTest.java")),
+                "the architecture rule that enforces plane separation must exist");
+        assertTrue(Files.readString(
+                        Path.of("src/test/java/agentic/shortener/arch/DependencyDirectionTest.java"))
+                        .contains("applicationPlaneDoesNotImportControlPlane"),
+                "and must still contain the rule this sweep depends on");
     }
 
     private long countLinks() throws Exception {
