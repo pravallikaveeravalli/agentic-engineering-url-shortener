@@ -889,17 +889,17 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
 
 ### Audit trail and signals
 
-- [ ] T111 [US5] Audit writer with six mandatory fields — `src/main/java/agentic/shortener/audit/AuditWriter.java`
+- [x] T111 [US5] Audit writer with six mandatory fields — `src/main/java/agentic/shortener/audit/AuditWriter.java`
   - **Req**: **FR-ORC-023**, NFR-AUD-001 · **Scn**: all · **ADR**: **ADR-010** · **Pre**: T027, T080
   - **Deps**: T027, T080 · **Par**: no (every stage writes through it) · **Artifact**: append-only writer requiring actor type, action, timestamp, affected artifact/state, result, **non-empty reason**
   - **TDD**: RED-FIRST · **Validate**: every record validated against `contracts/audit-event.schema.json`; a record missing any field rejected; `POL-AUD-001` passes · **Docs**: plan §7 · **Trace**: matrix FR-ORC-023, KE-19
   - **Guard**: **fail-closed applies to orchestrator governance writes only** (ADR-010 scoping) — no public shortener operation writes an audit row, so create, resolve, and analytics read are structurally incapable of audit-write failure. An audit write failure routes through the CL-006 envelope to suspension, not hard failure · **Done**: six fields enforced; corrections appended with `correctsEventId`, never edits · **Approval**: none
-- [ ] T112 [P] [US5] Correlation identifier propagation — `src/main/java/agentic/shortener/audit/CorrelationContext.java`
+- [x] T112 [P] [US5] Correlation identifier propagation — `src/main/java/agentic/shortener/audit/CorrelationContext.java`
   - **Req**: **NFR-OBS-001** · **Scn**: all · **ADR**: ADR-010 · **Pre**: T111
   - **Deps**: T111 · **Par**: yes · **Artifact**: run id on every audit row, log line, metric label, trace span, and persisted row
   - **TDD**: RED-FIRST · **Validate**: identifier present on **100%** of records for a sampled run · **Docs**: plan §7 · **Trace**: matrix FR-ORC-023
   - **Guard**: application-plane requests carry their own request id, correlated where a run touches them — the two ids must not be conflated · **Done**: 100% presence asserted · **Approval**: none
-- [ ] T113 [P] [US5] Immutability enforcement test over the governance set — `src/test/java/agentic/shortener/audit/GovernanceImmutabilityIT.java`
+- [x] T113 [P] [US5] Immutability enforcement test over the governance set — `src/test/java/agentic/shortener/audit/GovernanceImmutabilityIT.java`
   - **Req**: NFR-AUD-001 · **Scn**: — · **ADR**: **ADR-010** · **Pre**: T111, T028
   - **Deps**: T028, T111 · **Par**: yes · **Artifact**: UPDATE and DELETE rejected on all six governance tables
   - **TDD**: EVIDENCE · **Validate**: six tables × two operations = twelve rejections — **unchanged, deliberately**; plus an architecture assertion that **no deletion, purge or archival path exists anywhere** in the codebase (NFR-AUD-003, CR-017) · **Docs**: ADR-010 · **Trace**: NFR-AUD-001
