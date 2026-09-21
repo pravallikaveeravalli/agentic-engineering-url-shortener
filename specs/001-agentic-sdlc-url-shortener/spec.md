@@ -7,9 +7,11 @@
 **Created**: 2026-09-17
 
 **Status**: **Approved at Gate 2, 2026-09-18**; clarifications resolved at **Gate 3, 2026-09-19** by
-Pravallika Veeravalli. AQ-001..003 resolved at Gate 2; AQ-005, AQ-006 resolved at Gate 3. AQ-004 and
-four further items remain open and are recorded under Deferred Findings for disposition at the Plan
-gate.
+Pravallika Veeravalli; amended by **CR-001..CR-007** and by the Gate 4 closing package, 2026-09-20, and by
+**CR-010, CR-014 and CR-017** on 2026-09-20. **All six ambiguities are resolved**: AQ-001..003 at Gate 2, AQ-005
+and AQ-006 at Gate 3, and **AQ-004 at the Gate 4 closing package (CR-003)**. Of the five Deferred Findings,
+**DF-001, DF-002, DF-003 and DF-005 are resolved or closed; DF-004 alone remains open, by design and out of
+scope**.
 
 **Governing Constitution**: v1.1.0, ratified 2026-09-17, last amended 2026-09-18
 
@@ -31,7 +33,7 @@ ambiguity management and requirement discipline (Constitution I).
 | **Derived** | Not stated verbatim, but entailed by a Confirmed requirement or by the ratified constitution. The entailment source is named. |
 | **Assumption-dependent** | Valid only while the referenced assumption (AS-nnn) holds. |
 | **PVT-nnn** | Proposed validation target. A number **this specification proposes**, not a client requirement. Requires human approval before it constrains anything. |
-| **AQ-nnn** | Ambiguity. AQ-001..003 were blocking and are resolved at Gate 2 (see Clarification Log). AQ-004..006 remain open, deferred to `/speckit-clarify`. |
+| **AQ-nnn** | Ambiguity. All six are resolved: AQ-001..003 at Gate 2 (Clarification Log), AQ-005 and AQ-006 at Gate 3, AQ-004 at the Gate 4 closing package (CR-003). |
 | **Material** | A defined term — see §Defined terms below. It gates whether a human is consulted, so it is not left to the reader. |
 
 ### Defined terms
@@ -307,8 +309,11 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
 - **EC-042**: A client caches a redirect and follows it after the link has expired. Impossible under the
   temporary class required by FR-URL-007 — every follow reaches the service, so expiry is evaluated each time
   (CR-003).
-- **EC-043**: A retention purge runs while a suspended run's audit records are older than the retention window.
-  Must purge nothing — the clock starts at run termination, which has not occurred (NFR-AUD-002, CR-004).
+- **EC-043**: *(Retired by Decision H, 2026-09-20.)* This case described a retention purge running against a suspended
+  run's records. **No purge, deletion or archival path exists in this system** (NFR-AUD-003), so the case is
+  unreachable rather than untested. Retained as a numbered entry rather than deleted, because CR-004 created it and an
+  edge case that silently disappears is indistinguishable from one that was overlooked. The reasoning it carried — a
+  live or suspended run's history must never age out — survives inside PVT-010's production recommendation.
 
 ---
 
@@ -403,7 +408,9 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   **Reject (negative)**: the service MUST NOT store IP address, user agent, referrer, device
   identifier, geolocation, or any other follower-identifying field — this is a deliberate
   data-minimization decision, not an omission; analytics recording MUST NOT cause a resolvable
-  redirect to fail (EC-012).
+  redirect to fail (EC-012); redirect events are **not deleted or purged at any age** — this demonstration retains
+  them indefinitely (NFR-AUD-003, CR-017). The 30-day figure that previously appeared as a retention cap is now a
+  **production recommendation** recorded in PVT-010 and `docs/LIMITATIONS.md`, not a behaviour of this system.
   **Evidence**: analytics capture tests; degraded-analytics redirect test; stored-schema inspection
   confirming no follower-identifying field exists.
 
@@ -602,17 +609,26 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   **Evidence**: criteria evaluation records; negative tests for both directions.
 
 - **FR-ORC-007** — *Workflow creation.* **[Confirmed]** An engineer MUST be able to create a
-  workflow run from a submitted requirement and receive a durable run identifier.
-  **Accept**: the run identifier appears in all subsequent logs, metrics, evidence, and state.
-  **Reject (negative)**: work MUST NOT be executed outside a created, identified run.
-  **Evidence**: run creation tests; identifier propagation check.
+  workflow run from a submitted requirement and receive a durable run identifier, through an **addressable
+  submission surface defined in the API contract**.
+  **Accept**: the run identifier appears in all subsequent logs, metrics, evidence, and state; the submission
+  surface is declared in `contracts/openapi.yaml` and exercised by the contract suite, not only by an internal
+  call path; the surface sits under the machine-access trust boundary and **neither requires nor accepts a creator
+  credential** (CN-012).
+  **Reject (negative)**: work MUST NOT be executed outside a created, identified run; a run MUST NOT be creatable
+  only from inside the process, since a reviewer who cannot start a run cannot exercise the system (SC-016);
+  a creator credential MUST NOT authorize run creation; the submission surface MUST NOT be reachable from the
+  public redirect path; and submitted requirement text MUST be treated as **untrusted content** wherever it later
+  reaches an executor (ADR-004-A1's argv-not-shell rule).
+  **Evidence**: run creation tests; identifier propagation check; contract conformance on the submission operation;
+  an absence test proving no creator credential is accepted there.
 
 - **FR-ORC-008** — *Workflow inspection.* **[Confirmed]** A caller MUST be able to inspect a run's
   current state: per-stage status, graph position, parallel and join structure, blocking
   condition, retry history, and pending gates.
   **Accept**: inspection of an in-flight run reports its true current blocking condition.
   **Reject (negative)**: inspection MUST NOT report a stage as complete whose exit criteria were
-  not satisfied.
+  not satisfied; inspection MUST NOT require, consume, or be affected by a creator credential (CN-012).
   **Evidence**: inspection output at multiple run positions.
 
 - **FR-ORC-009** — *Requirement normalization.* **[Confirmed]** The orchestrator MUST convert
@@ -657,7 +673,12 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   artifact within the commit that acts on the decision, not held only in workflow state; and **the
   gate request itself states its expiry consequences up front** — the gate-wait deadline at which
   the run suspends, and the `auto-abandon-at` date computed from last activity plus the retention
-  period (FR-ORC-032).
+  period (FR-ORC-032); the decision-recording surface is declared in the API contract, accepts only the four
+  **submittable** outcomes — `APPROVED`, `REJECTED`, `CHANGES-REQUESTED`, `ESCALATED` — and **cannot express
+  `TIMED-OUT`**, which is produced only by deadline expiry, so silence is not merely rejected as an input but is
+  **inexpressible** as one; the surface requires the decision's repository record path and refuses a decision that
+  exists only in workflow state; and it sits under the machine-access trust boundary with no creator credential
+  accepted (CN-012).
   **Rationale recorded at Gate 3 (CL-005 addendum)**: the person being asked must see the deadline in
   the ask, rather than having to discover it by inspecting the run. This is additive to the
   inspectable field, not a substitute for it.
@@ -691,14 +712,27 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
      maybe-completed non-idempotent effect violates exactly-once (FR-ORC-018).
   5. **Information flows down, authority does not.** The executor receives the attempt number and
      remaining budget and may adapt its strategy; it never gains decision authority.
+  6. **Threshold escalation, never an automatic kill.** Each node declares an elapsed-time **escalation threshold**
+     (PVT-016). On breach the orchestrator MUST escalate to the human — presenting elapsed versus expected and the
+     node's last observed activity, drawn from existing state-transition, trace and audit records — and MUST offer
+     exactly two choices: **keep waiting**, which re-arms the threshold, or **kill the node**. A kill fails the node
+     by overrun, after which rules 1–4 apply unchanged, so a node whose effect is not declared idempotent is still
+     not retried. The orchestrator MUST NOT kill a node on its own authority, and MUST NOT treat a breach as a
+     failure until a human decides. **Absence of an answer follows the gate-wait deadline to suspension**
+     (FR-ORC-017); it is never a kill and never an approval. *(Added by CR-010 under the owner's escalation-threshold
+     decision, 2026-09-20.)*
 
   **Accept**: retry attempts are bounded, spaced per the declared backoff, and individually recorded;
   every retry decision produces a **two-signature audit record** — what the executor proposed and
-  what the orchestrator ruled.
+  what the orchestrator ruled; a breached escalation threshold produces a human escalation carrying
+  elapsed-versus-expected and last-observed activity, and each of the two choices produces its defined effect.
   **Reject (negative)**: retries MUST NOT be unbounded; a permanent failure MUST NOT be retried as
   if transient; an exhausted bound MUST NOT be reported as success; an unrecognized failure MUST NOT
   default to retryable; a declared retryable set MUST NOT force a retry the executor reported as
-  hopeless; an executor MUST NOT obtain a retry the declaration never approved.
+  hopeless; an executor MUST NOT obtain a retry the declaration never approved; a node MUST NOT be killed without a
+  recorded human decision; a threshold breach MUST NOT be recorded as a failure before that decision; and
+  **no new heartbeat or watchdog component** may be introduced to observe liveness — existing telemetry is the
+  source.
   **Rationale recorded at Gate 3**: the orchestrator is final authority not because it diagnoses
   better — it never overrides the diagnosis — but because it alone holds the decision context the
   executor cannot see: attempts consumed, whether compensation was already issued for this attempt
@@ -706,8 +740,9 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   by safe-stop, a pending gate, or a mandatory policy `FAIL`. Executor = diagnosis; orchestrator =
   policy and memory. A refusal path (FR-ORC-021) can only exist outside the governed party.
   **Evidence**: retry histories under injected transient, permanent, unknown, and malformed-envelope
-  faults; two-signature audit records; timeout-on-non-idempotent-effect refusal test. *Bounds:
-  PVT-007.*
+  faults; two-signature audit records; timeout-on-non-idempotent-effect refusal test; threshold-breach escalation
+  records for both choices, and a silence case proving suspension rather than kill. *Bounds: PVT-007. Thresholds:
+  PVT-016.*
 
 - **FR-ORC-015** — *Fallback.* **[Confirmed]** Stages that can degrade MUST declare fallback
   behavior, and the orchestrator MUST apply it when the primary path is exhausted.
@@ -765,7 +800,10 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
   **Evidence**: safe-stop records for each trigger class; state-machine test asserting `SAFE_STOP`
   is non-terminal and that the terminal set is exactly the three named states.
 
-- **FR-ORC-032** — *Idle retention and auto-abandonment.* **[Confirmed — CL-005]** A suspended run
+- **FR-ORC-032** — *Idle retention and auto-abandonment.* **[Confirmed — CL-005]** *(Placed here, out of numeric
+  sequence, deliberately: CL-005 introduced it as the completion of FR-ORC-017's safe-stop semantics and set it
+  adjacent to them. The identifier was taken at creation time — identifiers are never pre-allocated — so the number
+  follows the registry and the position follows the reasoning.)* A suspended run
   MUST be automatically abandoned after a configurable idle period measured **from the run's last
   activity or state change**, never from its creation time.
   **Accept**: the idle clock resets on any activity; on expiry the run moves to `ABANDONED` — a
@@ -996,8 +1034,9 @@ it and ask them to answer a fixed set of reconstruction questions from artifacts
 - **KE-21 ReleaseReadinessReport**: the determination plus every unmet blocking condition.
 - **KE-22 TraceLink**: a directed relation between two artifacts in the FR-ORC-027 chain.
 - **KE-23 Creator**: a provisioned identity permitted to create links and read its own links'
-  analytics. Owns zero or more ShortLinks. Provisioned by operator script, never self-service
-  (FR-URL-019).
+  analytics — **and nothing else**. Owns zero or more ShortLinks. Provisioned by operator script, never
+  self-service (FR-URL-019). A Creator is a **URL-shortener concept only** and has no standing in the
+  orchestrator's actor model (CN-012).
 - **KE-24 CreatorCredential**: the stored **hash** of a creator's API key, never the key itself, covering the
   full presented string. Belongs to one Creator. Carries a **nullable `expires_at`**, where null is reachable
   only by an explicit `never` at provisioning, and an optional `revoked_at`. *(Amended by CR-002.)*
@@ -1089,6 +1128,31 @@ Stages append declared overrides; they never contradict a row here without human
 
 Any effect not matching a row here is treated as **compensate-only** (FR-ORC-016 rule 4).
 
+## Retention Posture *(CR-017, 2026-09-20)*
+
+**This demonstration retains every record indefinitely.** No deletion, purge or archival path exists — for audit
+records, run history, gate decisions, policy results, or redirect events. The audit tables' insert-and-select-only
+grants and the tests asserting that the store rejects an UPDATE or a DELETE are unchanged, and with no retention path
+anywhere the §Compensation Register's *"never delete"* rows are now **literally true system-wide** rather than true by
+convention.
+
+**What production would do, recorded as a recommendation and not built:**
+
+| Data | Recommended production bound | Clock |
+|---|---|---|
+| Redirect events | 30 days | Record creation |
+| Terminated-run history and audit records | 90 days | **Run termination, never record creation** (CR-004) — so a live or suspended run's history can never age out |
+
+An archival job would move records past those bounds out of the live tables. It is not implemented, it is not
+scheduled, and it is not a deferred task pretending to be a backlog item: it is **out of scope for a demonstration**,
+recorded so that a reviewer can see the production shape was reasoned about rather than missed.
+
+**Why this posture rather than an implementation.** A purge makes records inaccessible, which the owner rejected. An
+archival move preserves access but requires an archive format, a location, a crash-reconciliation rule, and a DELETE
+privilege against tables whose insert-and-select-only grants are the mechanism that makes audit immutability real —
+an exception to a control for a housekeeping benefit no demonstration needs. Indefinite retention costs a
+demonstration nothing and keeps every control intact.
+
 ## Stage Executor Model *(mandatory)*
 
 Approved at Gate 2 under AQ-003. The orchestrator is not itself the AI — it **governs** agents,
@@ -1176,10 +1240,22 @@ requirement. None constrains implementation until approved.
 - **NFR-AUD-001** — Every audit record carries all six mandatory fields, and audit records are
   immutable after write. *Verifiable: schema validation over the full audit corpus; mutation
   attempt rejected.*
-- **NFR-AUD-002** — Audit evidence retains policy outcomes and exceptions, and its retention clock is anchored
-  to **run termination** rather than record creation, so a purge cannot defeat FR-ORC-023's reconstruction
-  requirement for a run that is still live, suspended, or freshly terminal *(CR-004)*. *Verifiable: presence
-  check per run; purge test per EC-043. Retention: PVT-010.*
+- **NFR-AUD-002** — Audit evidence retains policy outcomes and exceptions. **Because this demonstration retains all
+  records indefinitely (NFR-AUD-003), FR-ORC-023's reconstruction requirement is satisfied for every run without
+  qualification** — there is no purge that could defeat it. The **run-termination clock rule** decided at CR-004
+  survives as part of the production recommendation in PVT-010: were retention implemented, the clock would start at
+  run termination, never record creation, so a live or suspended run's history could never age out. *(Amended by
+  CR-017; CR-004's reasoning is preserved, not discarded.)* *Verifiable: presence check per run; a reconstruction
+  performed on the oldest run in the corpus.*
+- **NFR-AUD-003** — **Indefinite retention in this demonstration; production archival recorded as a recommendation.**
+  No record is deleted, purged, archived, or otherwise removed from its live table by any retention path, because no
+  such path exists. Audit records, run history, gate decisions, policy results and redirect events are retained
+  indefinitely. The **production recommendation** — an archival job moving redirect events past 30 days and terminated
+  runs' history past 90 days out of the live tables, with the run-termination clock rule of CR-004 — is documented in
+  `docs/LIMITATIONS.md` as work a real production deployment would do and this demonstration deliberately does not
+  *(CR-017)*. *Verifiable: an architecture test asserting **no deletion, purge or archival path exists anywhere** in
+  the codebase; the existing audit-immutability tests, which assert the store rejects an UPDATE or a DELETE, continue
+  to pass **unmodified**; and a review confirming the production recommendation is documented.*
 - **NFR-PERF-001** — Redirect resolution completes within PVT-001 at the p95 under stated
   conditions. *Verifiable: measured, with conditions declared.*
 - **NFR-PERF-002** — Link creation completes within PVT-002 at the p95 under stated conditions.
@@ -1284,13 +1360,50 @@ production statistic.
 | PVT-006 | Gate wait before safe-stop | 24 h | Long enough for a real reviewer; short enough to demonstrate the timeout path | Configurable; demonstration runs may use a compressed value, labelled as such |
 | PVT-007 | Retry bound and backoff | 3 attempts, exponential from 1 s | Bounded per Constitution VIII without masking permanent faults | Per transient-classified stage |
 | PVT-008 | Coverage, domain and orchestration transitions | ≥ 85% branch | Meaningful for governed logic without coverage theatre | Excludes generated and infrastructure code |
-| PVT-009 | Analytics recording tolerance under load | ≤ 0.5% loss | Analytics must never take down a redirect (FR-URL-010) | At PVT-003 |
-| PVT-010 | Audit and analytics retention | 90 days audit, 30 days redirect events | Housekeeping cap; no personal data is held (AQ-002), so retention is not a privacy control here | **Audit retention measured from run termination, never from record creation** (CR-003/CR-004 — DF-003 resolved): a run's records are not purgeable while it is live or suspended. Prototype scope |
+| PVT-009 | Analytics append-failure ceiling, **observable** | ≤ 0.5% of appends may **fail**, every failure counted and visible, **zero silent failures** | **Redefined by ADR-014 from a loss budget to a failure ceiling — the same number, a strictly stronger promise.** A loss budget permits events to vanish unremarked; a failure ceiling permits a bounded number of *counted, visible* failures and no silent ones. 0% was rejected: it cannot survive its own fault-injection test — when the store is deliberately killed, appends must fail and be counted, and that is the design working. A target unfalsifiable under fault injection is not a target | At PVT-003 concurrency. Measured from the **recording port's failure counter** (ADR-014 Condition 2), which every append passes through. No append failure may block or delay the redirect (EC-012, FR-URL-010) |
+| PVT-010 | Retention — **production recommendation, not a demonstration target** | *Recommended for production*: 90 days audit and terminated-run history, 30 days redirect events | **This demonstration retains all records indefinitely** (NFR-AUD-003, Decision H, CR-017). Retention was reduced from a binding target to a recorded recommendation because implementing a purge or an archival move added an archive format, a crash-reconciliation rule, and a DELETE privilege against the audit tables' insert-and-select-only grant — machinery the assessment does not ask for, against a housekeeping benefit a demonstration does not need. **Withdrawn as a binding target by the owner's explicit decision, 2026-09-20, not by implication** | **Not measured and not enforced.** If it were implemented, the audit and run-history clocks would run **from run termination, never record creation** (CR-004 — DF-003's reasoning is preserved inside the recommendation), so a live or suspended run's history could never age out. No personal data is held (AQ-002), so retention is not a privacy control here and its absence creates no exposure |
 | PVT-011 | Default link TTL when unspecified | 30 days | Bounded default rather than unbounded growth | Caller may override within limits |
 | PVT-012 | Creation rate limit | 60 requests/minute per creator | Demonstrates throttling without impeding tests | Per authenticated creator (FR-URL-018) |
 | PVT-013 | Redirect rate limit, per short code | 600 requests/minute per code | Hotspot protection: no single link can be hammered | Public, unauthenticated traffic |
 | PVT-014 | Redirect rate limit, per creator aggregated | 3,000 requests/minute across all a creator's links | Noisy-neighbor protection: many links each under PVT-013 cannot collectively soak capacity | Deliberately below the sum of per-code limits, which is what makes the tier bite |
-| PVT-015 | Suspended-run idle retention before auto-abandonment | 90 days from last activity | A feature is commonly worked for about a quarter, so a run awaiting a human answer can legitimately sit that long without being dead; aligns with PVT-010's audit retention | Configurable; demonstration runs use compressed values labelled per AS-007. *Boundary against PVT-010 audit retention is an open finding — see Deferred Findings DF-003* |
+| PVT-015 | Suspended-run idle retention before auto-abandonment | 90 days from last activity | A feature is commonly worked for about a quarter, so a run awaiting a human answer can legitimately sit that long without being dead | Configurable; demonstration runs use compressed values labelled per AS-007. On expiry the run becomes `ABANDONED` — terminal, and **never an approval** (FR-ORC-032, CL-005). Its records then **remain in the tables like every other record** (NFR-AUD-003). The PVT-010 boundary that DF-003 raised is **dissolved**: with nothing ever purged, an abandonment cannot coincide with its own history becoming unreadable |
+| PVT-016 | Per-node **escalation thresholds** | See §Per-node escalation thresholds | Constitution VIII requires timeout behavior defined explicitly, and the durations were nowhere stated. These are the elapsed times at which the orchestrator **asks the human**, never automatic **kill-timers**: a breach escalates with elapsed-versus-expected and the last observed activity, offering **keep waiting** or **kill the node**. This unifies every node with the human-decision model already used at stages 4 and 11 — one rule: threshold reached, ask the human | Configuration; demonstration runs may compress values, labelled per AS-007. A **kill** decision fails the node by overrun, after which the existing failure classification and idempotency gating apply **unchanged** (FR-ORC-014 rules 1–4) — the threshold sets **duration, never retry eligibility**. **No answer** follows the gate-wait deadline (PVT-006) to suspension: silence is never approval (Constitution III) |
+
+### Per-node escalation thresholds (PVT-016)
+
+| Node | Threshold | Ground |
+|---|---|---|
+| S1 Ingestion | 5 s | Deterministic: validate a submission and write one row. A slow S1 is a store problem, which the envelope already classifies |
+| S2 Normalization | 120 s | One AI call through the CLI subprocess: process startup plus model latency on a short prompt |
+| S3 Ambiguity detection | 120 s | Same shape as S2 |
+| S4 Human clarification | **N/A** | Already waiting on a human. Its threshold *is* the gate wait (PVT-006), which is the model every other node now follows |
+| S5 Decomposition | 180 s | Longer output than S2/S3: a dependency-ordered task set |
+| S6 Architecture & design | 300 s | Longest prompt and output: design plus, for a brownfield change, the seven-dimension impact analysis |
+| S7 Implementation | 600 s **per node** | AI authors, the engine applies on a branch, the build runs. Per fan-out child, not per stage |
+| S8 Testing | 1800 s | The real suite including Testcontainers startup. The only node whose elapsed time is dominated by our own tests, so the threshold must not be tight enough to make a slow machine look stalled |
+| S9 Documentation | 180 s | AI call over the run's delivered change and results |
+| S10 Security & policy | 600 s | Deterministic but dominated by the dependency-vulnerability scan, which fetches advisory data |
+| S11 Release readiness | 30 s evaluation, then **PVT-006** | The evaluator reads persisted rows; the wait that follows is already a human decision |
+| S12 Final summary | 60 s | Deterministic assembly from persisted evidence |
+
+**What a breach does** — four steps, none of them automatic:
+
+1. The orchestrator **escalates to the human**, presenting elapsed versus expected and the **last observed activity**
+   for that node. Liveness is read from telemetry that already exists — the node's state-transition history, its
+   trace spans and its audit events. **No heartbeat or watchdog subsystem is introduced** (Constitution VII's
+   prohibition on unjustified complexity).
+2. The human chooses **keep waiting** — the threshold is re-armed and the node continues — or **kill the node**.
+3. A **kill** fails the node by overrun. From that point the existing machinery applies with nothing added: the
+   failure crosses the boundary in the standard envelope, the two-vote rule decides retry eligibility, and a node
+   whose effect is not declared idempotent is **not** retried (FR-ORC-014 rules 2 and 4, EC-033).
+4. **No answer** is not a third option. The gate-wait deadline (PVT-006) elapses and the run suspends
+   (FR-ORC-017). Silence advances nothing, here as everywhere.
+
+**Counter-case, weighed and accepted by the owner, recorded because a decision without its counter-case is not a
+decision**: an unattended run now **stalls and then suspends** where an automatic kill-and-retry might have
+self-healed. The owner accepted this on the ground that **auto-retrying possibly-half-finished work is the exact
+danger the retry rules exist to prevent** — a threshold breach means completion is *unknown*, which is the same
+epistemic state as a timeout, and suspension is the declared safe outcome for it.
 
 ---
 
@@ -1325,6 +1438,27 @@ production statistic.
   see FR-ORC-028 and §Stage Executor Model.)*
 - **CN-011**: The reviewer-default path MUST be runnable with no AI key present. AI capability is a
   per-run mode, never a prerequisite for the system to function. *(Gate 2, AQ-003 — FR-ORC-029.)*
+- **CN-012**: **The shortener's actor model and the orchestrator's actor model are separate domains, and no
+  credential class crosses the boundary.** Creator credentials (FR-URL-018, FR-URL-019) authorize link creation and
+  owner-scoped analytics retrieval, and nothing else. They MUST NOT authenticate or authorize any orchestrator
+  governance surface — run creation (FR-ORC-007), run inspection (FR-ORC-008), or gate-decision recording
+  (FR-ORC-013) — and such a surface MUST NOT accept, require, read, or be affected by one. Orchestrator governance
+  surfaces sit under the **machine-access trust boundary**: the ability to run commands on the host *is* the
+  boundary, exactly as it is for creator provisioning (FR-URL-019).
+  **Accept**: no orchestrator surface references a creator credential; an architecture test asserts it mechanically.
+  **Reject (negative)**: a creator credential MUST NOT grant any orchestrator capability; an orchestrator surface
+  MUST NOT be reachable from the public redirect path; and the two identity models MUST NOT share a store, a filter,
+  or a header.
+  **Rationale recorded at CR-014, owner's ruling verbatim**: *"I don't think creators matter in orchestrator it is a
+  url shortner concept, don't leak those into orchestrator."* The boundary is the same one AQ-001 drew when it put
+  provisioning in an operator script rather than an HTTP endpoint — machine access is the trust boundary, and
+  restating it here keeps one boundary rather than inventing a second.
+  **Alternative considered and not taken**: a separate reviewer/engineer credential class, with its own provisioning
+  and its own store. Rejected as more machinery than the assessment needs; it is the production answer and is
+  recorded as future work, not as an oversight. The cost is accepted and disclosed: **anything that can reach the
+  port can drive the orchestrator**, which is a localhost-demonstration posture and is stated as such in
+  `docs/LIMITATIONS.md`.
+  *(Owner Decision 3 on the `/speckit-analyze` findings, 2026-09-20.)*
 
 ---
 
@@ -1368,8 +1502,9 @@ verbatim, in `docs/governance/gate-decisions/gate-02-specify.md`.
 
 Ambiguities raised at Gate 2 as non-blocking, dispositioned at Gate 3:
 
-- **AQ-004** — *Still open.* Whether redirects should be permanent or temporary by default (CN-006
-  defers the mechanism; the caching and analytics consequences differ). → Deferred Findings DF-002.
+- **AQ-004** — *Resolved at the Gate 4 closing package, 2026-09-20 (CR-003).* Redirects are **temporary, never
+  permanent**; the exact status code remains an implementation detail within the temporary class (CN-006).
+  → FR-URL-007, Deferred Findings DF-002.
 - **AQ-005** — *Resolved at Gate 3.* → Clarification Log CL-008.
 - **AQ-006** — *Resolved at Gate 3.* → Clarification Log CL-009.
 
@@ -1390,7 +1525,16 @@ interpretation. **Status as of the Gate 4 closing package, 2026-09-20:**
 
 Entries below retain their original text for provenance, annotated with their disposition.
 
-### DF-001 — Analytics exactness contradiction *(contradiction in the approved spec)*
+### DF-001 — Analytics exactness contradiction *(contradiction in the approved spec)* — **RESOLVED 2026-09-20**
+
+**Resolution**: the analytics append is **synchronous in a separate transaction**, its failure isolated, counted
+and surfaced, and the redirect succeeds regardless (ADR-014, accepted with three conditions at Gate 4). **PVT-009
+is retained and redefined**: it is an *observable append-failure ceiling*, not a loss budget — at most 0.5% of
+appends may fail, every failure is counted and visible through the recording port's failure counter, and no
+failure is silent or blocking (CR-010). The contradiction the finding names is therefore dissolved rather than
+traded away: FR-URL-010's "appends an event" and SC-001's 100% correctness both hold, because SC-001 is scoped to
+redirect correctness and analytics completeness is governed by PVT-009 as redefined. Original finding retained
+below for provenance.
 
 - **Finding**: PVT-009 proposes an analytics recording tolerance of "≤ 0.5% loss" under load, while
   FR-URL-010 states that following a link "appends an event" and SC-001 requires correctness across
@@ -1556,6 +1700,30 @@ rather than as clarifications. Append-only.
   the specification.* §Proposed Validation Targets retitled §Validation Targets with all 15 approved and binding;
   DF-005 closed; `executorModeUsed` renamed `executorKindUsed` in the contracts. Record:
   `docs/governance/change-control/CR-005-gate-4-closing-approvals.md`.
+- **CR-010** | approved and applied 2026-09-20 | Pravallika Veeravalli | *PVT-009 as an observable append-failure
+  ceiling; per-node escalation thresholds; stale resolution statuses corrected.* PVT-009 restated (same 0.5%, a
+  failure ceiling rather than a loss budget); DF-001 given its resolution paragraph; new **PVT-016** escalation
+  thresholds with FR-ORC-014 **rule 6** — a breached threshold **asks the human**, never kills on the orchestrator's
+  authority, and silence suspends; AQ-004 and the status header corrected; FR-ORC-032's out-of-sequence placement
+  explained. Record: `docs/governance/change-control/CR-010-pvt-009-restatement-and-stale-statuses.md`.
+- **CR-014** | approved and applied 2026-09-20 | Pravallika Veeravalli | *Credential-domain separation.* New
+  **CN-012**: the shortener's and the orchestrator's actor models are separate domains and no credential class
+  crosses the boundary; FR-ORC-007 gains an addressable submission surface; FR-ORC-008 and FR-ORC-013 exclude creator
+  credentials; FR-ORC-013's decision surface **cannot express `TIMED-OUT`**; KE-23 scoped. Owner's ruling: *"I don't
+  think creators matter in orchestrator it is a url shortner concept, don't leak those into orchestrator."* Record:
+  `docs/governance/change-control/CR-014-credential-domain-separation.md`.
+- **CR-017** | approved and applied 2026-09-20 | Pravallika Veeravalli | *Retention posture — indefinite retention,
+  production archival recorded as a recommendation.* New NFR-AUD-003 with an architecture test asserting no deletion
+  path exists; **PVT-010 withdrawn as a binding target** by the owner's explicit decision and replaced by a
+  production recommendation; NFR-AUD-002 amended with CR-004's clock rule preserved inside that recommendation;
+  FR-URL-010's retention cap restated as a recommendation; PVT-015 conditions; EC-043 retired as unreachable; new
+  §Retention Posture. **Revises the *status* of the 30-day click-record cap proposed by CL-002 at Gate 2** — from a
+  bound this system implements to a recommendation for production. **CL-002's substance is untouched**:
+  timestamp-only records, no follower-identifying field, data minimization as the deciding ground; and its own
+  finding that no personal data is held is what makes indefinite retention safe. Owner's grounds: *"let us not worry
+  about archival at all, let the records stay in the table for ever, but record this that, Ideally we would have a
+  prod archival job if we were doing this in a real prod env."* Record:
+  `docs/governance/change-control/CR-017-retention-as-archival.md`.
 
 ### CL-004 — Branch strategy | 2026-09-18 | Pravallika Veeravalli
 
