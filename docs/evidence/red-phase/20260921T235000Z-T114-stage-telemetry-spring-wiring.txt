@@ -1,0 +1,43 @@
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+
+Sabotage: StageTelemetry(MeterRegistry) constructor with the @Autowired annotation removed, leaving
+StageTelemetry with two constructors — the public (MeterRegistry) one and the private no-arg one behind
+disabled() — and no annotation telling Spring which to use for autowiring. This reproduces a REAL bug this
+session hit while building T114: Spring silently preferred the no-arg constructor, built a disabled
+StageTelemetry bean, and every real stage execution through the Spring-managed instance silently emitted
+no telemetry and recorded no metric — with no exception, no warning, nothing.
+
+[ERROR] Tests run: 4, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 6.388 s <<< FAILURE! -- in agentic.shortener.observability.StageTelemetryFileCaptureIT
+[ERROR] agentic.shortener.observability.StageTelemetryFileCaptureIT.realTelemetryLandsOnDisk -- Time elapsed: 0.004 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: the run this test just executed must appear in the file the CI scan actually reads ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at agentic.shortener.observability.StageTelemetryFileCaptureIT.realTelemetryLandsOnDisk(StageTelemetryFileCaptureIT.java:69)
+
+[ERROR] agentic.shortener.observability.StageTelemetryFileCaptureIT.realMeterRegistryRecordsTheSample -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: the Spring-managed MeterRegistry must carry this run's tagged sample ==> expected: not <null>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertNotNull.failNull(AssertNotNull.java:49)
+	at org.junit.jupiter.api.AssertNotNull.assertNotNull(AssertNotNull.java:35)
+	at org.junit.jupiter.api.Assertions.assertNotNull(Assertions.java:312)
+	at agentic.shortener.observability.StageTelemetryFileCaptureIT.realMeterRegistryRecordsTheSample(StageTelemetryFileCaptureIT.java:86)
+
+[INFO] Results:
+[ERROR] Failures:
+[ERROR]   StageTelemetryFileCaptureIT.realMeterRegistryRecordsTheSample:86 the Spring-managed MeterRegistry must carry this run's tagged sample ==> expected: not <null>
+[ERROR]   StageTelemetryFileCaptureIT.realTelemetryLandsOnDisk:69 the run this test just executed must appear in the file the CI scan actually reads ==> expected: <true> but was: <false>
+[ERROR] Tests run: 4, Failures: 2, Errors: 0, Skipped: 0
+
+Fix: restored @Autowired on the StageTelemetry(MeterRegistry) constructor (StageTelemetry.java), with a
+javadoc note explaining why the annotation is load-bearing rather than decorative here. This is exactly why
+StageTelemetryFileCaptureIT exists as a real-Spring-context IT rather than only a ListAppender-based unit
+test (StageTelemetryTest, RetryPolicyTelemetryTest): those never touch bean construction, so this class of
+bug — a real class working correctly in isolation but silently disabled when Spring builds it — has no
+other test that could have caught it.

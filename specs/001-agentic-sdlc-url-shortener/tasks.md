@@ -904,7 +904,7 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
   - **Deps**: T028, T111 · **Par**: yes · **Artifact**: UPDATE and DELETE rejected on all six governance tables
   - **TDD**: EVIDENCE · **Validate**: six tables × two operations = twelve rejections — **unchanged, deliberately**; plus an architecture assertion that **no deletion, purge or archival path exists anywhere** in the codebase (NFR-AUD-003, CR-017) · **Docs**: ADR-010 · **Trace**: NFR-AUD-001
   - **Guard**: `redirect_event` is **excluded from this set** — it is domain analytics, and a code-plus-timestamp event structurally cannot carry the six mandatory fields · **Done**: twelve rejections proven · **Approval**: none
-- [ ] T114 [P] [US5] Structured logs, metrics, and traces — `src/main/java/agentic/shortener/audit/telemetry/`
+- [x] T114 [P] [US5] Structured logs, metrics, and traces — `src/main/java/agentic/shortener/audit/telemetry/`
   - **Req**: NFR-OBS-001, NFR-OBS-002, **FR-URL-017**, SC-011 · **Scn**: all · **ADR**: ADR-010 · **Pre**: T112
   - **Deps**: T112 · **Par**: yes · **Artifact**: structured JSON logs, counters and timers, span per stage execution and per retry attempt — **explicitly not the audit trail, and rotatable**
   - **TDD**: RED-FIRST · **Validate**: T019's secret scan over **captured telemetry** returns zero findings · **Docs**: plan §7 · **Trace**: matrix FR-URL-017

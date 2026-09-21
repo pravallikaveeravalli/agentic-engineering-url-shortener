@@ -1,5 +1,6 @@
 package agentic.shortener.orchestration.reliability;
 
+import agentic.shortener.audit.telemetry.StageTelemetry;
 import agentic.shortener.orchestration.executor.StageExecutor;
 import agentic.shortener.orchestration.executor.StageInput;
 import agentic.shortener.orchestration.executor.StageOutcome;
@@ -8,6 +9,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Bounded retry with exponential backoff. Task T085. FR-ORC-014, PVT-007.
@@ -42,10 +44,17 @@ public final class RetryPolicy {
     private static final Duration FIRST_GAP = Duration.ofSeconds(1);
 
     private final Backoff backoff;
+    private final StageTelemetry telemetry;
     private final RetryRuling ruling = new RetryRuling();
 
     public RetryPolicy(Backoff backoff) {
+        this(backoff, StageTelemetry.disabled());
+    }
+
+    /** T114: {@code telemetry} emits a span per stage execution and per retry attempt. */
+    public RetryPolicy(Backoff backoff, StageTelemetry telemetry) {
         this.backoff = Objects.requireNonNull(backoff, "backoff");
+        this.telemetry = Objects.requireNonNull(telemetry, "telemetry");
     }
 
     /**
@@ -58,11 +67,21 @@ public final class RetryPolicy {
         Objects.requireNonNull(executor, "executor");
         Objects.requireNonNull(input, "input");
 
+        return telemetry.stageExecution(input.runId(), stageNumber,
+                stageSpanId -> runAttempts(stageNumber, executor, input, stageSpanId),
+                RetryOutcome::succeeded);
+    }
+
+    private RetryOutcome runAttempts(int stageNumber, StageExecutor executor, StageInput input,
+                                      UUID stageSpanId) {
         List<Attempt> attempts = new ArrayList<>();
         FailureEnvelope lastFailure = null;
 
         for (int number = 1; number <= MAX_ATTEMPTS; number++) {
-            StageOutcome outcome = attempt(executor, withAttemptNumber(input, number));
+            StageInput attemptInput = withAttemptNumber(input, number);
+            int attemptNumber = number;
+            StageOutcome outcome = telemetry.retryAttempt(input.runId(), stageSpanId, stageNumber,
+                    attemptNumber, () -> attempt(executor, attemptInput), StageOutcome::succeeded);
 
             if (outcome != null && outcome.succeeded()) {
                 attempts.add(new Attempt(number, outcome, null));

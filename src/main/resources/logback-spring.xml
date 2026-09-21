@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Task T114 — routes agentic.shortener.telemetry.* (StageTelemetry's structured JSON log lines) to a
+  dedicated, ROTATING file under target/telemetry/, where scripts/scan.sh's telemetry mode (T019,
+  FR-URL-017) already covers it as part of scripts/ci.sh's step 6.
+
+  Everything else keeps Spring Boot's own default console behaviour — this file includes it explicitly
+  rather than replacing it, so adding telemetry routing does not change how any other logger behaves.
+
+  Rotatable is the point: ADR-010 draws the line between this (lossy, rotated operational signal) and
+  the audit trail (append-only, never rotated, never deleted) precisely here.
+-->
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+    <appender name="TELEMETRY" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>target/telemetry/stage-telemetry.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>target/telemetry/stage-telemetry-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>100MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <!-- One JSON object per line: StageTelemetry's message IS the JSON, so the pattern adds
+                 nothing around it. -->
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="agentic.shortener.telemetry" level="INFO" additivity="false">
+        <appender-ref ref="TELEMETRY"/>
+    </logger>
+</configuration>
