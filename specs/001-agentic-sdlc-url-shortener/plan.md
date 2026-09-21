@@ -47,7 +47,7 @@ decisions came from.
 | Testing | JUnit 5 + Testcontainers (real Postgres), OpenAPI response validation, deterministic fake executors | ACCEPTED — ADR-005 |
 | Target Platform | Single JVM process, Linux/macOS developer machine; Docker for the store | ACCEPTED |
 | Project Type | Web service plus embedded orchestration engine; one deployable, two internal planes | ACCEPTED |
-| AI provider (AI-capable stages) | Anthropic Claude behind an owned interface; **transport is the local Claude Code CLI in headless mode** (ADR-004-A1), with the SDK adapter recorded as the production alternative behind the same seam. **Never required** — the run-level flag is `ai: on \| off`, default `off`, so the keyless path is the reviewer default (CN-011) | ACCEPTED — ADR-004, amended by ADR-004-A1 (CR-008) |
+| AI provider (AI-capable stages) | Anthropic Claude behind an owned interface; **transport is the local Claude Code CLI in headless mode** (ADR-004-A1), with the SDK adapter recorded as the production alternative behind the same seam. **Always on.** A fresh orchestration run requires an authenticated Claude Code CLI (ADR-004-A2); there is no keyless mode and no run-level switch. **The test suite and the shortener need nothing** — reliability proofs use injected fakes (FR-ORC-030) | ACCEPTED — ADR-004, amended by ADR-004-A1 (CR-008) and ADR-004-A2 (CR-028) |
 | Performance Goals | PVT-001 redirect p95 ≤ 50 ms; PVT-002 create p95 ≤ 200 ms; PVT-003 100 concurrent | **All 15 PVTs APPROVED** 2026-09-20 (CR-005) — now binding acceptance thresholds |
 | Constraints | 2–3 day timebox (§14); no push; no distributed components; no production deployment (EX-007) | **APPROVED** 2026-09-20 |
 | Scale/Scope | Demonstration scale only. Every measurement is a demonstration measurement (AS-009, Constitution IX) | Confirmed |
@@ -104,17 +104,17 @@ database process, git, the human owner.
 | Creator | Authenticated machine client | Create links; read **own** link analytics (FR-URL-011). |
 | Operator | Human with shell access | Provision creators via local script. **Shell access is the trust boundary** (FR-URL-019). |
 | Engineer | Human | Submit requirements, create and inspect runs, trigger replanning. Reached under the **machine-access** boundary — **never a creator credential** (CN-012). |
-| Reviewer / Approver | Human | Decide gates. Cannot be substituted by an agent at any autonomy setting. Records decisions through the governance surface under the machine-access boundary; holds **no** creator credential (CN-012). |
+| Reviewer / Approver | Human | Decide gates. **No workflow step submits or satisfies a gate decision** — the control is that the code path does not exist, asserted by T063’s architecture rule. Actor identity on a submitted decision is **declared, not verified** (FR-ORC-021’s declared limitation): an impersonating caller with process access is not detectable, and verified actor identity is out of scope for this demonstration. Records decisions through the governance surface under the machine-access boundary; holds **no** creator credential (CN-012). |
 | Release owner | Human | Release readiness. Never self-certified by an agent (FR-ORC-025). Same boundary as Reviewer (CN-012). |
 | Assessment reviewer | Human, read-only | Reconstruct runs from artifacts alone. |
-| Stage executor | Agent (AI-capable or deterministic) | Bounded per declaration; proposes, never rules (CL-006). |
+| Stage executor | Agent (AI-capable or deterministic) | Bounded per declaration; proposes, never rules (CL-006). **No mode selects between them** — each stage’s executor class is fixed by the approved executor map (ADR-004-A2). |
 
 ### External dependencies and failure modes
 
 | Dependency | Failure mode | Handling |
 |---|---|---|
 | PostgreSQL | Unavailable, restarting | `UNAVAILABLE` → proposed transient → bounded retry → suspension (CL-009). Disk-backed, so state survives. |
-| AI provider | Unavailable, rate-limited, timeout, unusable output | `UNAVAILABLE`/`RATE_LIMITED`/`TIMEOUT`/`INTERNAL` in the envelope; fallback to the deterministic counterpart where declared, stamped `DETERMINISTIC` (FR-ORC-015). |
+| AI provider | Unavailable, rate-limited, timeout, unusable output | `UNAVAILABLE`/`RATE_LIMITED`/`TIMEOUT`/`INTERNAL` in the envelope; **bounded retry per the node’s declared retryable set** (§3), then **safe suspension** on exhaustion. **No fallback** — FR-ORC-015 retired, Decision K (CR-032); `INTERNAL` is permanent and must surface, never be re-rolled. |
 | Git (stage 7 effects) | Dirty tree, conflict | Permanent classification; rollback of local un-pushed work is the only erasable class (Compensation Register). |
 | Clock | Skew | Single-host; timestamps from one source. Idle retention uses injectable clock for tests (EC-036). |
 
@@ -178,7 +178,7 @@ library it calls.
 | Expiration | Expiry evaluation at read; compensation target for unwanted links | FR-URL-008, Compensation Register |
 | Health/readiness | Liveness independent of store; readiness dependent on it | FR-URL-015 |
 | Telemetry | Structured logs, metrics, traces; secret-safe | FR-URL-017, NFR-OBS-001 |
-| Configuration | Secure defaults; throttling on by default; `ai: off` by default | FR-URL-016, CN-011 |
+| Configuration | Secure defaults; throttling on by default. **No mode flag exists** (ADR-004-A2) | FR-URL-016 |
 
 ### Scalability: first bottleneck — NFR-SCA-003 discharged
 
@@ -320,20 +320,28 @@ waiting** or **kill the node** (FR-ORC-014 rule 6). A kill fails the node by ove
 the node's design-time idempotency declaration decide retry eligibility — **the threshold sets duration, never
 eligibility** — and an unanswered escalation follows the gate-wait deadline to suspension.
 
-| # | Node | Purpose | Inputs → Outputs | Pre / Post | Actor | Timeout & retry | Failure class | Fallback |
-|---|---|---|---|---|---|---|---|---|
-| S1 | Ingestion | Admit a requirement, create the run | raw requirement → `WorkflowRun`, correlation ID | Pre: well-formed submission. Post: run persisted with ID | Deterministic engine | **PVT-016: 5 s**; `INTERNAL` permanent | Permanent on malformed input | None — refuse |
-| S2 | Normalization | Identified, testable, typed requirements | raw → `RequirementRecord[]` | Pre: S1 ok. Post: every requirement has ID + type + testable statement | AI-capable | **PVT-016: 120 s**; PVT-007 attempts; `TIMEOUT` retryable (idempotent) | Per envelope | Deterministic structural normalizer |
-| S3 | Ambiguity detection | Find incompleteness, conflict, untestability | requirements → `AmbiguityRecord[]` + quality-check record | Pre: S2 ok. Post: checks recorded; if none, the **reason clarification was not required** is recorded | AI-capable | **PVT-016: 120 s**; PVT-007 attempts; retryable | Per envelope | Deterministic rule checks |
-| S4 | Human clarification | Resolve material ambiguity | ambiguities → `ClarificationDecision[]` | Pre: ≥1 material ambiguity. Post: every material item answered | **Human** | **No execution threshold** (PVT-016: N/A) — already waiting on a human; its threshold *is* the gate wait PVT-006 → `SAFE_STOP`; no retry | N/A | None — suspension only |
-| S5 | Decomposition | Dependency-ordered tasks | requirements → `TaskRecord[]` + edges | Pre: no unresolved material ambiguity. Post: every task traces to ≥1 requirement; no orphans | AI-capable | **PVT-016: 180 s**; PVT-007 attempts; retryable | Per envelope | Deterministic template decomposition |
-| S6 | Architecture & design | Design + API/schema impact | tasks → design doc, contract deltas | Pre: S5 ok. Post: impacted contracts identified | AI-capable | **PVT-016: 300 s**; PVT-007 attempts; retryable | Per envelope | Deterministic impact analyzer |
-| S7 | Implementation (fan-out) | Author and apply change per task | task + design → branch commit | Pre: task approved, design ok. Post: patch applied on branch, buildable | AI-capable, or **`HUMAN`** under no-plan gate option 2 | **PVT-016: 600 s per node**; PVT-007 attempts; `TIMEOUT` **not** retryable (non-idempotent git effect) | Per envelope; conflict = permanent | Deterministic **plan-applying**; where **no change plan exists**, suspends at the no-plan gate — never no-ops forward (CR-001) |
-| S8 | Testing | Execute the real suite | branch → test results | Pre: S7 join complete. Post: results recorded with pass/fail per test | Deterministic, **real** | **PVT-016: 1800 s** threshold — the real suite plus Testcontainers startup; retry only on `UNAVAILABLE` | Test failure = permanent (routes back to S7 within bound) | None — real results only |
-| S9 | Documentation | Update docs with behavior | change + results → doc updates | Pre: S8 ok. Post: docs reflect delivered behavior | AI-capable | **PVT-016: 180 s**; PVT-007 attempts; retryable | Per envelope | Deterministic doc stub generator |
-| S10 | Security & policy | Evaluate `policy-set-1.1.0` | change + deps → `PolicyCheckResult[]` | Pre: S8 ok. Post: every applicable policy has one of four outcomes | Deterministic, **real** | **PVT-016: 600 s** — dominated by the dependency-vulnerability scan; retry on `UNAVAILABLE` only | Unevaluable = **not** `PASS` (EC-025) | None — verdicts must be repeatable |
-| S11 | Release readiness | Evaluate 9 blocking conditions, then human decision | all evidence → `ReleaseReadinessReport` + `GateDecision` | Pre: S9∥S10 join complete. Post: recorded human decision | Deterministic eval + **Human** | **PVT-016: 30 s** evaluation, then gate wait PVT-006 → `SAFE_STOP` | N/A | None |
-| S12 | Final summary | Assemble from recorded evidence only | evidence → summary artifact | Pre: S11 approved. Post: every claim traceable | Deterministic assembler | **PVT-016: 60 s** | Missing evidence = permanent | None — never invent content |
+**Three categories are never retryable at any node**, so they are stated once rather than in twelve rows:
+`INVALID_INPUT` (a deterministic content error — the same input fails identically), `INTERNAL` (classified
+permanent by CL-006 and ADR-004-A1, because malformed provider output must be surfaced rather than re-rolled), and
+`UNKNOWN` (FR-ORC-014 rule 3, default-deny). Every declared set is therefore drawn from
+`{TIMEOUT, UNAVAILABLE, RATE_LIMITED}`. `TIMEOUT` appears only where the node’s design-time contract declares its
+effect idempotent or repeat-safe, and two nodes (S8, S10) exclude it even though rule 4 would permit it — see
+their grounds (CR-022).
+
+| # | Node | Purpose | Inputs → Outputs | Pre / Post | Actor | Timeout & retry | Declared retryable set | Failure class | Fallback |
+|---|---|---|---|---|---|---|---|---|---|
+| S1 | Ingestion | Admit a requirement, create the run | raw requirement → `WorkflowRun`, correlation ID | Pre: well-formed submission. Post: run persisted with ID | Deterministic engine | **PVT-016: 5 s**; `INTERNAL` permanent | `{UNAVAILABLE}` | Permanent on malformed input | None — refuse |
+| S2 | Normalization | Identified, testable, typed requirements | raw → `RequirementRecord[]` | Pre: S1 ok. Post: every requirement has ID + type + testable statement | AI-capable | **PVT-016: 120 s**; PVT-007 attempts; `TIMEOUT` retryable (idempotent) | `{TIMEOUT, UNAVAILABLE, RATE_LIMITED}` | Per envelope | **None** — no deterministic counterpart (ADR-004-A2). Failure follows the envelope: bounded retry per the declared set, then suspension. |
+| S3 | Ambiguity detection | Find incompleteness, conflict, untestability — **semantic, AI-backed** (spec §What ambiguity detection is); output feeds a human gate, so variability is safe here and would not be at S10 | requirements → `AmbiguityRecord[]` + quality-check record | Pre: S2 ok. Post: checks recorded; if none, the **reason clarification was not required** is recorded | AI-capable | **PVT-016: 120 s**; PVT-007 attempts; retryable | `{TIMEOUT, UNAVAILABLE, RATE_LIMITED}` | Per envelope | **None** — no deterministic counterpart (ADR-004-A2). Failure follows the envelope: bounded retry per the declared set, then suspension. |
+| S4 | Human clarification | Resolve material ambiguity | ambiguities → `ClarificationDecision[]` | Pre: ≥1 material ambiguity. Post: every material item answered | **Human** | **No execution threshold** (PVT-016: N/A) — already waiting on a human; its threshold *is* the gate wait PVT-006 → `SAFE_STOP`; no retry | `{}` — **empty**; no executor | N/A | None — suspension only |
+| S5 | Decomposition | Dependency-ordered tasks | requirements → `TaskRecord[]` + edges | Pre: no unresolved material ambiguity. Post: every task traces to ≥1 requirement; no orphans | AI-capable | **PVT-016: 180 s**; PVT-007 attempts; retryable | `{TIMEOUT, UNAVAILABLE, RATE_LIMITED}` | Per envelope | **None** — no deterministic counterpart (ADR-004-A2). Failure follows the envelope: bounded retry per the declared set, then suspension. |
+| S6 | Architecture & design | Design + API/schema impact | tasks → design doc, contract deltas | Pre: S5 ok. Post: impacted contracts identified | AI-capable | **PVT-016: 300 s**; PVT-007 attempts; retryable | `{TIMEOUT, UNAVAILABLE, RATE_LIMITED}` | Per envelope | **None** — no deterministic counterpart (ADR-004-A2). Failure follows the envelope: bounded retry per the declared set, then suspension. |
+| S7 | Implementation (fan-out) | Author and apply change per task | task + design → branch commit | Pre: task approved, design ok. Post: patch applied on branch, buildable | AI-capable, or **`HUMAN`** under no-plan gate option 2 | **PVT-016: 600 s per node**; PVT-007 attempts; `TIMEOUT` **not** retryable (non-idempotent git effect) | `{UNAVAILABLE, RATE_LIMITED}` — `TIMEOUT` excluded (EC-033) | Per envelope; conflict = permanent | **None** — no deterministic counterpart (ADR-004-A2). Failure follows the envelope: bounded retry per the declared set, then suspension. **Where no change plan exists**, the stage suspends at the **no-plan gate** and never no-ops forward (CR-001) — with the counterpart gone, the gate is the sole guard (CR-028). |
+| S8 | Testing | Execute the real suite | branch → test results | Pre: S7 join complete. Post: results recorded with pass/fail per test | Deterministic, **real** | **PVT-016: 1800 s** threshold — the real suite plus Testcontainers startup; retry only on `UNAVAILABLE` | `{UNAVAILABLE}` — `TIMEOUT` excluded deliberately | Test failure = permanent (routes back to S7 within bound) | None — real results only |
+| S9 | Documentation | Update docs with behavior | change + results → doc updates | Pre: S8 ok. Post: docs reflect delivered behavior | AI-capable | **PVT-016: 180 s**; PVT-007 attempts; retryable | `{TIMEOUT, UNAVAILABLE, RATE_LIMITED}` | Per envelope | **None** — no deterministic counterpart (ADR-004-A2). Failure follows the envelope: bounded retry per the declared set, then suspension. |
+| S10 | Security & policy | Evaluate `policy-set-1.1.0` | change + deps → `PolicyCheckResult[]` | Pre: S8 ok. Post: every applicable policy has one of four outcomes | Deterministic, **real** | **PVT-016: 600 s** — dominated by the dependency-vulnerability scan; retry on `UNAVAILABLE` only | `{UNAVAILABLE, RATE_LIMITED}` — **widened**; `TIMEOUT` excluded | Unevaluable = **not** `PASS` (EC-025) | None — verdicts must be repeatable |
+| S11 | Release readiness | Evaluate 9 blocking conditions, then human decision | all evidence → `ReleaseReadinessReport` + `GateDecision` | Pre: S9∥S10 join complete. Post: recorded human decision | Deterministic eval + **Human** | **PVT-016: 30 s** evaluation, then gate wait PVT-006 → `SAFE_STOP` | `{UNAVAILABLE}` | N/A | None |
+| S12 | Final summary | Assemble from recorded evidence only | evidence → summary artifact | Pre: S11 approved. Post: every claim traceable | Deterministic assembler | **PVT-016: 60 s** | `{TIMEOUT, UNAVAILABLE}` | Missing evidence = permanent | None — never invent content |
 
 ### Replanning
 
@@ -406,13 +414,13 @@ Implements CL-006, CL-007, CL-005, CL-009 directly.
 | Concern | Design |
 |---|---|
 | Failure envelope | Closed category set: `TIMEOUT`, `UNAVAILABLE`, `RATE_LIMITED`, `INVALID_INPUT`, `INTERNAL`, `UNKNOWN`; plus executor-**proposed** classification and detail. Executors translate provider errors into it. |
-| Transient vs permanent | `retries = stage's declared retryable set ∩ executor proposal`. Either side vetoes. Executor has veto, never grant. |
+| Transient vs permanent | `retries = node's declared retryable set ∩ executor proposal`. Either side vetoes. Executor has veto, never grant. **The declared operand is enumerated per node in §3’s `Declared retryable set` column** (CR-022) — twelve concrete sets drawn from `{TIMEOUT, UNAVAILABLE, RATE_LIMITED}`, with `INVALID_INPUT`, `INTERNAL` and `UNKNOWN` never retryable anywhere. An unspecified declared set would make the intersection empty under default-deny, so the enumeration is what keeps the retry design alive rather than nominally present. |
 | Unknown / malformed | **Permanent.** Default-deny, matching EC-025. Suspension path. |
 | Retry bounds & backoff | PVT-007 (3 attempts, exponential from 1 s), per stage, individually recorded with a **two-signature** ruling (executor proposal + orchestrator ruling). |
 | Timeout / overrun | Per-node **escalation thresholds** are **PVT-016**'s schedule (§3). A breach **asks the human** — keep waiting, or kill the node — and never kills on the orchestrator's own authority (FR-ORC-014 rule 6). Liveness comes from existing state-transition, trace and audit records; **no watchdog component is introduced**. A kill fails the node by overrun; retry is then gated exactly as before — retryable **only** where the design-time contract declares the effect idempotent/repeat-safe, never executor self-certification (S7 is explicitly not retryable). Duration and eligibility stay separate decisions: PVT-016 sets the first, CL-006 rule 4 the second. An unanswered escalation suspends. |
 | Idempotency | Application plane: marker-based, three semantics (CL-008). Control plane: stage effects keyed so resumption cannot re-apply a committed effect. |
 | Duplicate execution protection | Resumption reads persisted effect records before re-dispatch; concurrent resumption of one run is prevented by a run-level lease (EC-026). |
-| Fallback | Declared per stage (table §3). Recorded **as fallback**, never as primary success. A failing fallback escalates to suspension (EC-023). |
+| Fallback | **Retired — FR-ORC-015, Decision K (CR-032).** Every declared fallback in this design was a deterministic counterpart for an AI-capable stage, and Decision J removed those. **Bounded retry then safe suspension is the whole degradation story**; the row is kept rather than deleted so the absence is visible in the table where a reader looks for it. Disclosed as a named limitation in `docs/LIMITATIONS.md`. |
 | Rollback | Only for effects the Compensation Register classes erasable — local un-pushed work. |
 | Compensation | For irreversible effects, via the register's named action: superseding gate record, appended audit correction, link set to expired. Applied at most once per effect even if a retry later succeeds (EC-022). |
 | Safe-stop | Suspended, non-terminal, resumable, reason recorded, deadlines disclosed. |
@@ -493,7 +501,7 @@ Each `failure_event` row captures: `failure_detected_at`, `recovery_started_at`,
 | Dependency risk | Vulnerability scan in release readiness; approved-dependency policy in §9 |
 | Audit integrity | Append-only, immutable, six mandatory fields; corrections are new entries |
 | Least privilege | Store credentials scoped to the application schema; no superuser at runtime |
-| Secure defaults | Throttling on; `ai: off`; verbose error detail off; readiness fails closed |
+| Secure defaults | Throttling on; verbose error detail off; readiness fails closed — **three defaults**; the former `ai: off` is gone with the flag (ADR-004-A2) |
 | Threat model | Deliverable in Phase 1 (`research.md` §Threat Model), covering the trust boundaries in §1 plus the two named accepted trade-offs |
 
 ---
@@ -667,7 +675,9 @@ network. The reliability suite must pass with **no AI key and no network** (NFR-
   available for historical analytics indefinitely, and expired links should still redirect for
   trusted partners."*
 - **Interpretation**: S3 flags the conflict, naming the conflicting elements; unsafe implementation is
-  prevented.
+  prevented. **Detection is semantic and AI-backed** (CR-025). Draft 1 of that record asked whether a keyless run could
+  detect this input; Decision J removed the keyless mode, so the question is moot — but the capability is stated rather
+  than assumed, because a reader is entitled to know whether "finds conflict" means reasoning or pattern-matching.
 - **Decomposition**: deferred on the affected path only.
 - **Path**: S1→S2→S3→**S4 fires**→ suspension awaiting human → clarification recorded → impact
   analysis → **replan** of exactly the affected downstream artifacts → resume → S5..S12. Unaffected
@@ -747,9 +757,9 @@ at authoring time. **Nothing here should be read as an open question.**
 - **Question**: which provider, and how is it bounded?
 - **Options**: (a) Anthropic Claude; (b) OpenAI; (c) local model; (d) none (deterministic only).
 - **Criteria**: quality on code-authoring and analysis, availability of a clean interface boundary,
-  cost, and the hard constraint CN-011 that the reviewer default must run with no key.
+  cost, and the hard constraint CN-011 that the reviewer default must run with no key. *(CN-011 was **retired by Decision J**, CR-028; this section records the criteria as they stood at Gate 4 and is not rewritten.)*
 - **Recommended**: **(a) Anthropic Claude** behind a provider interface, with the specific model pinned at
-  implementation time; the run-level flag is `ai: on | off` and defaults to `off`.
+  implementation time; the run-level flag is `ai: on | off` and defaults to `off`. *(The flag was **removed entirely by Decision J**, ADR-004-A2 / CR-028. Recorded as it stood, per this section’s historical idiom.)*
 - **Rationale**: (d) alone would make the "agentic" claim hollow (CL-003). Keeping the provider behind
   an interface satisfies NFR-MNT-002 and keeps (b)/(c) open.
 - **Transport — settled separately by [ADR-004-A1](../../docs/governance/adr/ADR-004-amendment-01-transport-claude-code-cli.md) (CR-008)**:
@@ -802,10 +812,45 @@ mandatory release-blocking policy — so an incomplete chain cannot reach releas
 **Timebox: 2–3 days — APPROVED 2026-09-20** at the Gate 4 closing package, with the milestones, checkpoints and
 stop conditions below.
 
-**It is a control instrument, not a promise, and not a source of pressure.** **Completeness takes priority over
+**It is a control instrument, not a promise, and not a source of pressure** — see §Scope versus timebox below for what that means against a 173-task plan. **Completeness takes priority over
 speed**, and **no external submission deadline exists** (Gate 5 time-attitude amendment, CR-009). The schedule
 exists so that slippage is *observed and escalated* rather than absorbed silently — not so that work is rushed or
 quietly narrowed to fit it.
+
+**Scope versus timebox — reconciled, because the arithmetic invites the question.** The plan carries **173 tasks**. The
+box is **2–3 days**. Those two numbers do not reconcile on any honest reading of a task that requires a captured red
+phase, a real database, and executed evidence — and a reader who multiplies them is right to ask which number is
+fiction.
+
+**Neither is fiction, because they are not the same kind of number.**
+
+- **The scope is the commitment.** 173 tasks is what the approved requirements need. It was not sized to fit a
+  schedule, and it will not be cut to fit one: cuts come from the backlog and never from mandatory validation or
+  reviewer evidence, and a scope reduction happens **only on the owner's recorded order at a checkpoint** (CR-009).
+- **The timebox is a reporting instrument.** Its function is to make slippage *visible and escalated* rather than
+  absorbed silently. The day-level milestones below are the resolution at which that reporting happens — they are
+  **observation points, not commitments**.
+- **No external deadline exists.** There is no submission date this box is protecting. Completeness is the commitment;
+  the box is how progress against it is narrated (CR-009, Gate 5 time-attitude amendment).
+
+**What this means concretely when the arithmetic bites**, which it will: the End-Day-1 and End-Day-2 checkpoints will
+show the plan behind its milestones. That is the instrument working, not failing. Each checkpoint **escalates with
+options and does not cut**; the owner decides whether anything is reduced; and the two controls that protect
+correctness rather than schedule — the fabrication-pressure halt and the mandatory-policy-`FAIL` block — are untouched
+by any of it.
+
+**Owner Decision J removed work without removing tasks, and that distinction matters here.** Striking the six
+deterministic counterparts (ADR-004 Amendment 02) takes real implementation out of T071 — five engines instead of
+eleven — yet the task count does not move, because T071 is one task either way. So the arithmetic above is unchanged
+by Decision J even though the day's work is lighter. **Removing work is not the same as removing scope**, and this
+statement deliberately does not claim the decision bought schedule: the milestones are unchanged, the checkpoints will
+still escalate, and any credit for a lighter T071 belongs at a checkpoint where it can be observed rather than in a
+forecast.
+
+**Why this is stated rather than left implicit.** A reviewer who finds a 173-task plan in a 2–3 day box and no
+acknowledgement of the gap reasonably concludes that one of the two was not thought about. The gap was thought about,
+the answer was decided at Gate 5, and until now it lived in a change-control record rather than beside the numbers it
+explains.
 
 Sequenced as vertical slices; each ends with
 executed tests and committed evidence, never with unverified code.
