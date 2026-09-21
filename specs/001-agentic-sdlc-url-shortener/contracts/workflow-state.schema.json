@@ -2,11 +2,11 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://agentic-sdlc-url-shortener/contracts/workflow-state.schema.json",
   "title": "WorkflowStateSnapshot",
-  "version": "2.0.0",
-  "description": "Persisted run state. Validated against persisted snapshots in contract tests so the invariants below are machine-enforced rather than documented. v2.0.0 (CR-013) replaces integer stage identity with instance-keyed node identity, because the previous fixed twelve-element array could not represent S7's per-task fan-out (FR-ORC-003).",
+  "version": "3.0.0",
+  "description": "Persisted run state. Validated against persisted snapshots in contract tests so the invariants below are machine-enforced rather than documented. v2.0.0 (CR-013) replaces integer stage identity with instance-keyed node identity, because the previous fixed twelve-element array could not represent S7's per-task fan-out (FR-ORC-003). v3.0.0 (CR-029) removes the run-level ai flag: orchestration always uses AI (ADR-004-A2), so there is no mode to record. What ran is recorded per node in executorKindUsed.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["runId", "state", "policySetVersion", "ai", "lastActivityAt", "nodes", "edges"],
+  "required": ["runId", "state", "policySetVersion", "lastActivityAt", "nodes", "edges"],
   "properties": {
     "runId": { "type": "string" },
     "state": { "type": "string", "enum": ["PENDING", "RUNNING", "SAFE_STOP", "COMPLETED", "REJECTED", "ABANDONED"] },
@@ -16,12 +16,6 @@
       "description": "Terminal set is exactly these three. SAFE_STOP is suspended and NON-terminal (CL-005)."
     },
     "policySetVersion": { "type": "string", "description": "The policy version this run evaluated (Constitution VI)." },
-    "ai": {
-      "type": "string",
-      "enum": ["on", "off"],
-      "default": "off",
-      "description": "Run-level flag: whether AI executors participate. Named for the one thing it controls. Deliberately not called a 'mode', because a run with ai=off can still contain a HUMAN execution at the stage-7 no-plan gate, so a run-level determinism claim would over-promise."
-    },
     "lastActivityAt": { "type": "string", "format": "date-time", "description": "Drives the idle clock. Never creation time — a run that received attention must not be reaped on age." },
     "autoAbandonAt": { "type": ["string", "null"], "format": "date-time" },
     "suspensionReason": { "type": ["string", "null"] },

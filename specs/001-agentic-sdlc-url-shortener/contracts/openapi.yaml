@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Agentic SDLC URL Shortener API
-  version: 2.0.0
+  version: 3.0.0
   description: >
     Application-plane API for the URL shortener, plus read-only control-plane inspection.
     Versioning: additive changes are MINOR; removing or narrowing a field, renaming, or changing a
@@ -453,11 +453,6 @@ components:
           description: >
             The requirement text to govern. Treated as UNTRUSTED CONTENT throughout: it reaches AI stages as prompt
             input, so the CLI adapter MUST pass it as an argv element and never as a shell string (ADR-004-A1).
-        ai:
-          type: string
-          enum: ["on", "off"]
-          default: "off"
-          description: Whether AI executors participate in this run. Default off — the keyless reviewer path (CN-011).
 
     GateDecisionRequest:
       type: object
@@ -559,7 +554,7 @@ components:
 
     RunInspection:
       type: object
-      required: [runId, state, policySetVersion, ai, nodes]
+      required: [runId, state, policySetVersion, nodes]
       additionalProperties: false
       properties:
         runId: { type: string }
@@ -571,16 +566,6 @@ components:
           enum: [COMPLETED, REJECTED, ABANDONED, null]
           description: Null while suspended — a suspended run has no terminal outcome (CL-005).
         policySetVersion: { type: string }
-        ai:
-          type: string
-          # Quoted deliberately: unquoted on/off are booleans under YAML 1.1, which silently
-          # coerced this enum to [true, false]. Caught by parser validation, 2026-09-20.
-          enum: ["on", "off"]
-          default: "off"
-          description: >
-            Run-level flag: whether AI executors participate. Named for the one thing it controls, and
-            deliberately not a "mode" — a run with ai=off can still contain a HUMAN execution at the stage-7
-            no-plan gate, so a run-level determinism claim would over-promise.
         suspensionReason: { type: [string, 'null'] }
         autoAbandonAt:
           type: [string, 'null']

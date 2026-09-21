@@ -10,8 +10,8 @@ rather than deriving them (ADR-005).
 
 | File | Version | What validates it |
 |---|---|---|
-| `openapi.yaml` | **2.0.0** (CR-013) | Contract tests assert live responses conform to this document. A deliberate drift must fail the build. |
-| `workflow-state.schema.json` | **2.0.0** (CR-013) | Persisted run snapshots validated against it, including the terminal/suspended conditionals and the fan-out node model; node-key uniqueness and the join invariant are asserted by T074's test, which JSON Schema cannot express |
+| `openapi.yaml` | **3.0.0** (CR-029) | Contract tests assert live responses conform to this document. A deliberate drift must fail the build. |
+| `workflow-state.schema.json` | **3.0.0** (CR-029) | Persisted run snapshots validated against it, including the terminal/suspended conditionals and the fan-out node model; node-key uniqueness and the join invariant are asserted by T074's test, which JSON Schema cannot express |
 | `approval.schema.json` | 1.0.0 | Gate decision records validated; `repositoryRecordPath` pattern enforces materialization |
 | `audit-event.schema.json` | 1.0.0 | Every audit record validated for all six mandatory fields (`POL-AUD-001`) |
 | `policy-evaluation.schema.json` | 1.0.0 | S10 output validated for exactly four outcome values and complete exception fields |
@@ -55,6 +55,13 @@ defect was found and fixed: `RunInspection.ai` was written `enum: [on, off]`, wh
 
 **Not yet meta-schema linted** against OpenAPI 3.1 or JSON Schema 2020-12 — validators are not present in this
 environment, so structural conformance remains unverified. Slice 1 task (T011).
+
+**v3.0.0 (CR-029)**: the run-level `ai` flag removed from both documents — orchestration always uses AI
+(ADR-004-A2), so there is no mode to record, and what ran is recorded per node in `executorKindUsed`. The field
+was in the state schema’s `required` array, so this is a removal rather than a deprecation; the pre-first-service
+rule below permits it in place, and its precondition — nothing implemented, no consumer, no persisted snapshot —
+is exactly this situation. **Re-parse required after application**: the last two shape changes each found a real
+defect only by running a parser.
 
 **`nodes` model, v2.0.0 (CR-013)**: the fixed twelve-element `stages` array was replaced because it could not
 represent S7's per-task fan-out. **Re-parsed 2026-09-20 after the change** — `workflow-state.schema.json` via
