@@ -69,3 +69,19 @@ shortener:
     # than accepting traffic it cannot serve. Failing open would make a broken instance look healthy,
     # which is the failure mode this default exists to prevent.
     fail-closed: true
+  # claude-cli — the pinned transport for the ONE StageAiProvider seam (ADR-004-A1, T073).
+  #
+  # Deliberately NOT under `shortener.ai`: SecureDefaultsTest asserts that whole namespace absent,
+  # because ADR-004 Amendment 02 (CR-028, Decision J) removed the run-level `ai: on|off` MODE toggle
+  # and the test's job is to make sure it never quietly reappears. This is a different kind of value —
+  # which binary, which model — with no on/off semantic at all, so it lives in its own namespace rather
+  # than risk that assertion ever being read as "no AI configuration of any kind may exist".
+  claude-cli:
+    # Resolved via PATH in production. A deployment without the CLI installed classifies every AI-stage
+    # invocation UNAVAILABLE (ADR-004-A1's risk table) — AI mode degrades; it never fails the run.
+    command: claude
+    # PLACEHOLDER, like own-hosts above: a deployment MUST verify this against the actually installed
+    # CLI's accepted --model values before an AI-mode run. The model id recorded in evidence is read
+    # FROM the response, never from this pin (FR-ORC-029) — so a stale or wrong pin here cannot corrupt
+    # the evidence trail, only the choice of which model answers.
+    pinned-model: claude-sonnet-5

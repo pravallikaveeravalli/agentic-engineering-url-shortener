@@ -1,0 +1,144 @@
+# Red-phase evidence
+
+- **Label**: T073-claude-code-cli-adapter
+- **Captured (UTC)**: 20260921T133845Z
+- **Command**: `./mvnw -Dtest=ClaudeCodeCliStageAiProviderTest test`
+- **Exit code**: 1
+- **Requirement**: NFR-TST-002 (red phase evidenced, not asserted); CN-004
+
+## Why this file exists
+
+This is the failing run captured BEFORE the implementation that makes it pass. It is stored
+so that the red phase is readable by a reviewer rather than claimed in a commit message.
+
+## Captured output
+
+```
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< agentic:shortener >--------------------------
+[INFO] Building agentic-sdlc-url-shortener 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ shortener ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 6 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ shortener ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 116 source files with javac [debug parameters release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ shortener ---
+[INFO] skip non existing resourceDirectory /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ shortener ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 84 source files with javac [debug parameters release 21] to target/test-classes
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java uses or overrides a deprecated API.
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest
+[ERROR] Tests run: 6, Failures: 3, Errors: 2, Skipped: 0, Time elapsed: 0.039 s <<< FAILURE! -- in agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest
+[ERROR] agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest.jsonMissingModelFieldIsMalformed -- Time elapsed: 0.013 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <agentic.shortener.orchestration.reliability.MalformedProviderOutputException> but was: <java.lang.UnsupportedOperationException>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:67)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3115)
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest.jsonMissingModelFieldIsMalformed(ClaudeCodeCliStageAiProviderTest.java:167)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T073 not implemented
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProvider.invoke(ClaudeCodeCliStageAiProvider.java:11)
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest.lambda$jsonMissingModelFieldIsMalformed$3(ClaudeCodeCliStageAiProviderTest.java:167)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:53)
+	... 6 more
+
+[ERROR] agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest.modelIdReadFromResponseNotFromConfiguration -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T073 not implemented
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProvider.invoke(ClaudeCodeCliStageAiProvider.java:11)
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest.modelIdReadFromResponseNotFromConfiguration(ClaudeCodeCliStageAiProviderTest.java:110)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest.nonJsonOutputIsInternalAndPermanent -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <agentic.shortener.orchestration.reliability.MalformedProviderOutputException> but was: <java.lang.UnsupportedOperationException>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:67)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3115)
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest.nonJsonOutputIsInternalAndPermanent(ClaudeCodeCliStageAiProviderTest.java:148)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T073 not implemented
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProvider.invoke(ClaudeCodeCliStageAiProvider.java:11)
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest.lambda$nonJsonOutputIsInternalAndPermanent$2(ClaudeCodeCliStageAiProviderTest.java:148)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:53)
+	... 6 more
+
+[ERROR] agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest.promptPassesThroughVerbatimUninterpreted -- Time elapsed: 0.002 s <<< ERROR!
+java.lang.UnsupportedOperationException: T073 not implemented
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProvider.invoke(ClaudeCodeCliStageAiProvider.java:11)
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest.promptPassesThroughVerbatimUninterpreted(ClaudeCodeCliStageAiProviderTest.java:81)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest.cliUnavailableTranslatesToUnavailable -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <UNAVAILABLE> but was: <UNKNOWN>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:177)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1145)
+	at agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProviderTest.cliUnavailableTranslatesToUnavailable(ClaudeCodeCliStageAiProviderTest.java:130)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   ClaudeCodeCliStageAiProviderTest.cliUnavailableTranslatesToUnavailable:130 expected: <UNAVAILABLE> but was: <UNKNOWN>
+[ERROR]   ClaudeCodeCliStageAiProviderTest.jsonMissingModelFieldIsMalformed:167 Unexpected exception type thrown, expected: <agentic.shortener.orchestration.reliability.MalformedProviderOutputException> but was: <java.lang.UnsupportedOperationException>
+[ERROR]   ClaudeCodeCliStageAiProviderTest.nonJsonOutputIsInternalAndPermanent:148 Unexpected exception type thrown, expected: <agentic.shortener.orchestration.reliability.MalformedProviderOutputException> but was: <java.lang.UnsupportedOperationException>
+[ERROR] Errors: 
+[ERROR]   ClaudeCodeCliStageAiProviderTest.modelIdReadFromResponseNotFromConfiguration:110 » UnsupportedOperation T073 not implemented
+[ERROR]   ClaudeCodeCliStageAiProviderTest.promptPassesThroughVerbatimUninterpreted:81 » UnsupportedOperation T073 not implemented
+[INFO] 
+[ERROR] Tests run: 6, Failures: 3, Errors: 2, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  2.106 s
+[INFO] Finished at: 2026-09-21T08:38:47-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project shortener: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+```
