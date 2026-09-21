@@ -696,7 +696,7 @@ from the response JSON. Each is `[P]` because each touches its own files and dep
   - **Deps**: T080 · **Par**: yes · **Artifact**: content hash plus producing stage; for any artifact, which stage produced it, from which inputs, under which decisions
   - **TDD**: RED-FIRST · **Validate**: provenance query over a completed run returns a complete chain · **Docs**: `data-model.md` KE-11/artifact_version · **Trace**: matrix FR-ORC-005
   - **Guard**: an artifact MUST NOT exist in a run without recorded provenance · **Done**: no orphan artifacts in a completed run · **Approval**: none
-- [ ] T082 [P] [US3] Requirement, ambiguity, clarification, and task records — `src/main/java/agentic/shortener/orchestration/lineage/`
+- [x] T082 [P] [US3] Requirement, ambiguity, clarification, and task records — `src/main/java/agentic/shortener/orchestration/lineage/`
   - **Req**: FR-ORC-009, FR-ORC-010, FR-ORC-011, FR-ORC-012 · **Scn**: DS-A, DS-C · **ADR**: ADR-008 · **Pre**: T080
   - **Deps**: T080 · **Par**: yes · **Artifact**: RequirementRecord(`external_id`, `type`, `statement`, `status`); AmbiguityRecord(`ambiguity_class`, `affected_path`, `resolution_state`, `quality_checks_performed`, **`no_clarification_reason?`**); ClarificationDecision(`actor`, `question`, `answer`, `decided_at`); TaskRecord(`requirement_ids` **≥ 1, enforced**)
   - **TDD**: RED-FIRST · **Validate**: orphan-task test — a TaskRecord with zero requirement IDs is rejected · **Docs**: `data-model.md` KE-07..KE-12 · **Trace**: matrix FR-ORC-009..012, KE-08, KE-09

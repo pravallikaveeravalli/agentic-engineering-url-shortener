@@ -1,0 +1,392 @@
+# Red-phase evidence
+
+- **Label**: T082-requirement-lineage
+- **Captured (UTC)**: 20260921T134538Z
+- **Command**: `./mvnw -Dtest=ShortLinkTest -Dit.test=RequirementLineageIT -Dfailsafe.failIfNoSpecifiedTests=false verify`
+- **Exit code**: 1
+- **Requirement**: NFR-TST-002 (red phase evidenced, not asserted); CN-004
+
+## Why this file exists
+
+This is the failing run captured BEFORE the implementation that makes it pass. It is stored
+so that the red phase is readable by a reviewer rather than claimed in a commit message.
+
+## Captured output
+
+```
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< agentic:shortener >--------------------------
+[INFO] Building agentic-sdlc-url-shortener 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ shortener ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 6 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ shortener ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 126 source files with javac [debug parameters release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ shortener ---
+[INFO] skip non existing resourceDirectory /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ shortener ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 85 source files with javac [debug parameters release 21] to target/test-classes
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java uses or overrides a deprecated API.
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.domain.link.ShortLinkTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.042 s -- in agentic.shortener.domain.link.ShortLinkTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- jar:3.4.2:jar (default-jar) @ shortener ---
+[INFO] Building jar: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/shortener-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- spring-boot:3.3.4:repackage (repackage) @ shortener ---
+[INFO] Replacing main artifact /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/shortener-0.1.0-SNAPSHOT.jar with repackaged archive, adding nested dependencies in BOOT-INF/.
+[INFO] The original artifact has been renamed to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/shortener-0.1.0-SNAPSHOT.jar.original
+[INFO] 
+[INFO] --- failsafe:3.2.5:integration-test (default) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.orchestration.lineage.RequirementLineageIT
+08:45:42.009 [main] INFO org.testcontainers.images.PullPolicy -- Image pull policy will be performed by: DefaultPullPolicy()
+08:45:42.011 [main] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+08:45:42.023 [main] INFO org.testcontainers.DockerClientFactory -- Testcontainers version: 1.20.1
+08:45:42.175 [main] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Found Docker environment with Environment variables, system properties and defaults. Resolved dockerHost=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+08:45:42.175 [main] INFO org.testcontainers.DockerClientFactory -- Docker host IP address is localhost
+08:45:42.181 [main] INFO org.testcontainers.DockerClientFactory -- Connected to docker: 
+  Server Version: 28.3.3
+  API Version: 1.51
+  Operating System: Ubuntu 24.04.2 LTS
+  Total Memory: 3905 MB
+08:45:42.202 [main] INFO tc.testcontainers/ryuk:0.8.1 -- Creating container for image: testcontainers/ryuk:0.8.1
+08:45:42.247 [main] INFO tc.testcontainers/ryuk:0.8.1 -- Container testcontainers/ryuk:0.8.1 is starting: 9e375587cd3e18cef415398c4a03931354498fc786d8a9094bbd48323b27bd1d
+08:45:42.336 [main] INFO tc.testcontainers/ryuk:0.8.1 -- Container testcontainers/ryuk:0.8.1 started in PT0.133315S
+08:45:42.337 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:33674
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+08:45:42.597 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:33674
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+08:45:42.854 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:33674
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+08:45:43.110 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:33674
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+08:45:43.372 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:33674
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+08:45:43.633 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:33674
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+08:45:43.894 [testcontainers-ryuk] WARN org.testcontainers.utility.RyukResourceReaper -- Can not connect to Ryuk at localhost:33674
+java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$null$1(RyukResourceReaper.java:105)
+	at org.rnorth.ducttape.ratelimits.RateLimiter.doWhenReady(RateLimiter.java:27)
+	at org.testcontainers.utility.RyukResourceReaper.lambda$maybeStart$2(RyukResourceReaper.java:101)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+08:45:44.157 [main] INFO org.testcontainers.utility.RyukResourceReaper -- Ryuk started - will monitor and terminate Testcontainers containers on JVM exit
+08:45:44.157 [main] INFO org.testcontainers.DockerClientFactory -- Checking the system...
+08:45:44.158 [main] INFO org.testcontainers.DockerClientFactory -- ✔︎ Docker server version should be at least 1.6.0
+08:45:44.159 [main] INFO tc.postgres:16-alpine -- Creating container for image: postgres:16-alpine
+08:45:44.206 [main] INFO tc.postgres:16-alpine -- Container postgres:16-alpine is starting: 6ac011332ac646bc00dbd127f1fbc271cb1351090653335db20e4287ad10ac16
+08:45:44.829 [main] INFO tc.postgres:16-alpine -- Container postgres:16-alpine started in PT0.6701S
+08:45:44.829 [main] INFO tc.postgres:16-alpine -- Container is started (JDBC URL: jdbc:postgresql://localhost:33675/shortener?loggerLevel=OFF)
+08:45:47.347 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33675/shortener (PostgreSQL 16.15)
+08:45:47.362 [main] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Schema history table "public"."flyway_schema_history" does not exist yet
+08:45:47.363 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 6 migrations (execution time 00:00.007s)
+08:45:47.370 [main] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Creating Schema History table "public"."flyway_schema_history" ...
+08:45:47.395 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": << Empty Schema >>
+08:45:47.401 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "1 - baseline"
+08:45:47.423 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "2 - domain"
+08:45:47.441 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "3 - governance"
+08:45:47.469 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "4 - orchestration graph"
+08:45:47.485 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "5 - artifact provenance"
+08:45:47.495 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "public" to version "6 - join semantics all only"
+08:45:47.501 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 6 migrations to schema "public", now at version v6 (execution time 00:00.062s)
+08:45:47.544 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33675/shortener (PostgreSQL 16.15)
+08:45:47.551 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 6 migrations (execution time 00:00.003s)
+08:45:47.558 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 6
+08:45:47.558 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+08:45:47.587 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33675/shortener (PostgreSQL 16.15)
+08:45:47.593 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 6 migrations (execution time 00:00.003s)
+08:45:47.599 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 6
+08:45:47.599 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+08:45:47.623 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33675/shortener (PostgreSQL 16.15)
+08:45:47.629 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 6 migrations (execution time 00:00.003s)
+08:45:47.637 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 6
+08:45:47.637 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+08:45:47.661 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33675/shortener (PostgreSQL 16.15)
+08:45:47.666 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 6 migrations (execution time 00:00.003s)
+08:45:47.673 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 6
+08:45:47.674 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+08:45:47.702 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33675/shortener (PostgreSQL 16.15)
+08:45:47.708 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 6 migrations (execution time 00:00.003s)
+08:45:47.714 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 6
+08:45:47.714 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+08:45:47.735 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33675/shortener (PostgreSQL 16.15)
+08:45:47.740 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 6 migrations (execution time 00:00.002s)
+08:45:47.746 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 6
+08:45:47.746 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+08:45:47.770 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33675/shortener (PostgreSQL 16.15)
+08:45:47.775 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 6 migrations (execution time 00:00.002s)
+08:45:47.780 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 6
+08:45:47.781 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+08:45:47.802 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33675/shortener (PostgreSQL 16.15)
+08:45:47.807 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 6 migrations (execution time 00:00.003s)
+08:45:47.814 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 6
+08:45:47.814 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+08:45:47.838 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33675/shortener (PostgreSQL 16.15)
+08:45:47.843 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 6 migrations (execution time 00:00.002s)
+08:45:47.849 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 6
+08:45:47.849 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+08:45:47.882 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33675/shortener (PostgreSQL 16.15)
+08:45:47.887 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 6 migrations (execution time 00:00.002s)
+08:45:47.893 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 6
+08:45:47.893 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+08:45:47.914 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33675/shortener (PostgreSQL 16.15)
+08:45:47.918 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 6 migrations (execution time 00:00.002s)
+08:45:47.923 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 6
+08:45:47.924 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+08:45:47.944 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://localhost:33675/shortener (PostgreSQL 16.15)
+08:45:47.948 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 6 migrations (execution time 00:00.002s)
+08:45:47.953 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "public": 6
+08:45:47.954 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "public" is up to date. No migration necessary.
+[ERROR] Tests run: 13, Failures: 1, Errors: 11, Skipped: 0, Time elapsed: 6.056 s <<< FAILURE! -- in agentic.shortener.orchestration.lineage.RequirementLineageIT
+[ERROR] agentic.shortener.orchestration.lineage.RequirementLineageIT.taskCannotDependOnItself -- Time elapsed: 0.042 s <<< ERROR!
+java.lang.UnsupportedOperationException: T082 not implemented
+	at agentic.shortener.orchestration.lineage.LineageStore.recordRequirement(LineageStore.java:16)
+	at agentic.shortener.orchestration.lineage.RequirementLineageIT.taskCannotDependOnItself(RequirementLineageIT.java:169)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.lineage.RequirementLineageIT.tasksCanDeclareDependencies -- Time elapsed: 0.036 s <<< ERROR!
+java.lang.UnsupportedOperationException: T082 not implemented
+	at agentic.shortener.orchestration.lineage.LineageStore.recordRequirement(LineageStore.java:16)
+	at agentic.shortener.orchestration.lineage.RequirementLineageIT.tasksCanDeclareDependencies(RequirementLineageIT.java:157)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.lineage.RequirementLineageIT.clarificationResolvesAMaterialAmbiguity -- Time elapsed: 0.038 s <<< ERROR!
+java.lang.UnsupportedOperationException: T082 not implemented
+	at agentic.shortener.orchestration.lineage.LineageStore.recordRequirement(LineageStore.java:16)
+	at agentic.shortener.orchestration.lineage.RequirementLineageIT.clarificationResolvesAMaterialAmbiguity(RequirementLineageIT.java:217)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.lineage.RequirementLineageIT.taskCannotReferenceANonexistentRequirement -- Time elapsed: 0.040 s <<< ERROR!
+java.lang.IllegalStateException: count failed
+	at agentic.shortener.orchestration.lineage.RequirementLineageIT.countTaskRecords(RequirementLineageIT.java:263)
+	at agentic.shortener.orchestration.lineage.RequirementLineageIT.taskCannotReferenceANonexistentRequirement(RequirementLineageIT.java:151)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: org.postgresql.util.PSQLException: ERROR: relation "task_record" does not exist
+  Position: 22
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2733)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2420)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:517)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:434)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:194)
+	at org.postgresql.jdbc.PgPreparedStatement.executeQuery(PgPreparedStatement.java:137)
+	at agentic.shortener.orchestration.lineage.RequirementLineageIT.countTaskRecords(RequirementLineageIT.java:258)
+	... 4 more
+
+[ERROR] agentic.shortener.orchestration.lineage.RequirementLineageIT.taskWithRequirementIsAccepted -- Time elapsed: 0.033 s <<< ERROR!
+java.lang.UnsupportedOperationException: T082 not implemented
+	at agentic.shortener.orchestration.lineage.LineageStore.recordRequirement(LineageStore.java:16)
+	at agentic.shortener.orchestration.lineage.RequirementLineageIT.taskWithRequirementIsAccepted(RequirementLineageIT.java:132)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.lineage.RequirementLineageIT.normalizationPreservesEverySubmittedRequirement -- Time elapsed: 0.031 s <<< ERROR!
+java.lang.UnsupportedOperationException: T082 not implemented
+	at agentic.shortener.orchestration.lineage.LineageStore.recordRequirement(LineageStore.java:16)
+	at agentic.shortener.orchestration.lineage.RequirementLineageIT.normalizationPreservesEverySubmittedRequirement(RequirementLineageIT.java:64)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.lineage.RequirementLineageIT.materialPendingMustNotCarryAReason -- Time elapsed: 0.035 s <<< ERROR!
+java.lang.UnsupportedOperationException: T082 not implemented
+	at agentic.shortener.orchestration.lineage.LineageStore.recordRequirement(LineageStore.java:16)
+	at agentic.shortener.orchestration.lineage.RequirementLineageIT.materialPendingMustNotCarryAReason(RequirementLineageIT.java:203)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.lineage.RequirementLineageIT.orphanTaskIsRejected -- Time elapsed: 0.035 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: FR-ORC-012: every task traces to at least one requirement; decomposition MUST NOT invent scope (Constitution I) ==> Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.UnsupportedOperationException>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:67)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:39)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3131)
+	at agentic.shortener.orchestration.lineage.RequirementLineageIT.orphanTaskIsRejected(RequirementLineageIT.java:120)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: java.lang.UnsupportedOperationException: T082 not implemented
+	at agentic.shortener.orchestration.lineage.LineageStore.recordTask(LineageStore.java:25)
+	at agentic.shortener.orchestration.lineage.RequirementLineageIT.lambda$orphanTaskIsRejected$2(RequirementLineageIT.java:121)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:53)
+	... 6 more
+
+[ERROR] agentic.shortener.orchestration.lineage.RequirementLineageIT.externalIdScopedPerRun -- Time elapsed: 0.045 s <<< ERROR!
+java.lang.UnsupportedOperationException: T082 not implemented
+	at agentic.shortener.orchestration.lineage.LineageStore.recordRequirement(LineageStore.java:16)
+	at agentic.shortener.orchestration.lineage.RequirementLineageIT.externalIdScopedPerRun(RequirementLineageIT.java:102)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.lineage.RequirementLineageIT.externalIdUniquePerRun -- Time elapsed: 0.031 s <<< ERROR!
+java.lang.UnsupportedOperationException: T082 not implemented
+	at agentic.shortener.orchestration.lineage.LineageStore.recordRequirement(LineageStore.java:16)
+	at agentic.shortener.orchestration.lineage.RequirementLineageIT.externalIdUniquePerRun(RequirementLineageIT.java:85)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.lineage.RequirementLineageIT.notMaterialRequiresAReason -- Time elapsed: 0.030 s <<< ERROR!
+java.lang.UnsupportedOperationException: T082 not implemented
+	at agentic.shortener.orchestration.lineage.LineageStore.recordRequirement(LineageStore.java:16)
+	at agentic.shortener.orchestration.lineage.RequirementLineageIT.notMaterialRequiresAReason(RequirementLineageIT.java:188)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.lineage.RequirementLineageIT.notMaterialRecordsWhatWasChecked -- Time elapsed: 0.030 s <<< ERROR!
+java.lang.UnsupportedOperationException: T082 not implemented
+	at agentic.shortener.orchestration.lineage.LineageStore.recordRequirement(LineageStore.java:16)
+	at agentic.shortener.orchestration.lineage.RequirementLineageIT.notMaterialRecordsWhatWasChecked(RequirementLineageIT.java:235)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   RequirementLineageIT.orphanTaskIsRejected:120 FR-ORC-012: every task traces to at least one requirement; decomposition MUST NOT invent scope (Constitution I) ==> Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.UnsupportedOperationException>
+[ERROR] Errors: 
+[ERROR]   RequirementLineageIT.clarificationResolvesAMaterialAmbiguity:217 » UnsupportedOperation T082 not implemented
+[ERROR]   RequirementLineageIT.externalIdScopedPerRun:102 » UnsupportedOperation T082 not implemented
+[ERROR]   RequirementLineageIT.externalIdUniquePerRun:85 » UnsupportedOperation T082 not implemented
+[ERROR]   RequirementLineageIT.materialPendingMustNotCarryAReason:203 » UnsupportedOperation T082 not implemented
+[ERROR]   RequirementLineageIT.normalizationPreservesEverySubmittedRequirement:64 » UnsupportedOperation T082 not implemented
+[ERROR]   RequirementLineageIT.notMaterialRecordsWhatWasChecked:235 » UnsupportedOperation T082 not implemented
+[ERROR]   RequirementLineageIT.notMaterialRequiresAReason:188 » UnsupportedOperation T082 not implemented
+[ERROR]   RequirementLineageIT.taskCannotDependOnItself:169 » UnsupportedOperation T082 not implemented
+[ERROR]   RequirementLineageIT.taskCannotReferenceANonexistentRequirement:151->countTaskRecords:263 IllegalState count failed
+[ERROR]   RequirementLineageIT.taskWithRequirementIsAccepted:132 » UnsupportedOperation T082 not implemented
+[ERROR]   RequirementLineageIT.tasksCanDeclareDependencies:157 » UnsupportedOperation T082 not implemented
+[INFO] 
+[ERROR] Tests run: 13, Failures: 1, Errors: 11, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- failsafe:3.2.5:verify (default) @ shortener ---
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  8.851 s
+[INFO] Finished at: 2026-09-21T08:45:48-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-failsafe-plugin:3.2.5:verify (default) on project shortener: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/failsafe-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+```
