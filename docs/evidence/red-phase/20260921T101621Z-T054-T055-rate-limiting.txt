@@ -1,0 +1,179 @@
+# Red-phase evidence
+
+- **Label**: T054-T055-rate-limiting
+- **Captured (UTC)**: 20260921T101621Z
+- **Command**: `./mvnw -Dtest=RateLimiterTest test`
+- **Exit code**: 1
+- **Requirement**: NFR-TST-002 (red phase evidenced, not asserted); CN-004
+
+## Why this file exists
+
+This is the failing run captured BEFORE the implementation that makes it pass. It is stored
+so that the red phase is readable by a reviewer rather than claimed in a commit message.
+
+## Captured output
+
+```
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< agentic:shortener >--------------------------
+[INFO] Building agentic-sdlc-url-shortener 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ shortener ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 3 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ shortener ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 49 source files with javac [debug parameters release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ shortener ---
+[INFO] skip non existing resourceDirectory /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ shortener ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 49 source files with javac [debug parameters release 21] to target/test-classes
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java uses or overrides a deprecated API.
+[INFO] /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/src/test/java/agentic/shortener/contract/ResponseExamplesTest.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ shortener ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running agentic.shortener.delivery.ratelimit.RateLimiterTest
+[ERROR] Tests run: 13, Failures: 3, Errors: 7, Skipped: 0, Time elapsed: 0.102 s <<< FAILURE! -- in agentic.shortener.delivery.ratelimit.RateLimiterTest
+[ERROR] agentic.shortener.delivery.ratelimit.RateLimiterTest.limitMustBePositive -- Time elapsed: 0.007 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown.
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:73)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3115)
+	at agentic.shortener.delivery.ratelimit.RateLimiterTest.limitMustBePositive(RateLimiterTest.java:194)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.delivery.ratelimit.RateLimiterTest.creatorsAreIndependent -- Time elapsed: 0.010 s <<< ERROR!
+java.lang.UnsupportedOperationException: T054 not implemented
+	at agentic.shortener.delivery.ratelimit.CreationRateLimiter.check(CreationRateLimiter.java:15)
+	at agentic.shortener.delivery.ratelimit.RateLimiterTest.creatorsAreIndependent(RateLimiterTest.java:114)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.delivery.ratelimit.RateLimiterTest.creationLimitIsSixtyPerMinute -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T054 not implemented
+	at agentic.shortener.delivery.ratelimit.CreationRateLimiter.check(CreationRateLimiter.java:15)
+	at agentic.shortener.delivery.ratelimit.RateLimiterTest.creationLimitIsSixtyPerMinute(RateLimiterTest.java:81)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.delivery.ratelimit.RateLimiterTest.refusalSaysWhenToRetry -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T054 not implemented
+	at agentic.shortener.delivery.ratelimit.CreationRateLimiter.check(CreationRateLimiter.java:15)
+	at agentic.shortener.delivery.ratelimit.RateLimiterTest.refusalSaysWhenToRetry(RateLimiterTest.java:143)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.delivery.ratelimit.RateLimiterTest.concurrentCallersCannotExceedTheLimit -- Time elapsed: 0.012 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: exactly the limit, not one more: increments were lost or double-counted ==> expected: <60> but was: <0>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at agentic.shortener.delivery.ratelimit.RateLimiterTest.concurrentCallersCannotExceedTheLimit(RateLimiterTest.java:184)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.delivery.ratelimit.RateLimiterTest.redirectLimitIsSixHundredPerMinutePerCode -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T055 not implemented
+	at agentic.shortener.delivery.ratelimit.RedirectRateLimiter.check(RedirectRateLimiter.java:14)
+	at agentic.shortener.delivery.ratelimit.RateLimiterTest.redirectLimitIsSixHundredPerMinutePerCode(RateLimiterTest.java:208)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.delivery.ratelimit.RateLimiterTest.codesAreIndependent -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T055 not implemented
+	at agentic.shortener.delivery.ratelimit.RedirectRateLimiter.check(RedirectRateLimiter.java:14)
+	at agentic.shortener.delivery.ratelimit.RateLimiterTest.codesAreIndependent(RateLimiterTest.java:219)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.delivery.ratelimit.RateLimiterTest.windowRolls -- Time elapsed: 0 s <<< ERROR!
+java.lang.UnsupportedOperationException: T054 not implemented
+	at agentic.shortener.delivery.ratelimit.CreationRateLimiter.check(CreationRateLimiter.java:15)
+	at agentic.shortener.delivery.ratelimit.RateLimiterTest.windowRolls(RateLimiterTest.java:128)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.delivery.ratelimit.RateLimiterTest.creationRefusalNamesItsTier -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.UnsupportedOperationException: T054 not implemented
+	at agentic.shortener.delivery.ratelimit.CreationRateLimiter.check(CreationRateLimiter.java:15)
+	at agentic.shortener.delivery.ratelimit.RateLimiterTest.creationRefusalNamesItsTier(RateLimiterTest.java:97)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.delivery.ratelimit.RateLimiterTest.theDeferredTierIsDisclosed -- Time elapsed: 0 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: without docs/delivery/baseline-omissions.md the deferral is indistinguishable from an oversight (T055a) ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at agentic.shortener.delivery.ratelimit.RateLimiterTest.theDeferredTierIsDisclosed(RateLimiterTest.java:253)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   RateLimiterTest.concurrentCallersCannotExceedTheLimit:184 exactly the limit, not one more: increments were lost or double-counted ==> expected: <60> but was: <0>
+[ERROR]   RateLimiterTest.limitMustBePositive:194 Expected java.lang.IllegalArgumentException to be thrown, but nothing was thrown.
+[ERROR]   RateLimiterTest.theDeferredTierIsDisclosed:253 without docs/delivery/baseline-omissions.md the deferral is indistinguishable from an oversight (T055a) ==> expected: <true> but was: <false>
+[ERROR] Errors: 
+[ERROR]   RateLimiterTest.codesAreIndependent:219 » UnsupportedOperation T055 not implemented
+[ERROR]   RateLimiterTest.creationLimitIsSixtyPerMinute:81 » UnsupportedOperation T054 not implemented
+[ERROR]   RateLimiterTest.creationRefusalNamesItsTier:97 » UnsupportedOperation T054 not implemented
+[ERROR]   RateLimiterTest.creatorsAreIndependent:114 » UnsupportedOperation T054 not implemented
+[ERROR]   RateLimiterTest.redirectLimitIsSixHundredPerMinutePerCode:208 » UnsupportedOperation T055 not implemented
+[ERROR]   RateLimiterTest.refusalSaysWhenToRetry:143 » UnsupportedOperation T054 not implemented
+[ERROR]   RateLimiterTest.windowRolls:128 » UnsupportedOperation T054 not implemented
+[INFO] 
+[ERROR] Tests run: 13, Failures: 3, Errors: 7, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.798 s
+[INFO] Finished at: 2026-09-21T05:16:23-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project shortener: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+```

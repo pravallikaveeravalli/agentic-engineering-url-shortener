@@ -429,23 +429,23 @@ resolution, and expiry outcomes.
   - **Deps**: T022 · **Par**: no (guards create and analytics) · **Artifact**: `Authorization: Bearer <key>`; SHA-256 of the full presented string; **constant-time comparison**; expired and revoked refused with the **same response shape**
   - **TDD**: RED-FIRST · **Validate**: authenticated vs anonymous create; **EC-041** expired-vs-revoked byte-identity; constant-time unit test · **Docs**: `contracts/openapi.yaml` `creatorApiKey` · **Trace**: matrix FR-URL-018, EC-041, CL-001
   - **Guard**: bearer transport chosen because proxies and scrubbers redact `Authorization` **by default** — a custom header would forfeit that. Redirects never enter this filter · **Done**: all four tests pass · **Approval**: none
-- [ ] T053 [US1] Operator provisioning script with required expiry — `ops/scripts/provision-creator.sh`
+- [x] T053 [US1] Operator provisioning script with required expiry — `ops/scripts/provision-creator.sh`
   - **Req**: **FR-URL-019** · **Scn**: — · **ADR**: **ADR-013**, ADR-012 · **Pre**: T052
   - **Deps**: T052 · **Par**: no · **Artifact**: `crk_` + base64url of **≥ 256 CSPRNG bits**; `--expires <duration|never>` **required, no default**; key displayed **once** to the operator terminal; only the hash stored
   - **TDD**: RED-FIRST · **Validate**: script **exits non-zero without `--expires`**; `never` yields null `expires_at` and nothing else does; hash-only storage asserted; needs store connectivity but **not** a running application
   - **Docs**: `quickstart.md` provisioning section · **Trace**: matrix FR-URL-019, CR-002
   - **Guard**: **no HTTP issuance surface may exist** — an absence test asserts it. The application never writes key material at any level, including startup · **Done**: four tests pass; absence-of-endpoint test passes · **Approval**: none
-- [ ] T054 [P] [US1] Per-creator creation rate limit — `src/main/java/agentic/shortener/delivery/ratelimit/CreationRateLimiter.java`
+- [x] T054 [P] [US1] Per-creator creation rate limit — `src/main/java/agentic/shortener/delivery/ratelimit/CreationRateLimiter.java`
   - **Req**: **FR-URL-016**, EC-013 · **Scn**: DS-B · **ADR**: ADR-013 · **Pre**: T052
   - **Deps**: T052 · **Par**: yes · **Artifact**: **PVT-012 — 60 requests/minute per creator**; throttled outcome names the tier
   - **TDD**: RED-FIRST · **Validate**: `-Dtest=CreationRateLimiterTest` at and above the limit · **Docs**: `contracts/openapi.yaml` 429 · **Trace**: matrix FR-URL-016
   - **Guard**: throttling MUST NOT be silently disabled by default configuration (T018 asserts on-by-default) · **Done**: limit enforced; tier named in the response · **Approval**: none
-- [ ] T055 [US1] Two-tier redirect rate limiting — `src/main/java/agentic/shortener/delivery/ratelimit/RedirectRateLimiter.java`
+- [x] T055 [US1] Two-tier redirect rate limiting — `src/main/java/agentic/shortener/delivery/ratelimit/RedirectRateLimiter.java`
   - **Req**: **FR-URL-016** · **Scn**: DS-B · **ADR**: ADR-013 · **Pre**: T044, T054
   - **Deps**: T044, T054 · **Par**: no (shares the limiter module) · **Artifact**: **per short code — PVT-013, 600/min** (hotspot). The **per-creator aggregate tier (PVT-014) is deliberately deferred** to the brownfield scenario (T136a) and disclosed in the baseline-omissions record (**T055a**)
   - **TDD**: RED-FIRST · **Validate**: per-code tier tests at and above the limit. **The multi-link aggregate case is NOT tested here** — it is the brownfield scenario's **before-state**, where it must pass **unthrottled** · **Docs**: plan §8 · **Trace**: matrix FR-URL-016
   - **Guard**: **FR-URL-016 remains binding in full**; deferring the third tier is a scheduled omission with a named closure (T136a), never an accepted gap. PVT-014 sits deliberately **below** the sum of per-code limits, which is what makes the tier bite. A throttled response MUST NOT disclose the owning creator to a public follower. **Accepted trade-off**: followers of a popular creator may be throttled through no fault of their own — document it in the threat model · **Done**: two tiers proven; the third deferred and disclosed · **Approval**: none
-- [ ] T055a [P] [US1] Baseline-omissions register — `docs/delivery/baseline-omissions.md`
+- [x] T055a [P] [US1] Baseline-omissions register — `docs/delivery/baseline-omissions.md`
   - **Req**: **FR-URL-016**, **PVT-014**, CN-007 · **Scn**: **DS-B** (its before-state presumes this is written) · **ADR**: ADR-013 · **Pre**: T055
   - **Deps**: T055 · **Par**: yes (own file) · **Artifact**: the written record of every **deliberate** baseline omission — currently exactly **one**: the per-creator aggregate redirect tier (**PVT-014**), deferred from Slice 3. Each entry names five things: **what is omitted**, **which requirement it belongs to**, **that the requirement remains binding in full**, **the run that closes it**, and **what release readiness must report if that run does not happen**
   - **TDD**: N/A-DOC · **Validate**: the entry exists **before T057's acceptance sweep** records the multi-link case as passing unthrottled — otherwise the sweep documents a gap with no disclosure behind it; a reviewer can read the register in one page and answer *"what is missing, and who closes it"*; cross-checked against `docs/LIMITATIONS.md` (T147) so the two cannot disagree

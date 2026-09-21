@@ -4,6 +4,8 @@ import agentic.shortener.application.GetAnalyticsUseCase;
 import agentic.shortener.application.LinkService;
 import agentic.shortener.domain.link.ShortLink;
 import agentic.shortener.delivery.auth.CreatorAuthFilter;
+import agentic.shortener.delivery.ratelimit.CreationRateLimiter;
+import agentic.shortener.delivery.ratelimit.RateLimitDecision;
 import agentic.shortener.domain.validation.CredentialRedactor;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -38,10 +40,13 @@ public class LinkController {
 
     private final LinkService links;
     private final GetAnalyticsUseCase analytics;
+    private final CreationRateLimiter rateLimiter;
 
-    public LinkController(LinkService links, GetAnalyticsUseCase analytics) {
+    public LinkController(LinkService links, GetAnalyticsUseCase analytics,
+                          CreationRateLimiter rateLimiter) {
         this.links = links;
         this.analytics = analytics;
+        this.rateLimiter = rateLimiter;
     }
 
     /**
@@ -80,6 +85,20 @@ public class LinkController {
             HttpServletRequest httpRequest) {
         if (request == null || request.destination() == null) {
             return error(HttpStatus.BAD_REQUEST, "INVALID_INPUT", "A destination is required.");
+        }
+
+        // PVT-012, before any work is done. The creator is already authenticated, so the limit applies
+        // to the identity that owns the traffic rather than to an address, which would throttle an
+        // office and miss a script.
+        RateLimitDecision limit = rateLimiter.check(authenticatedCreator(httpRequest));
+        if (!limit.allowed()) {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("code", "RATE_LIMITED");
+            body.put("message", "Too many requests.");
+            body.put("detail", "Tier: " + limit.tier() + ".");
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header("Retry-After", String.valueOf(limit.retryAfterSeconds()))
+                    .body(body);
         }
 
         Instant expiresAt = null;

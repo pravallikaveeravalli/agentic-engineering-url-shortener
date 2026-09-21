@@ -1,6 +1,8 @@
 package agentic.shortener.delivery;
 
 import agentic.shortener.application.ResolveLinkUseCase;
+import agentic.shortener.delivery.ratelimit.RateLimitDecision;
+import agentic.shortener.delivery.ratelimit.RedirectRateLimiter;
 import agentic.shortener.domain.analytics.AnalyticsRecordingPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,17 +44,27 @@ public class RedirectController {
 
     private final ResolveLinkUseCase resolve;
     private final AnalyticsRecordingPort analytics;
+    private final RedirectRateLimiter rateLimiter;
     private final Clock clock;
 
     public RedirectController(ResolveLinkUseCase resolve, AnalyticsRecordingPort analytics,
-                              Clock clock) {
+                              RedirectRateLimiter rateLimiter, Clock clock) {
         this.resolve = Objects.requireNonNull(resolve, "resolve");
         this.analytics = Objects.requireNonNull(analytics, "analytics");
+        this.rateLimiter = Objects.requireNonNull(rateLimiter, "rateLimiter");
         this.clock = Objects.requireNonNull(clock, "clock");
     }
 
     @GetMapping("/{shortCode:[A-Za-z0-9]{7}}")
     public ResponseEntity<Map<String, Object>> follow(@PathVariable String shortCode) {
+        // Throttling FIRST, before the store is touched. A limiter that ran after the lookup would
+        // still do the work the limit exists to prevent — PVT-013 is hotspot protection, and protecting
+        // the store from a hammered link means not querying it.
+        RateLimitDecision limit = rateLimiter.check(shortCode);
+        if (!limit.allowed()) {
+            return throttled(limit);
+        }
+
         ResolveLinkUseCase.Resolution resolution = resolve.resolve(shortCode);
 
         if (resolution.outcome() == ResolveLinkUseCase.Outcome.REDIRECT) {
@@ -88,6 +100,23 @@ public class RedirectController {
     public ResponseEntity<Map<String, Object>> onStoreProblem(IllegalStateException e) {
         return error(HttpStatus.SERVICE_UNAVAILABLE, "STORE_UNAVAILABLE",
                 "This link cannot be resolved right now.");
+    }
+
+    /**
+     * 429, naming the tier and nothing else.
+     *
+     * <p>FR-URL-016 forbids a throttled response disclosing the owning creator's identity to a public
+     * follower. The tier name is {@code per-code} and carries no creator, which is enforced one level
+     * down: {@link RedirectRateLimiter} has no creator parameter to disclose.
+     */
+    private static ResponseEntity<Map<String, Object>> throttled(RateLimitDecision limit) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("code", "RATE_LIMITED");
+        body.put("message", "Too many requests.");
+        body.put("detail", "Tier: " + limit.tier() + ".");
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(limit.retryAfterSeconds()))
+                .body(body);
     }
 
     private static ResponseEntity<Map<String, Object>> error(HttpStatus status, String code,
