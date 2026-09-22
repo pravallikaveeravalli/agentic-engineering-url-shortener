@@ -20,9 +20,11 @@ and nothing you don't already have.
 | Human gate decisions — one record per mandatory gate, immutable once filed | [`docs/governance/gate-decisions/`](governance/gate-decisions/) |
 | Constitution amendments | [`docs/governance/amendments/`](governance/amendments/) |
 | What was scoped, deferred, or cut, and why | [`docs/delivery/`](delivery/) — `scope-register.md` (the 9 must-have slices), `backlog.md` (indefinite deferrals), `baseline-omissions.md` (scheduled omissions with a named closing task), `critical-path.md`, `checkpoints.md`, `milestones.md`, `stop-conditions.md` |
-| Real, live AI-stage demonstrations (model id, prompt, captured response) | [`docs/evidence/ai-demos/`](evidence/ai-demos/) — `T073a` through `T073f` |
+| Real, live, per-unit-stage AI demonstrations (model id, prompt, captured response) — six stages, one call each, via the Gemini CLI adapter, proving the transport seam is pluggable | [`docs/evidence/ai-demos/`](evidence/ai-demos/) — `T073a` through `T073f` |
+| **The three demonstration scenarios, executed live on the Claude transport** — greenfield (DS-A), brownfield (DS-B), ambiguous (DS-C) | [`docs/evidence/ds-a/`](evidence/ds-a/), [`docs/evidence/ds-b/`](evidence/ds-b/), [`docs/evidence/ds-c/`](evidence/ds-c/) — see "The three scenarios" below |
 | Deliberate red-phase captures — a real failing test, the exact output, the fix | [`docs/evidence/red-phase/`](evidence/red-phase/) |
 | The MTTR measurement method's declared population, exclusions, and limitations | [`docs/evidence/mttr-method.md`](evidence/mttr-method.md) |
+| Every known limitation and residual risk, disclosed by name | [`docs/LIMITATIONS.md`](LIMITATIONS.md) |
 | What was built vs. deliberately not, the two named threat-model trade-offs | [`README.md`](../README.md) |
 | The constitution itself — every MUST/SHOULD requirement this project is held to | [`.specify/memory/constitution.md`](../.specify/memory/constitution.md) |
 
@@ -44,27 +46,38 @@ on one field. It is **non-deterministic by design**, which is safe specifically 
 human gate rather than acting on its own authority. **Declared variability**: the same requirement can be
 scored differently across runs, and that is disclosed rather than hidden. **When nothing is found, the
 reason no clarification was required is recorded** — a non-detection is inspectable, not silent. Real,
-live evidence of this stage running against the actual model, not a scripted fake: `docs/evidence/ai-demos/
-T073b-ambiguity-detection-gemini-demo.txt`.
+live evidence of this stage running against an actual model, not a scripted fake: one unit-level call via
+the Gemini transport (`docs/evidence/ai-demos/T073b-ambiguity-detection-gemini-demo.txt`), and — the fuller
+proof — dozens of independent live dispatches via the Claude transport across the DS-A/DS-B/DS-C scenario
+runs (`docs/evidence/ds-a/`, `docs/evidence/ds-b/`, `docs/evidence/ds-c/`), including the genuinely
+non-deterministic real findings documented in `docs/LIMITATIONS.md` §2-3.
 
 ## What the baseline deliberately omitted
 
-**One entry, as of this guide**: the per-creator-aggregate redirect rate-limit tier (`PVT-014`, `FR-URL-016`'s
-third tier) — `docs/delivery/baseline-omissions.md`. Only the per-creator creation tier (`PVT-012`) and the
-per-code redirect tier (`PVT-013`) ship in the baseline; the aggregate tier's absence is itself asserted by
-a dedicated test (`RateLimiterTest.theAggregateTierIsNotPartiallyPresent`), not left an unstated gap.
+**One entry, ever**: the per-creator-aggregate redirect rate-limit tier (`PVT-014`, `FR-URL-016`'s third
+tier) — `docs/delivery/baseline-omissions.md`. Only the per-creator creation tier (`PVT-012`) and the
+per-code redirect tier (`PVT-013`) shipped in the baseline; the tier's own absence, at that point, was
+itself asserted by a dedicated test rather than left an unstated gap.
 
-**Which run closes it, and where that run's evidence is — stated honestly, not implied**: the closing task
-is `T136a`, in the brownfield demonstration scenario (DS-B). As of this guide, Phase 8's demonstration
-scenarios have not yet completed as live, submitted runs (see the next section) — a public HTTP endpoint to
-submit a fresh orchestration run now exists (`POST /v1/runs`, `RunSubmissionController`, T082a). One attempt
-at the greenfield scenario (DS-A, not DS-B) has been made through the underlying driver: it reached S3
-(ambiguity detection) before a real, external Gemini API quota exhaustion suspended the run —
-`docs/evidence/ds-a/run-snapshot-ATTEMPT-1-BLOCKED-gemini-quota-exhausted.md`, kept and labelled as a blocked
-attempt, not claimed as completed evidence. `baseline-omissions.md`'s own status field says `open` for
-exactly this reason. When DS-B runs, its evidence will land under `docs/evidence/` alongside the six
-AI-stage demos already there, and this guide's own claim here should be checked against that evidence rather
-than trusted on the word of this sentence.
+**Closed.** The closing task, `T136a`, in the brownfield demonstration scenario (DS-B), has run:
+`AggregateRedirectLimiter` exists, is wired into `RedirectController`, and is enforced. Built directly
+rather than by a live AI dispatch through the orchestrator — three genuine, capped, live orchestrator
+attempts were made first (`docs/evidence/ds-b/attempts-1-3-finding.md`); the owner then directed the tier
+be built directly rather than risk a further live-AI variance round, and that choice is disclosed by name
+in `docs/evidence/ds-b/t136a-built-directly.md`, not presented as orchestrator output.
+`baseline-omissions.md`'s own status field now says `Closed`, and FR-URL-016's traceability-matrix row
+reads complete, not `PARTIAL`.
+
+## The three demonstration scenarios
+
+All three ran live, on the Claude transport (ADR-004 Amendment 04), each with its own evidence directory —
+none of this is aspirational or "once run" language; it already happened and the evidence is on disk.
+
+| Scenario | Subject | Evidence | Honest caveat |
+|---|---|---|---|
+| **DS-A — greenfield** | `GET /v1/version`, a genuinely new endpoint | [`docs/evidence/ds-a/`](evidence/ds-a/) — `run.json`, `bundle/` (T134's seven-item evidence bundle) | The literal S4-`SKIPPED` path this task's own artifact names has never once occurred across ~30 real attempts — every real, well-formed requirement this engagement tried still surfaced genuine ambiguity (`docs/evidence/ds-a/requirement-completeness-ceiling-finding.md`). What *is* real: attempt 26 ran S1→S10 clean in one continuous pass (one genuine S4 clarification resolved under standing delegation, a real S6 design gate, real S7-authored code, a real S8 pass, S9's drift guard confirming only executed behaviour), and that run's own feature is landed in this codebase. S11's own open gate has not been reached in a single continuous run; disclosed, not hidden. |
+| **DS-B — brownfield** | The per-creator aggregate redirect tier (PVT-014) | [`docs/evidence/ds-b/`](evidence/ds-b/) — `run.json`, `test-results/`, `attempts-1-3-finding.md`, `t136a-built-directly.md` | Retry (a real two-attempt S3 recovery) and compensation (T090's real machinery against a real effect) were both genuinely demonstrated live, through the orchestrator. The tier's own code was **not** — built directly, after three capped live attempts, disclosed by name rather than claimed as AI output. Before/after tests real and passing against the landed tier. |
+| **DS-C — ambiguous** | A requirement with an internal contradiction (expire vs. retain vs. trusted-partner access) | [`docs/evidence/ds-c/`](evidence/ds-c/) — `silence.json`, `replan.json`, `rejection.json` | The conflict is detected and named before implementation; the silence path is demonstrated first (`SAFE_STOP`, deadlines disclosed) before any resolution; a replan event lists invalidated stages and voided approvals. The trusted-partner feature itself was not built — the owner accepted the detect→clarify→replan→resume mechanism as proven and declined to build the feature it was demonstrating around (`docs/governance/gate-decisions/ds-c/scenario-accepted-as-demonstrated.md`). |
 
 ## The capability framing, carried forward — and one thing corrected
 
@@ -108,8 +121,13 @@ zero orphans in both directions — every requirement traces to a task, and vice
 `./scripts/build.sh test` and `./scripts/build.sh -DfailIfNoTests=false verify` — every `.txt` report names
 its class and its `Tests run / Failures / Errors / Skipped` counts directly; nothing here can report a
 generated-but-unexecuted test as passing, because the count comes from Surefire/Failsafe actually running
-it. As of this guide: 717 fast-tier tests, 363 integration-tier tests, 0 failures, 1 deliberate skip
-(`StoreRestartResumeIT`, `@Disabled` with the reason in its own javadoc).
+it. As of this guide (verified with a clean build, 2026-09-22): 792 fast-tier tests, 381 integration-tier
+tests, 0 failures, 1 deliberate skip
+(`StoreRestartResumeIT`, `@Disabled` with the reason in its own javadoc). **A raw, non-clean `target/`
+directory can also carry `Ds*LiveRun` reports** (e.g. `DsALiveRun`, `DsBLiveRun`) — these drive the real
+scenario evidence under `docs/evidence/ds-a|ds-b|ds-c/`, are excluded from the graded suite by name (same
+convention as `T073a-f*LiveDemo`), require an authenticated Claude CLI, and are run manually and
+separately; a clean build (`clean test`/`clean verify`) never includes their residue.
 
 **3. Where did the run retry, fall back, roll back, or compensate?**
 There is no run-level "fallback" to find — `FR-ORC-015` was retired (Decision K, `CR-032`); bounded retry
@@ -127,8 +145,12 @@ or database record, never only a conversation.
 **5. Which figures were measured, under what conditions, and which are proposed targets?**
 Every figure `RunMetrics` or `MttrCalculator` produces is wrapped in `MeasurementLabel`
 (`MEASURED`-with-conditions or `PROPOSED`-with-basis) — structurally, not by convention (T121). The MTTR
-method's own declared population, exclusions, and limitations: `docs/evidence/mttr-method.md`.
+method's own declared population, exclusions, and limitations: `docs/evidence/mttr-method.md`. Real retry,
+rollback, and compensation counts drawn from the three scenarios' own evidence (not a combined MTTR, which
+was never computed over a persisted cross-scenario population — stated honestly rather than fabricated):
+`quickstart.md` §5, "Reliability, as figures."
 
 **6. What did the baseline deliberately omit, which run implemented it, and where is that run's evidence?**
 Answered above, honestly: `docs/delivery/baseline-omissions.md` names it; the closing run (`T136a`, DS-B)
-has not executed as of this guide, and that file's own `open` status says so.
+has executed and closed it — `docs/evidence/ds-b/` carries the evidence, and that file's own status field
+now reads `Closed`.
