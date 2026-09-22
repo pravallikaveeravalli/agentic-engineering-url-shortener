@@ -1,0 +1,45 @@
+Task CR-049 — S3 (ambiguity detection) materiality-classification step. RED-FIRST, genuine.
+
+Root cause of T132's two DS-A live-run stops at S4 (owner's own diagnosis, verified by reading the
+current prompt): AmbiguityDetectionAiExecutor.buildPrompt() asks the model to classify each detected
+ambiguity's resolutionState as MATERIAL_PENDING or NOT_MATERIAL, but never states CR-007's own
+materiality predicate anywhere in the prompt -- the model has no criterion to apply, only the bare
+words "MATERIAL_PENDING or NOT_MATERIAL" with nothing distinguishing them.
+
+Command:
+  ./scripts/build.sh -q -Dtest=AmbiguityDetectionAiExecutorTest test
+
+Result: Tests run: 13, Failures: 1.
+
+  [ERROR] AmbiguityDetectionAiExecutorTest.promptStatesTheMaterialityPredicateGenerally
+  expected CR-007's own 'alter an approved obligation' language: <the real, current prompt text,
+  captured verbatim via a capturing StageAiProvider fake> ==> expected: <true> but was: <false>
+
+The real, current prompt (captured by the test, not paraphrased):
+  "You are the ambiguity-detection stage of a software requirement pipeline. Examine the normalized
+  requirements below for: missing acceptance criteria, undefined terms, unbounded quantifiers, missing
+  actors, self-referential constraints, contradictory bounds on the same field, and SEMANTIC
+  CONTRADICTIONS between different concepts (the kind no structural rule alone would catch). You MUST
+  NOT resolve any ambiguity you find -- only detect and record it; a human decides.
+
+  Respond with ONLY a JSON array, no prose. ... "resolutionState": "MATERIAL_PENDING" or
+  "NOT_MATERIAL", ..."
+
+Confirms the diagnosis exactly: "MATERIAL_PENDING or NOT_MATERIAL" is offered as a bare choice with
+zero criterion attached anywhere in the prompt.
+
+The companion negative test (promptContainsNoDsASpecificVocabulary) already passed against the CURRENT
+prompt, which is expected and correct -- there is nothing DS-A-specific in it yet, because there is
+nothing about materiality in it at all. That test's real job is to keep passing AFTER the fix, proving
+the added predicate stays general.
+
+Fix: CR-007's own predicate ("could alter an approved obligation... or determines which of two
+behaviours the system MUST exhibit... AND that resolution is not already fixed by an existing approved
+artifact... Non-materiality must be demonstrated, never assumed: when classification is uncertain, the
+item MUST be treated as material") is added to buildPrompt(), stated generally -- no reference to
+expiry, rounding, HTTP status codes, creators, owners, or any other DS-A-specific term.
+
+Re-run:
+  ./scripts/build.sh -q -Dtest=AmbiguityDetectionAiExecutorTest test
+
+Result: all green (see commit for exact counts).

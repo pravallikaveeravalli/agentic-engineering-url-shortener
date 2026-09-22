@@ -13,6 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -135,6 +136,90 @@ class AmbiguityDetectionAiExecutorTest {
 
         assertFalse(outcome.succeeded());
         assertEquals(FailureCategory.INTERNAL, outcome.failure().category());
+    }
+
+    // ==============================================================================================
+    // CR-049: the materiality-classification step. The predicate itself is stated generally, in
+    // CR-007's own terms — a reviewer reading only the prompt must see a general predicate, not a
+    // DS-A-specific answer key. These tests capture the REAL prompt text and check both directions.
+    // ==============================================================================================
+
+    @Test
+    @DisplayName("CR-049: the prompt states CR-007's materiality predicate, generally")
+    void promptStatesTheMaterialityPredicateGenerally() throws Exception {
+        String[] capturedPrompt = new String[1];
+        StageAiProvider capturing = prompt -> {
+            capturedPrompt[0] = prompt;
+            return new AiResponse("claude-test-fixture", "[{"
+                    + "\"ambiguityClass\":\"MISSING_ACCEPTANCE_CRITERIA\","
+                    + "\"affectedPath\":\"n/a\",\"resolutionState\":\"NOT_MATERIAL\","
+                    + "\"qualityChecksPerformed\":\"checked\","
+                    + "\"noClarificationReason\":\"already fixed by an existing approved artifact\"}]");
+        };
+
+        new AmbiguityDetectionAiExecutor(capturing).execute(inputWith("[{\"statement\":\"x\"}]"));
+
+        String prompt = capturedPrompt[0];
+        String lower = prompt.toLowerCase();
+        assertTrue(lower.contains("material"), "the prompt must name materiality at all");
+        assertTrue(lower.contains("approved obligation") || lower.contains("alter an approved"),
+                "expected CR-007's own 'alter an approved obligation' language: " + prompt);
+        assertTrue(lower.contains("already fixed by an existing approved artifact")
+                        || lower.contains("existing approved artifact"),
+                "expected CR-007's own 'not already fixed by an existing approved artifact' language: "
+                        + prompt);
+        assertTrue(lower.contains("uncertain"),
+                "expected CR-007's own closing default to be stated: uncertainty routes to material: "
+                        + prompt);
+    }
+
+    @Test
+    @DisplayName("CR-049: the predicate contains ZERO DS-A-specific vocabulary — general, not an answer key")
+    void promptContainsNoDsASpecificVocabulary() throws Exception {
+        String[] capturedPrompt = new String[1];
+        StageAiProvider capturing = prompt -> {
+            capturedPrompt[0] = prompt;
+            return new AiResponse("claude-test-fixture", "[{"
+                    + "\"ambiguityClass\":\"MISSING_ACCEPTANCE_CRITERIA\","
+                    + "\"affectedPath\":\"n/a\",\"resolutionState\":\"NOT_MATERIAL\","
+                    + "\"qualityChecksPerformed\":\"checked\","
+                    + "\"noClarificationReason\":\"already fixed by an existing approved artifact\"}]");
+        };
+
+        new AmbiguityDetectionAiExecutor(capturing).execute(inputWith("[{\"statement\":\"x\"}]"));
+
+        String lower = capturedPrompt[0].toLowerCase();
+        List<String> forbidden = List.of("expiry", "expires", "expiresat", "rounding", "round", "401",
+                "creator", "owner", "secondsremaining", "link");
+        for (String term : forbidden) {
+            assertFalse(lower.contains(term),
+                    "the prompt must state the materiality predicate generally, with zero reference to "
+                            + "any specific DS-A finding — found DS-A-specific term '" + term + "' in: "
+                            + capturedPrompt[0]);
+        }
+    }
+
+    @Test
+    @DisplayName("an explicit JSON null for noClarificationReason on a MATERIAL_PENDING record is accepted, "
+            + "same as an omitted key — found live via the CR-049 compensating check")
+    void explicitNullNoClarificationReasonOnMaterialIsAccepted() throws Exception {
+        // A real model may include the key with an explicit JSON null rather than omitting it entirely —
+        // both mean "no reason given", and MATERIAL_PENDING correctly has none to give.
+        StageAiProvider provider = fixedResponse("[{"
+                + "\"ambiguityClass\":\"UNDEFINED_TERM\","
+                + "\"affectedPath\":\"the term 'trusted partner' is used without any definition anywhere\","
+                + "\"resolutionState\":\"MATERIAL_PENDING\","
+                + "\"qualityChecksPerformed\":\"searched the requirement set for a definition; found none\","
+                + "\"noClarificationReason\":null"
+                + "}]");
+
+        StageOutcome outcome = new AmbiguityDetectionAiExecutor(provider).execute(inputWith("[...]"));
+
+        assertTrue(outcome.succeeded(), outcome.succeeded() ? "" : "unexpected failure: " + outcome.failure());
+        JsonNode records = JSON.readTree(outcome.producedArtifacts().get(0).content());
+        assertEquals("MATERIAL_PENDING", records.get(0).get("resolutionState").asText());
+        assertFalse(records.get(0).has("noClarificationReason"),
+                "an inapplicable field must not resurface in the produced artifact either");
     }
 
     @Test

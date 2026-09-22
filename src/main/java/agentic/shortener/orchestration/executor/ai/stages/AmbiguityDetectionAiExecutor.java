@@ -70,6 +70,22 @@ public final class AmbiguityDetectionAiExecutor implements StageExecutor {
                 + "bounds on the same field, and SEMANTIC CONTRADICTIONS between different concepts (the "
                 + "kind no structural rule alone would catch). You MUST NOT resolve any ambiguity you "
                 + "find — only detect and record it; a human decides.\n\n"
+                + "For every ambiguity you detect, you MUST ALSO classify its MATERIALITY, using exactly "
+                + "this predicate — it decides whether a human is actually consulted, so apply it "
+                + "precisely rather than by impression:\n\n"
+                + "An ambiguity is MATERIAL_PENDING if and only if its resolution could alter an approved "
+                + "obligation (any functional or non-functional requirement, a gate condition, a stated "
+                + "scope boundary, the security posture, or a binding validation target), or determines "
+                + "which of two behaviours the system MUST exhibit — AND that resolution is not already "
+                + "fixed by an existing approved artifact (a schema, a domain invariant, an existing "
+                + "policy, or an already-defined contract).\n\n"
+                + "An ambiguity is NOT_MATERIAL if and only if you can AFFIRMATIVELY SHOW its resolution "
+                + "cannot alter any obligation or required behaviour — for example, because an existing "
+                + "approved artifact already fixes the answer, or because every conformant choice "
+                + "satisfies every stated obligation equally. Non-materiality must be demonstrated, never "
+                + "assumed: WHEN CLASSIFICATION IS UNCERTAIN, THE ITEM MUST BE TREATED AS MATERIAL_PENDING. "
+                + "This default is not optional — the burden of proof runs toward materiality, not away "
+                + "from it.\n\n"
                 + "Respond with ONLY a JSON array, no prose. If you find nothing, the array MUST still "
                 + "contain exactly one element with resolutionState \"NOT_MATERIAL\" naming, "
                 + "substantively, what checks you actually performed — never an empty array standing in "
@@ -79,8 +95,10 @@ public final class AmbiguityDetectionAiExecutor implements StageExecutor {
                 + "(at least one full sentence, not a bare field reference like \"R1.statement\") of "
                 + "exactly which requirement(s) or clause(s) are involved and why, \"resolutionState\": "
                 + "\"MATERIAL_PENDING\" "
-                + "or \"NOT_MATERIAL\", \"qualityChecksPerformed\": substantive string, "
-                + "\"noClarificationReason\": substantive string, REQUIRED when resolutionState is "
+                + "or \"NOT_MATERIAL\" per the predicate above, \"qualityChecksPerformed\": substantive "
+                + "string, \"noClarificationReason\": substantive string stating SPECIFICALLY which "
+                + "existing approved artifact already fixes the answer, or why every conformant choice "
+                + "satisfies every stated obligation equally — REQUIRED when resolutionState is "
                 + "NOT_MATERIAL, omitted otherwise}.\n\nNormalized requirements:\n" + requirements;
     }
 
@@ -138,7 +156,13 @@ public final class AmbiguityDetectionAiExecutor implements StageExecutor {
 
         String affectedPath = substantiveOrThrow(element, "affectedPath");
         String qualityChecksPerformed = substantiveOrThrow(element, "qualityChecksPerformed");
-        String noClarificationReason = element.has("noClarificationReason")
+        // A model may either omit the key entirely or include it with an explicit JSON null to mean
+        // "no reason given" — both are the same fact and must be treated identically. has() alone answers
+        // "does the key exist", not "is there a usable value", so an explicit null previously fell through
+        // to substantiveOrThrow and was rejected as malformed even though MATERIAL_PENDING correctly has
+        // no reason to give. Found live via the CR-049 compensating check, not hypothesized.
+        JsonNode reasonNode = element.get("noClarificationReason");
+        String noClarificationReason = (reasonNode != null && !reasonNode.isNull())
                 ? substantiveOrThrow(element, "noClarificationReason") : null;
 
         // Structural validation (non-blank, reason-iff-NOT_MATERIAL) reuses AmbiguityRecord's own
