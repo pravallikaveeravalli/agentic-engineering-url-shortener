@@ -1080,6 +1080,25 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
     about `main`'s own current state). Full finding, options disclosed, not decided here:
     `docs/evidence/ds-a/attempt-21-s7-succeeded-s8-finding.md`. Run correctly reached `SAFE_STOP` (branch
     `ds-run/T1-039d59ef` kept as real evidence). **Still not `COMPLETED`** — S9 onward not reached.
+  - **Progress (2026-09-22, CR-064)**: `ContractFilesLintTest`'s own count bumped 8→9 (CR-064), landed as a
+    real, deterministic follow-up commit applied on top of S7's own real feature branch (`DsALiveRun`'s new
+    `s7WithBookkeepingFollowup` wrapper — the same `GitWorktreeBranchApplier` machinery, a real search/replace,
+    a real commit, a real compile check; no live AI call for this step, since "how many paths does the
+    document contain" has exactly one correct, mechanically-derivable answer). A fresh live run then reached
+    **S7 SUCCEEDED again** (`ds-run/T1-5218f637`, a real `pom.xml`/`openapi.yaml`/`VersionController.java`/
+    `VersionResponse.java` change — independently re-derived by the model, not identical to attempt 21's own)
+    with the bookkeeping follow-up applied cleanly on top (`ds-run/T1-cr064-path-count-e444449a`, diff
+    verified byte-exact against CR-064's own spec), and **S8 SUCCEEDED — the first time the real 775-test
+    fast tier has ever passed against a live S7 change in this task's history.**
+    **S9 then failed**, on a genuinely new, previously-unexercised structural finding: `TestingEngine`'s own
+    real `"test-results"` artifact is a plain summary STRING (aggregate pass/fail counts), but
+    `DocumentationAiExecutor` requires a JSON object with a non-empty `"executedBehaviors"` array (T149's
+    drift check, Constitution X) — a producer/consumer SHAPE mismatch, not a key-name alias gap, never before
+    surfaced because S8 has never succeeded against a real live change until this turn. Full finding, four
+    disclosed options, not decided here: `docs/evidence/ds-a/attempt-22-s9-executedbehaviors-finding.md`. Run
+    correctly `SAFE_STOP`; both real branches kept as evidence. **Still not `COMPLETED`** — S9 onward not
+    reached, this is a real design decision (what "an executed behaviour" concretely means) that needs the
+    owner's own judgment, not a mechanical fix like CR-064's own.
 - [ ] T133 [P] [US3] DS-A late-ambiguity escalation — `docs/evidence/ds-a/late-ambiguity.json`
   - **Req**: **DS-A**, FR-ORC-011, EC-021 · **Scn**: **DS-A** · **ADR**: ADR-009 · **Pre**: T132, T096
   - **Deps**: T096, T132 · **Par**: yes · **Artifact**: material ambiguity emerging mid-run suspends **only the affected path**; governed clarification and impact analysis follow; resumption from the correct state after explicit approval

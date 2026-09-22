@@ -2,11 +2,15 @@ package agentic.shortener.orchestration.conductor;
 
 import agentic.shortener.audit.AuditWriter;
 import agentic.shortener.audit.telemetry.StageTelemetry;
+import agentic.shortener.orchestration.executor.ExecutorKind;
+import agentic.shortener.orchestration.executor.ProducedArtifact;
 import agentic.shortener.orchestration.executor.StageExecutor;
+import agentic.shortener.orchestration.executor.StageOutcome;
 import agentic.shortener.orchestration.executor.ai.AiResponse;
 import agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProvider;
 import agentic.shortener.orchestration.executor.ai.StageAiProvider;
 import agentic.shortener.orchestration.executor.ai.stages.AmbiguityDetectionAiExecutor;
+import agentic.shortener.orchestration.executor.ai.stages.BranchApplier;
 import agentic.shortener.orchestration.executor.ai.stages.DecompositionAiExecutor;
 import agentic.shortener.orchestration.executor.ai.stages.DesignAiExecutor;
 import agentic.shortener.orchestration.executor.ai.stages.DocumentationAiExecutor;
@@ -34,6 +38,8 @@ import agentic.shortener.orchestration.lineage.RequirementStatus;
 import agentic.shortener.orchestration.lineage.RequirementType;
 import agentic.shortener.orchestration.lineage.ResolutionState;
 import agentic.shortener.orchestration.reliability.Backoff;
+import agentic.shortener.orchestration.reliability.FailureCategory;
+import agentic.shortener.orchestration.reliability.FailureEnvelope;
 import agentic.shortener.orchestration.reliability.RetryPolicy;
 import agentic.shortener.orchestration.state.RetentionPolicy;
 import agentic.shortener.orchestration.state.RunState;
@@ -278,7 +284,7 @@ class DsALiveRun extends PostgresIntegrationTest {
             case 3 -> s3;
             case 5 -> s5;
             case 6 -> s6;
-            case 7 -> s7;
+            case 7 -> s7WithBookkeepingFollowup(s7);
             case 9 -> s9;
             default -> throw new IllegalArgumentException("no executor for stage " + stageNumber);
         };
@@ -425,6 +431,71 @@ class DsALiveRun extends PostgresIntegrationTest {
 
         System.out.println("DS-A LIVE RUN: implemented for real, reached S11 (release readiness), "
                 + "AWAITING_APPROVAL. See docs/evidence/ds-a/pending-gate-s11-context.md for the owner.");
+    }
+
+    /**
+     * CR-064: wraps the real {@link ImplementationAiExecutor} so that, once its own real, AI-authored change
+     * succeeds, one further, purely mechanical follow-up is applied on top of it, on the same branch
+     * lineage, before S8 ever sees the result -- {@code ContractFilesLintTest}'s own change-controlled
+     * OpenAPI path count, which the real feature legitimately makes stale by exactly one. This follow-up's
+     * own content is NOT model-authored: "how many paths does the document now contain" has exactly one
+     * correct answer, derivable from the document itself, so it is applied directly through the SAME real
+     * {@link GitWorktreeBranchApplier} machinery CR-060 already built and proved (a real search/replace, a
+     * real commit, a real compile check) rather than routed through another live AI call for a decision with
+     * no genuine discretion in it. If the real feature's own S7 dispatch fails, this never runs at all --
+     * only a genuinely successful feature change ever receives the bookkeeping follow-up.
+     */
+    private StageExecutor s7WithBookkeepingFollowup(StageExecutor realS7) {
+        return input -> {
+            StageOutcome outcome = realS7.execute(input);
+            if (!outcome.succeeded()) {
+                return outcome;
+            }
+            String featureBranch = outcome.producedArtifacts().get(0).content();
+            System.out.println("DS-A LIVE RUN: S7's real feature branch is " + featureBranch
+                    + " -- applying CR-064's own deterministic bookkeeping follow-up on top of it.");
+
+            com.fasterxml.jackson.databind.node.ObjectNode root = JSON.createObjectNode();
+            com.fasterxml.jackson.databind.node.ArrayNode files = root.putArray("files");
+            com.fasterxml.jackson.databind.node.ObjectNode file = files.addObject();
+            file.put("path", "src/test/java/agentic/shortener/contract/ContractFilesLintTest.java");
+            file.put("action", "EDIT");
+            com.fasterxml.jackson.databind.node.ObjectNode edit = file.putArray("edits").addObject();
+            edit.put("search", "        // Eight paths after CR-013 added createRun and "
+                    + "recordGateDecision.\n"
+                    + "        assertEquals(8, document.path(\"paths\").size(),\n"
+                    + "                \"CR-013 took the document to eight paths; a different count "
+                    + "means the document and \"\n"
+                    + "                        + \"the record disagree\");");
+            edit.put("replace", "        // Nine paths after CR-013 added createRun and "
+                    + "recordGateDecision, and CR-064\n"
+                    + "        // added GET /v1/version.\n"
+                    + "        assertEquals(9, document.path(\"paths\").size(),\n"
+                    + "                \"CR-064 took the document to nine paths; a different count "
+                    + "means the document and \"\n"
+                    + "                        + \"the record disagree\");");
+
+            BranchApplier bookkeepingApplier = new GitWorktreeBranchApplier(REPO_ROOT, featureBranch);
+            BranchApplier.ApplyResult bookkeepingResult;
+            try {
+                bookkeepingResult = bookkeepingApplier.apply("T1-cr064-path-count", root.toString());
+            } catch (Exception e) {
+                return StageOutcome.failed(new FailureEnvelope(FailureCategory.INTERNAL,
+                        "CR-064's bookkeeping follow-up threw: " + e, false));
+            }
+            if (!bookkeepingResult.buildable()) {
+                return StageOutcome.failed(new FailureEnvelope(FailureCategory.INVALID_INPUT,
+                        "CR-064's bookkeeping follow-up did not apply/build cleanly on top of the real "
+                                + "feature branch " + featureBranch + ": " + bookkeepingResult.detail(),
+                        false));
+            }
+            System.out.println("DS-A LIVE RUN: CR-064 bookkeeping follow-up applied cleanly on "
+                    + bookkeepingResult.branchRef() + " -- this is the branch S8 onward will now see.");
+
+            return StageOutcome.succeeded(
+                    List.of(new ProducedArtifact("branchCommit", bookkeepingResult.branchRef(), List.of())),
+                    ExecutorKind.AI);
+        };
     }
 
     /** Applies a real, substantive `GateDecision` -- never under the routine-clarification delegation. */
