@@ -1341,11 +1341,19 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
   - **Deps**: T142 · **Par**: no · **Artifact**: unit, integration, API contract, orchestration transition, reliability, security, end-to-end — **each category non-empty and executed**
   - **TDD**: EVIDENCE · **Validate**: `./mvnw -q verify` with a per-category inventory report · **Docs**: — · **Trace**: `POL-TST-001`
   - **Guard**: a category present but empty fails `POL-TST-001`; generated-but-unexecuted tests never count · **Done**: seven categories, each with ≥1 executed test · **Approval**: none
-- [ ] T144 [P] Red-phase evidence audit — `docs/evidence/red-phase/index.md`
+- [x] T144 [P] Red-phase evidence audit — `docs/evidence/red-phase/index.md`
   - **Req**: **NFR-TST-002** · **Scn**: — · **ADR**: ADR-011 · **Pre**: T143
   - **Deps**: T143 · **Par**: yes · **Artifact**: index of captured failing-run outputs, one per RED-FIRST task, each showing the failure was **for the expected reason**
   - **TDD**: EVIDENCE · **Validate**: every RED-FIRST task has a stored artifact; tasks where TDD was impractical carry a recorded reason **and** executed validation · **Docs**: new file · **Trace**: NFR-TST-002
   - **Guard**: **evidenced, not asserted.** A compile error in the captured output does not satisfy the red phase · **Done**: index complete; no RED-FIRST task without evidence · **Approval**: none
+  - **Done (2026-09-22)**: `docs/evidence/red-phase/index.md` written as an honest audit, not a scorecard —
+    indexes 85 real captured files across two capture formats (structured Markdown-header logs and
+    raw/narrative sabotage write-ups, the two explicitly NOT conflated), cross-references `git log`'s own
+    RED-FIRST/red-phase commit trail, and discloses the real gap plainly: well under half of ~150 numbered
+    tasks carry red-phase-labelled evidence by raw task-ID count, with specific task IDs named, and nothing
+    beyond T131d (later work — T132 greenfield, T136a, T138/T139 DS-C — uses the `docs/evidence/ds-*/` and
+    governance-index conventions instead, stated as a different convention, not silently treated as
+    coverage).
 - [ ] T144a [P] Checklist `[Now]` re-evaluation written to the results register — `specs/001-agentic-sdlc-url-shortener/checklists/EVALUATION-RESULTS.md`
   - **Req**: **Constitution §Assessment Scope** (repository as source of truth), **Constitution XI.10**, `POL-TRC-001` · **Scn**: — · **ADR**: — · **Pre**: T143
   - **Deps**: T143 · **Par**: yes (own file) · **Artifact**: §Pass 2 of the register populated — **per-item** outcome (`PASS` / `FAIL` / `NOT-EVALUABLE`), the artifact and location inspected, and for every `FAIL` the finding and its disposition record, across all **231 `[Now]`** items
@@ -1396,11 +1404,16 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
   - **TDD**: N/A-DOC · **Validate**: cross-checked against every ADR's Risks section and every DF entry; the fallback retirement is present as a **named absence** stating what the assignment asks, what is demonstrated instead, and why — **not** as a silent omission · **Docs**: new file · **Trace**: Constitution XI point 8
   - **Guard**: **undisclosed limitations are a release-blocking condition** (condition 8). Disclosure is cheaper than discovery · **Done**: no ADR risk or DF item absent · **Approval**: none
   - **Progress (2026-09-22)**: written — `docs/LIMITATIONS.md`, 11 sections covering the T145a-d performance deferral, the live-AI pipeline's own real non-determinism (the guards as the control, not a bug), the requirement-completeness ceiling finding, the deferred per-creator aggregate redirect tier (T136a not yet closed it), the retention posture (CR-017), the governance-surface/actor-identity limitation, PVT-016 as engineering judgement (PVT-017 confirmed withdrawn, never minted — CR-023), the fallback retirement as a named absence (CR-032), single-host/compressed-time measurement scope, meta-schema lint coverage, and an explicit cross-check against every ADR's own Risks table and every DF entry (DF-001/002/003/005 resolved; DF-004 open by design). Motivated directly by S11's own real, live release-readiness refusal (attempt 26, condition 8) — written to close a genuine gate condition, not as a standalone exercise.
-- [ ] T148 [P] Governance-evidence index — `docs/evidence/governance-index.md`
+- [x] T148 [P] Governance-evidence index — `docs/evidence/governance-index.md`
   - **Req**: Constitution §Gate semantics, `POL-CHG-002` · **Scn**: — · **ADR**: — · **Pre**: T146
   - **Deps**: T146 · **Par**: yes · **Artifact**: every gate decision, change request, exception, and ADR with its outcome, authority, date, and commit
   - **TDD**: N/A-DOC · **Validate**: `POL-CHG-002` — every mandatory gate has a materialized record; zero unmaterialized outcomes · **Docs**: new file · **Trace**: Constitution §Governance condition 3
   - **Guard**: an unmaterialized gate outcome blocks release readiness; this index is how it is detected rather than assumed · **Done**: every gate, CR, exception, and ADR indexed · **Approval**: none
+  - **Done (2026-09-22)**: `docs/evidence/governance-index.md` written and merged from `phase9-docs` —
+    indexes all 14 ADRs (+4 ADR-004 amendments), 70 change-control records (CR-001–CR-070, no gaps,
+    updated with CR-069/CR-070 on merge), 16 gate decisions (9 program-level, 4 ds-a, 1 ds-b, 2 ds-c),
+    1 constitution amendment, 1 standing delegation, and confirms 0 exceptions (`docs/governance/
+    exceptions/` does not exist on disk, stated as the honest zero-to-date rather than an oversight).
 - [ ] T149 [P] Documentation-behaviour drift check — `docs/evidence/drift-check.md`
   - **Req**: Constitution X, §Governance condition 7 · **Scn**: — · **ADR**: — · **Pre**: T126, T143
   - **Deps**: T126, T143 · **Par**: yes · **Artifact**: every documented behaviour matched to an executed test; every implemented behaviour matched to documentation
