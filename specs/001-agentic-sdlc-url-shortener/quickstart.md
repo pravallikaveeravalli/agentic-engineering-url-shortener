@@ -2,25 +2,26 @@
 
 **Feature**: 001-agentic-sdlc-url-shortener | **Date**: 2026-09-19 | **Plan**: [plan.md](./plan.md)
 
-**Status**: **T127 executed this guide, 2026-09-21.** Sections 1-2 and the retention/restart claims in
-section 3 were run for real on the verification machine; corrections below are the result. Two findings
-disclosed rather than smoothed over at that time: (1) `psql` was not installed on the verification machine —
-the provisioning script's own `--emit-sql` fallback is documented as the corrected path; (2) at that time,
-there was no public HTTP endpoint to create or submit a fresh orchestration run. **Corrected forward,
-2026-09-21 (T082a, CR-045)**: `POST /v1/runs` (`RunSubmissionController`) now exists alongside
-`RunInspectionController` (`GET /v1/runs/{runId}`) and `GateDecisionController`
-(`POST .../gates/{gateId}/decision`) — a requirement can genuinely be submitted over HTTP. Its own response
-returns before the run is fully driven (a fast, bounded reply; the pipeline advances on a background thread
-afterward — poll `GET /v1/runs/{runId}` to watch it progress), and the run-orchestration driver behind it
-(`Conductor`, T131a) is itself proven by `ConductorIT` (parallel fan-out and join, gate-pause-and-resume,
-terminal outcome) rather than by a live demonstration scenario. Running the three demonstration scenarios as
-live, submitted runs is Phase 8 work; as of this correction, one attempt at the greenfield scenario (DS-A)
-reached S3 before a real, external Gemini API quota exhaustion suspended it —
-`docs/evidence/ds-a/run-snapshot-ATTEMPT-1-BLOCKED-gemini-quota-exhausted.md` — not yet a completed
-scenario run. The six AI-capable stages have each been individually proven with a real, live model call
-(`docs/evidence/ai-demos/`), and the full deterministic reliability/policy/readiness machinery is proven by
-the automated test suite — what remains unverified by a literal command in this guide is a completed,
-end-to-end, HTTP-submitted DS-A/B/C run reaching its terminal outcome.
+**Status**: **T127 executed this guide, 2026-09-21; superseded by the final state below, 2026-09-22.**
+Sections 1-2 and the retention/restart claims in section 3 were run for real on the verification machine.
+Two findings from that pass, still true: (1) `psql` was not installed on the verification machine — the
+provisioning script's own `--emit-sql` fallback is the corrected path; (2) at that time there was no public
+HTTP endpoint to submit a fresh orchestration run — closed the same day (T082a, CR-045): `POST /v1/runs`
+(`RunSubmissionController`) now exists alongside `RunInspectionController` (`GET /v1/runs/{runId}`) and
+`GateDecisionController` (`POST .../gates/{gateId}/decision`). Its own response returns before the run is
+fully driven (a fast, bounded reply; the pipeline advances on a background thread afterward — poll
+`GET /v1/runs/{runId}` to watch it progress), and the run-orchestration driver behind it (`Conductor`,
+T131a) is proven both by `ConductorIT` and by three real, live, end-to-end scenario runs (below).
+
+**The three demonstration scenarios have run, live, to completion or to a genuine, disclosed stopping
+point** — greenfield (DS-A), brownfield (DS-B), ambiguous (DS-C), all on the Claude transport
+(`ClaudeCodeCliStageAiProvider`, model `claude-sonnet-5`, [ADR-004 Amendment 04](../../docs/governance/adr/ADR-004-amendment-04-claude-cli-nesting-corrected.md),
+which supersedes Amendment 03's Gemini choice for live/scenario runs — the quota exhaustion that blocked
+the very first DS-A attempt under Amendment 03's transport is exactly why). Evidence:
+`docs/evidence/ds-a/`, `docs/evidence/ds-b/`, `docs/evidence/ds-c/` — see §4 below for what each honestly
+shows and does not. The six AI-capable stages were additionally each individually proven with a real, live
+model call over the Gemini transport (`docs/evidence/ai-demos/`), demonstrating the transport seam itself
+is pluggable — unit-level evidence, not scenario evidence.
 
 ---
 
@@ -51,12 +52,11 @@ injected fakes (FR-ORC-030), so the test suite never calls a live provider.
 
 ## What a run demonstrates
 
-**Design intent, verified at the mechanism level, and — as of T082a/CR-045 — genuinely reachable over HTTP**
-(see the Status note above). Everything below is real and tested (retry, gates, rollback, compensation,
-stage 7's own suspend-and-ask behavior, the executor-kind labelling), proven by the automated suite and, for
-the AI-capable stages, by real live model calls. The FIRST sentence below is no longer aspirational: `POST
-/v1/runs` exists and admits an arbitrary requirement of your own — see sections 4 and 5's own correction
-notes for exactly what is and is not yet demonstrated by a completed live run.
+**Design intent, verified at the mechanism level and genuinely reachable over HTTP** (see the Status note
+above). Everything below is real and tested (retry, gates, rollback, compensation, stage 7's own
+suspend-and-ask behavior, the executor-kind labelling), proven by the automated suite and, for the
+AI-capable stages, by real live model calls — including three full, live, end-to-end scenario runs (§4
+below) over the real `POST /v1/runs` surface, not only the mechanism-level argument.
 
 **You are not limited to the three prepared scenarios. Submit any requirement you like.** The system is
 required to process arbitrary requirements without any change to its executors (FR-ORC-028, SC-016), and the
@@ -132,12 +132,13 @@ Alongside them sits the out-of-scenario run described above. **You can read all 
 
 ```
 docker compose up -d                              # PostgreSQL only
-./scripts/build.sh test                            # fast tier: 717 tests, no Docker, no AI key, no network
+./scripts/build.sh test                            # fast tier: 792 tests, no Docker, no AI key, no network
 ./scripts/build.sh -DfailIfNoTests=false verify     # + integration tier: real Postgres via Testcontainers
 ```
 
-**Verified 2026-09-21**: fast tier — 717 tests, 0 failures. Integration tier — 363 tests, 0 failures, 1
-skipped (`StoreRestartResumeIT`, `@Disabled`; see "Resumption survives both restart classes" below).
+**Verified with a clean build, 2026-09-22**: fast tier — 792 tests, 0 failures. Integration tier — 381
+tests, 0 failures, 1 skipped (`StoreRestartResumeIT`, `@Disabled`; see "Resumption survives both restart
+classes" below).
 
 ### If the integration tier cannot reach the store
 
@@ -162,6 +163,15 @@ persistence, integration, orchestration-transition, approval, retry, timeout, fa
 rollback/compensation, safe-stop, resumption, replanning, concurrency, security, and end-to-end.
 
 **This is the single most important check**: if the **test suite** needs a key or a network, FR-ORC-030 is violated — reliability proofs are driven by injected fakes and must never reach a live provider. *(The check previously cited CN-011, which Decision J retired; the surviving obligation is FR-ORC-030’s and it is the one that matters for the tests.)*
+
+**If you see `DsALiveRun`, `DsBLiveRun`, `DsCClarificationRun`, or similar `*LiveRun` classes' own reports
+in a raw `target/surefire-reports/` directory** (not from the command above — these are excluded from it by
+name, matching every `T073a-f*LiveDemo` class), that is this project's own real, live scenario-driving code
+used to produce the committed `docs/evidence/ds-a|ds-b|ds-c/` evidence, run manually and separately (e.g.
+`./scripts/build.sh -q -Dtest=DsBLiveRun -DfailIfNoTests=false test`), never part of the graded suite, and
+requiring an authenticated Claude CLI to run at all. Stale residue from an earlier manual invocation in
+`target/` (git-ignored) can look like a failure on a superficial read; it is not part of `./scripts/build.sh
+test`'s own 792, and a genuinely clean build (`clean test`) has none of it.
 
 ---
 
@@ -302,18 +312,18 @@ policy is `FAIL` or an exception is unapproved or expired.
 ## 4. Run the three scenarios
 
 **Corrected 2026-09-21, corrected forward again same day (T082a/CR-045)**: `POST /v1/runs`
-(`RunSubmissionController`) now exists and genuinely admits a requirement — the original finding that no
-submission endpoint existed at all is no longer true. A `<run> scenario DS-A` CLI, as originally drafted
-here, still does not exist and this guide will not pretend otherwise; submitting a scenario means a real
-`POST /v1/runs` call with that scenario's requirement text as the body. Running the three demonstration
-scenarios as live, end-to-end submitted runs is Phase 8 work: one attempt at DS-A has been made and reached
-S3 before a real, external Gemini API quota exhaustion suspended it
-(`docs/evidence/ds-a/run-snapshot-ATTEMPT-1-BLOCKED-gemini-quota-exhausted.md`) — not yet a completed run.
+(`RunSubmissionController`) exists and genuinely admits a requirement. A `<run> scenario DS-A` CLI, as
+originally drafted here, does not exist and this guide will not pretend otherwise; submitting a scenario
+means a real `POST /v1/runs` call with that scenario's requirement text as the body — exactly how each of
+the three scenarios below was actually run.
 
-**What IS executed and verifiable today**, in place of the above: each of the six AI-capable stages
-(normalization, ambiguity detection, decomposition, design, implementation, documentation) has its own
-real, live demonstration against the actual model — not a scripted fake — with the exact command, the
-pinned model id, and the captured output on file:
+**All three demonstration scenarios have run live, on the Claude transport** (`ClaudeCodeCliStageAiProvider`,
+model `claude-sonnet-5`, ADR-004 Amendment 04 — which supersedes Amendment 03's Gemini choice for exactly
+this reason: the quota exhaustion that blocked the very first DS-A attempt under the Gemini transport).
+Separately, and earlier, each of the six AI-capable stages (normalization, ambiguity detection,
+decomposition, design, implementation, documentation) was individually proven with a real, live model call
+over the **Gemini** transport — unit-level evidence that the transport seam is genuinely pluggable, not
+scenario evidence:
 
 ```
 ./scripts/build.sh -q -Dtest=NormalizationAiExecutorLiveDemo -DfailIfNoTests=false test   # and *b, *c, *d, *e, *f
@@ -322,16 +332,16 @@ pinned model id, and the captured output on file:
 Evidence for each: `docs/evidence/ai-demos/T073a` through `T073f`-`*-gemini-demo.txt`. Every deterministic
 stage, every reliability property (retry, rollback, compensation, safe-stop, orchestrator-process
 resumption, replanning), the twelve-check policy engine, and all nine release-readiness conditions are
-proven by the automated test suite already run in step 1 — not by a scenario-specific command, because
-none of that machinery is scenario-specific.
+additionally proven by the automated test suite already run in step 1 — not by a scenario-specific command,
+because none of that machinery is scenario-specific.
 
-**What each scenario is designed to show, once run** (Phase 8, not yet executed as of this correction pass):
+**What each scenario actually showed, stated honestly — not what it was designed to show, in the abstract**:
 
-| Scenario | What to look for |
-|---|---|
-| **DS-A** | Stage 4 is `SKIPPED`. The run records the quality checks performed **and the explicit reason clarification was not required**. No gate fires artificially. |
-| **DS-B** | The subject is the **per-creator aggregate redirect limit** — FR-URL-016's third tier (PVT-014), deliberately deferred from the baseline, which builds only the per-creator creation tier and the per-code redirect tier. Confirm the **before-state** first: traffic spread across several links, each staying **under** the per-code limit, passes **unthrottled**. Then the seven-dimension impact analysis whose timestamp **precedes** the first code modification. Then the governed change: the same traffic is throttled, the response **names the aggregate tier without naming the creator**, the per-code tier is unregressed, and redirect latency is re-measured against PVT-001 with the ownership lookup now in the hot path. Retry and compensation records present. **This scenario's implementation step reaches a security-sensitive human gate — expect the run to stop and wait for a recorded decision, not to complete unattended.** |
-| **DS-C** | Ambiguity detected before implementation; only the affected path suspends; a replan event lists invalidated stages and **voided approvals**; the run resumes and terminates. |
+| Scenario | What ran, and what to look for | Evidence | Honest caveat |
+|---|---|---|---|
+| **DS-A — greenfield** (`GET /v1/version`) | S1→S10 ran clean in one continuous, real, live pass (attempt 26 of this engagement's own live-attempt history): one genuine S4 clarification, resolved under the owner's standing delegation; a real S6 design gate finding material decisions; real S7-authored code; a real S8 pass; S9's own drift guard confirming only actually-executed behaviour is documented. That run's own real feature is landed in this codebase. | `docs/evidence/ds-a/run.json`, `bundle/` | The literal S4-`SKIPPED` path this scenario's own task artifact names has never once occurred across roughly 30 real attempts — every real, well-formed requirement this engagement tried still surfaced genuine ambiguity (see `docs/evidence/ds-a/requirement-completeness-ceiling-finding.md`, and `docs/LIMITATIONS.md` §3). S11's own open release-readiness gate has not been reached within one single continuous run. |
+| **DS-B — brownfield** (the per-creator aggregate redirect tier, PVT-014) | Real, live retry (S3, a genuine harness-injected transient failure, two real attempts, the second reaching the live model) and real compensation (T090's own machinery against a real effect this run produced), both through the orchestrator. Three capped, real, live full-build attempts were also made seeking the tier's own code from a live S7 dispatch. | `docs/evidence/ds-b/run.json`, `test-results/`, `attempts-1-3-finding.md` | The tier's own code (`AggregateRedirectLimiter`) was **built directly**, not authored by any of those three live attempts — the owner directed this after the third attempt hit a genuine, novel live-AI defect (fixed, not yet re-verified live), judging a fourth attempt not worth the variance risk against an already fully-specified, already security-gate-approved design. Disclosed by name: `docs/evidence/ds-b/t136a-built-directly.md`. Before/after tests real and passing against the landed tier (`RateLimitIT`). |
+| **DS-C — ambiguous** (expire vs. retain vs. trusted-partner access) | The internal contradiction is detected and named before implementation; the silence path is demonstrated first — the run genuinely suspends (`SAFE_STOP`), deadlines disclosed, before any resolution; a replan event lists invalidated stages and voided approvals; the run resumes and reaches a terminal outcome. | `docs/evidence/ds-c/silence.json`, `replan.json`, `rejection.json` | The trusted-partner feature the requirement describes was never built — the owner accepted the detect→clarify→replan→resume *mechanism* as proven and explicitly declined to build the feature around it (`docs/governance/gate-decisions/ds-c/scenario-accepted-as-demonstrated.md`). |
 
 Each emits an evidence bundle carrying a per-node **executor-kind label** — `DETERMINISTIC`, `AI` or `HUMAN`
 (FR-ORC-029; "kind", not "mode", since **CR-001/CR-005** — and since **CR-028** there is no run-level mode at all). Deterministic executions are labelled as such and never
@@ -339,16 +349,13 @@ presented as AI work.
 
 ### Now run one of your own
 
-**Corrected 2026-09-21, corrected forward again same day (T082a/CR-045)**: a real submission surface now
-exists — `POST /v1/runs`, body `{"requirement": "<your text>"}`. The underlying claim this section is about
-(an arbitrary requirement completes the same governed lifecycle with no executor changes, FR-ORC-028/SC-016)
-is proven at the executor level: every `StageExecutor` implementation is structurally unable to see which
-scenario or demonstration produced its input (`StageInput` carries no scenario label,
-`StageExecutorContractTest` asserts the closed field list), so no executor CAN branch on recognizing a
-blessed input — and that structural guarantee now applies to a real, literal HTTP submission, not only to
-the mechanism-level argument. What is not yet demonstrated is a *completed* end-to-end run over
-reviewer-chosen input reaching a terminal outcome — real live AI-stage calls take real time, and this
-guide's own correction pass does not claim more than what has actually been run.
+A real submission surface exists — `POST /v1/runs`, body `{"requirement": "<your text>"}`. The underlying
+claim this section is about (an arbitrary requirement completes the same governed lifecycle with no
+executor changes, FR-ORC-028/SC-016) is proven both at the executor level — every `StageExecutor`
+implementation is structurally unable to see which scenario or demonstration produced its input
+(`StageInput` carries no scenario label, `StageExecutorContractTest` asserts the closed field list), so no
+executor CAN branch on recognizing a blessed input — and empirically, by the three scenarios above, each a
+different real, live-AI-authored path through the identical pipeline with no per-scenario code.
 
 ---
 
@@ -395,6 +402,33 @@ same mechanism `POL-TRC-001` uses at policy-evaluation time. `MttrCalculator` st
 exclusions (human wait, per `docs/evidence/mttr-method.md`), and separately counts unrecovered failures
 (T119) — every figure it or `RunMetrics` produces is wrapped in `MeasurementLabel` (`MEASURED`/`PROPOSED`),
 never a bare number.
+
+### Reliability, as figures — not just as tested mechanisms
+
+`docs/evidence/mttr-method.md`'s own declared population is `failure_event` rows from the three
+demonstration scenarios *and* the reliability test suite's own injected-fault tests, computed live against
+whatever a run's own database holds. This demonstration's own scenario runs each used a separate,
+ephemeral Testcontainers database (torn down at the end of that JVM process, per this project's own
+single-host, compressed-time scope, `docs/LIMITATIONS.md` §9) — so there is no single persisted database
+holding all three scenarios' `failure_event` rows together for `MttrCalculator` to compute one combined
+MTTR over after the fact. Fabricating one now would violate the same discipline `docs/evidence/mttr-method.md`
+itself states ("a bare number is not reportable"). What **is** real and citable, from the evidence each
+scenario actually left behind:
+
+| Mechanism | Real count | Population | Source |
+|---|---|---|---|
+| Retry (S3's real two-vote rule) | 2 of 2 controlled demonstrations recovered on the second attempt | n=2, harness-injected transient failure, DS-B | `docs/evidence/ds-b/attempts-1-3-finding.md` |
+| Rollback (S7's erasable-effect path — a change set that fails to apply/parse) | 5 real, organic occurrences, all correctly discarded (branch removed, nothing kept) | n=5, DS-A's own live attempt history, not injected | `docs/evidence/ds-a/run-snapshot-ATTEMPT-{14,15,17,19,25}-*.md` |
+| Compensation (T090, a real effect corrected) | 1 of 1 real, live demonstration succeeded | n=1, DS-B, a deliberate, disclosed exercise of tested machinery | `docs/evidence/ds-b/t136-compensation-only.md` |
+| MTTR (the method itself) | Asserted against a seeded population, not a demonstration-run population | Reliability test suite | `MttrCalculatorTest`, `MttrDenominatorTest` — run the command above |
+
+**Genuinely transient (`UNAVAILABLE`/`RATE_LIMITED`/`TIMEOUT`) live-AI failures were rare enough in this
+engagement's own real dispatch history that an organic retry rate cannot be meaningfully estimated from
+it** — nearly every real S3/S7 failure this engagement actually hit was classified a permanent category
+(malformed output, a domain-invariant violation), which `RetryRuling`'s own default-deny correctly never
+retries. Retry is real and proven, twice, live; its *natural* trigger rate against this project's own real
+AI-output failure mix is honestly closer to zero than to frequent, and that is disclosed here rather than
+implied otherwise by only showing the controlled demonstration.
 
 ---
 
