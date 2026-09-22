@@ -452,6 +452,44 @@ class DsALiveRun extends PostgresIntegrationTest {
                 return outcome;
             }
             String featureBranch = outcome.producedArtifacts().get(0).content();
+            String bookkeepingSearch = "        // Eight paths after CR-013 added createRun and "
+                    + "recordGateDecision.\n"
+                    + "        assertEquals(8, document.path(\"paths\").size(),\n"
+                    + "                \"CR-013 took the document to eight paths; a different count "
+                    + "means the document and \"\n"
+                    + "                        + \"the record disagree\");";
+
+            // CR-064's follow-up is idempotent: S7's own real dispatch is non-deterministic run to run, and
+            // occasionally (as found live) the model ALREADY includes this exact bookkeeping bump itself as
+            // part of its own real diff, ahead of this wrapper ever running. Checking the real, current
+            // content of the branch first -- rather than assuming the pre-bump text is always still there
+            // -- is what makes this genuinely idempotent instead of a hard failure on an already-solved
+            // problem.
+            String currentTestContent;
+            try {
+                ProcessRunner.Result show = ProcessRunner.run(
+                        List.of("git", "show",
+                                featureBranch + ":src/test/java/agentic/shortener/contract/"
+                                        + "ContractFilesLintTest.java"),
+                        REPO_ROOT, java.time.Duration.ofSeconds(30));
+                currentTestContent = show.succeeded() ? show.stdout() : "";
+            } catch (Exception e) {
+                currentTestContent = "";
+            }
+            if (!currentTestContent.contains(bookkeepingSearch)) {
+                if (currentTestContent.contains("assertEquals(9, document.path(\"paths\").size()")) {
+                    System.out.println("DS-A LIVE RUN: S7's own real change already included the "
+                            + "ContractFilesLintTest bump to nine paths -- CR-064's follow-up is a no-op "
+                            + "this run, skipping cleanly.");
+                    return outcome;
+                }
+                return StageOutcome.failed(new FailureEnvelope(FailureCategory.INTERNAL,
+                        "CR-064's bookkeeping follow-up found neither the expected pre-bump text nor an "
+                                + "already-correct nine-path assertion in ContractFilesLintTest.java on "
+                                + "branch " + featureBranch + " -- a real, unexpected state, not "
+                                + "something to force past", false));
+            }
+
             System.out.println("DS-A LIVE RUN: S7's real feature branch is " + featureBranch
                     + " -- applying CR-064's own deterministic bookkeeping follow-up on top of it.");
 
@@ -461,12 +499,7 @@ class DsALiveRun extends PostgresIntegrationTest {
             file.put("path", "src/test/java/agentic/shortener/contract/ContractFilesLintTest.java");
             file.put("action", "EDIT");
             com.fasterxml.jackson.databind.node.ObjectNode edit = file.putArray("edits").addObject();
-            edit.put("search", "        // Eight paths after CR-013 added createRun and "
-                    + "recordGateDecision.\n"
-                    + "        assertEquals(8, document.path(\"paths\").size(),\n"
-                    + "                \"CR-013 took the document to eight paths; a different count "
-                    + "means the document and \"\n"
-                    + "                        + \"the record disagree\");");
+            edit.put("search", bookkeepingSearch);
             edit.put("replace", "        // Nine paths after CR-013 added createRun and "
                     + "recordGateDecision, and CR-064\n"
                     + "        // added GET /v1/version.\n"
