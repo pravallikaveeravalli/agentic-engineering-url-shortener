@@ -367,6 +367,33 @@ class AmbiguityDetectionAiExecutorTest {
     }
 
     @Test
+    @DisplayName("CR-070: the prompt states ambiguityClass and resolutionState are disjoint vocabularies")
+    void promptStatesAmbiguityClassAndResolutionStateAreDisjoint() {
+        java.util.concurrent.atomic.AtomicReference<String> capturedPrompt = new java.util.concurrent.atomic
+                .AtomicReference<>();
+        StageAiProvider provider = prompt -> {
+            capturedPrompt.set(prompt);
+            return new AiResponse("claude-test-fixture", "[{"
+                    + "\"ambiguityClass\":\"UNDEFINED_TERM\","
+                    + "\"affectedPath\":\"the term 'current version' in requirement 1e is undefined\","
+                    + "\"resolutionState\":\"NOT_MATERIAL\","
+                    + "\"qualityChecksPerformed\":\"checked all other requirements for this dimension\","
+                    + "\"noClarificationReason\":\"no obligation constrains it, uncontested default applies\""
+                    + "}]");
+        };
+
+        StageOutcome outcome = new AmbiguityDetectionAiExecutor(provider).execute(inputWith("[...]"));
+
+        assertTrue(outcome.succeeded());
+        String prompt = capturedPrompt.get().toLowerCase();
+        assertTrue(prompt.contains("disjoint") || prompt.contains("two different fields drawing"),
+                "the prompt must state ambiguityClass and resolutionState draw from different vocabularies");
+        assertTrue(prompt.contains("must never be material_pending or not_material"),
+                "the prompt must explicitly forbid the real, live confusion observed (a resolutionState "
+                        + "value used as an ambiguityClass value): " + prompt);
+    }
+
+    @Test
     @DisplayName("NEGATIVE: resolutionState=RESOLVED from the detector is refused — only S4 may resolve")
     void detectorClaimingResolvedIsRefused() {
         StageAiProvider provider = fixedResponse("[{"

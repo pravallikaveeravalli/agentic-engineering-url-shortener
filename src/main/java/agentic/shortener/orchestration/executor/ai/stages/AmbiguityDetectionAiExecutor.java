@@ -45,6 +45,18 @@ import java.util.UUID;
  * two fields are never redundant with each other, gives a worked example showing both present and genuinely
  * different for the same element, and repeats "required on every element, no exception" at the point the
  * field is first named — never trusting a single mention buried among several other field descriptions.
+ *
+ * <h2>CR-070: ambiguityClass and resolutionState are never the same vocabulary — this is prompt hardening
+ * too, not a new validation rule</h2>
+ *
+ * <p>A real, live DS-B attempt (docs/evidence/ds-b's own run-snapshot.md) put {@code "NOT_MATERIAL"} — a
+ * {@link ResolutionState} value — into the {@code ambiguityClass} field, on two of eight elements in the
+ * same real answer. {@link #toRecord} already refused this correctly ({@code AmbiguityClass.valueOf}
+ * throwing on an unrecognized value, translated to a permanent {@code MalformedProviderOutputException}) —
+ * this fix does not touch that validation at all, only {@link #buildPrompt}, which now states explicitly,
+ * after the schema, that the two fields draw from disjoint vocabularies and names the exact confusion
+ * observed live. Not yet re-verified against a further live attempt within the same turn this was found
+ * (the turn's own capped-attempts discipline was already exhausted) — left for the next live DS-B attempt.
  */
 public final class AmbiguityDetectionAiExecutor implements StageExecutor {
 
@@ -141,6 +153,14 @@ public final class AmbiguityDetectionAiExecutor implements StageExecutor {
                 + "settles it.\", \"noClarificationReason\": \"No stated obligation constrains this "
                 + "dimension, and the framework's own standard behaviour for an unaddressed case is "
                 + "uncontested, so every conformant choice satisfies every stated requirement equally.\"}."
+                + "\n\nCR-070: ambiguityClass and resolutionState are TWO DIFFERENT fields drawing from TWO "
+                + "DIFFERENT, DISJOINT vocabularies -- a real, live answer once put MATERIAL_PENDING (a "
+                + "resolutionState value) into the ambiguityClass field, which this stage refuses outright. "
+                + "ambiguityClass MUST be exactly one of the seven values listed above (MISSING_ACCEPTANCE_"
+                + "CRITERIA, UNDEFINED_TERM, UNBOUNDED_QUANTIFIER, MISSING_ACTOR, SELF_REFERENTIAL_"
+                + "CONSTRAINT, CONTRADICTORY_BOUNDS, SEMANTIC_CONTRADICTION) and must NEVER be "
+                + "MATERIAL_PENDING or NOT_MATERIAL -- those belong only in resolutionState, never in "
+                + "ambiguityClass."
                 + "\n\nNormalized requirements:\n" + requirements;
     }
 
