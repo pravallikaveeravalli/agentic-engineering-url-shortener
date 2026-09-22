@@ -31,6 +31,16 @@ import java.util.Set;
  * cross-checked against it, and any entry not present there is refused. A documented behaviour with no
  * corresponding executed test is not merely unverified — it is invented, and Constitution I forbids
  * inventing scope as much for prose as for code.
+ *
+ * <h2>CR-066: making the producer honest, never the guard weaker</h2>
+ *
+ * <p>A real, live attempt (docs/evidence/ds-a/attempts-24-25-finding.md) had the model name a
+ * plausible-sounding test that was never in that run's own real results — the guard correctly refused it.
+ * The fix is entirely on the prompt side: {@link #buildPrompt} now prints the allow-list of real executed
+ * behaviours as its own explicit, bounded, "copy verbatim or not at all" list, separate from the raw {@code
+ * results} JSON blob's own {@code total}/{@code failed}/{@code report} noise, rather than asking the model to
+ * "consult the results below" as one instruction among several. The cross-check in {@link #parse} — the
+ * actual guard — is untouched.
  */
 public final class DocumentationAiExecutor implements StageExecutor {
 
@@ -63,7 +73,7 @@ public final class DocumentationAiExecutor implements StageExecutor {
             return StageOutcome.failed(ProviderFailureTranslator.forSubprocessProvider().translate(e));
         }
 
-        return AiStageSupport.run(provider, buildPrompt(change, results),
+        return AiStageSupport.run(provider, buildPrompt(change, executedBehaviors),
                 response -> parse(response, executedBehaviors));
     }
 
@@ -86,13 +96,30 @@ public final class DocumentationAiExecutor implements StageExecutor {
         return behaviors;
     }
 
-    private static String buildPrompt(String change, String results) {
+    /** CR-066: the allow-list is printed explicitly and prominently, separate from the raw {@code results}
+     * JSON blob it came from — burying it inside {@code total}/{@code failed}/{@code report} noise is
+     * exactly the shape a real, live attempt drifted against (docs/evidence/ds-a/attempts-24-25-finding.md:
+     * the model named a plausible-sounding test that was never in that run's own real results). The
+     * instruction is verbatim, copy-paste selection from a visibly bounded list, not "consult the results
+     * below" as one instruction among many. */
+    private static String buildPrompt(String change, Set<String> executedBehaviors) {
+        StringBuilder allowList = new StringBuilder();
+        for (String behavior : executedBehaviors) {
+            allowList.append("- ").append(behavior).append('\n');
+        }
         return "You are the documentation stage of a software requirement pipeline. Update documentation "
-                + "to reflect ONLY the behaviour delivered and verified in THIS run — you MUST NOT describe "
-                + "any behaviour that was not actually executed by a test in the results below.\n\n"
-                + "Respond with ONLY JSON, no prose: {\"documentation\": string, \"behaviorsDescribed\": "
-                + "[every behaviour name from the results below that your documentation text describes]}."
-                + "\n\nChange:\n" + change + "\n\nTest results:\n" + results;
+                + "to reflect ONLY the behaviour delivered and verified in THIS run.\n\n"
+                + "Below is the COMPLETE and ONLY list of behaviours this run actually verified. Every "
+                + "entry in your own 'behaviorsDescribed' array MUST be copied VERBATIM, character for "
+                + "character, from this list. You MUST NOT invent, generalize, paraphrase, combine, "
+                + "abbreviate, or guess a name similar to one on this list — if a behaviour is not copied "
+                + "EXACTLY from this list, it does not exist for the purposes of this run, even if you "
+                + "believe it was probably also true or was tested in some other run. If nothing on this "
+                + "list is worth documenting, describe fewer of them — never describe something not on it.\n\n"
+                + "ALLOWED behaviours (copy exactly, or not at all):\n" + allowList
+                + "\nRespond with ONLY JSON, no prose: {\"documentation\": string, \"behaviorsDescribed\": "
+                + "[zero or more entries copied verbatim from the ALLOWED list above]}."
+                + "\n\nChange:\n" + change;
     }
 
     private static List<ProducedArtifact> parse(AiResponse response, Set<String> executedBehaviors) {

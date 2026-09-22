@@ -41,6 +41,20 @@ import java.util.Objects;
  * performs the actual string search/replace or file write, deterministically, in the isolated worktree — this
  * class still authors nothing to disk itself and still never executes AI output as text.
  *
+ * <h2>CR-066: robust extraction, one bounded self-correction retry, before ever failing on malformed JSON</h2>
+ *
+ * <p>A real, live attempt (docs/evidence/ds-a/attempts-24-25-finding.md) showed the model's own JSON answer
+ * occasionally fails to parse at all — upstream of the search/replace mechanism above, which is never even
+ * reached in that case. Two changes address this: {@link #extractJsonCandidate} tries several real shapes a
+ * live answer can take (a fenced block anywhere, not only a leading one; bare JSON; JSON surrounded by stray
+ * prose with no fence) before ever concluding nothing usable was said; and a genuine parse failure gets
+ * exactly ONE internal retry — a fresh call showing the model its own prior answer and the specific reason it
+ * was refused — before the stage fails. This retry is safe precisely because it happens strictly before
+ * {@link BranchApplier#apply} is ever called: no git effect has occurred yet, so EC-033's own
+ * non-idempotent-git-effect concern (why S7 is excluded from the ORCHESTRATOR's ordinary retry set) does not
+ * apply to it at all — from {@link agentic.shortener.orchestration.conductor.Conductor}'s own point of view
+ * this is still exactly one {@code StageOutcome} per dispatch, never a second stage attempt.
+ *
  * <h2>Why a build failure — or a search block that does not match — is {@code INVALID_INPUT}, not
  * {@code INTERNAL}</h2>
  *
@@ -87,9 +101,10 @@ public final class ImplementationAiExecutor implements StageExecutor {
         // change -- exactly as before this key existed.
         String existingFiles = input.inputArtifacts().get(INPUT_EXISTING_FILES_KEY);
 
+        String prompt = buildPrompt(task, design, existingFiles);
         AiResponse response;
         try {
-            response = provider.invoke(buildPrompt(task, design, existingFiles));
+            response = provider.invoke(prompt);
         } catch (Exception e) {
             // TIMEOUT is EXCLUDED from S7's own declared retryable set (EC-033: the git effect is
             // non-idempotent), unlike every other AI-capable stage. The translator still classifies it
@@ -101,8 +116,22 @@ public final class ImplementationAiExecutor implements StageExecutor {
         String changeSet;
         try {
             changeSet = extractChangeSet(response.content());
-        } catch (Exception e) {
-            return StageOutcome.failed(TRANSLATOR.translate(e));
+        } catch (Exception firstFailure) {
+            // CR-066: one bounded, internal self-correction retry — never a git/branch effect yet at this
+            // point (extraction happens strictly before BranchApplier.apply), so retrying just the
+            // JSON-shape step does not touch EC-033's own non-idempotent-git-effect concern at all; this is
+            // invisible to Conductor's own RetryPolicy (still exactly one StageOutcome per dispatch), not a
+            // second stage attempt. Real, live evidence motivating this (attempt 25,
+            // docs/evidence/ds-a/attempts-24-25-finding.md): a malformed-JSON answer is plausible one-off
+            // model variance, not necessarily a repeatable defect — worth one real chance to self-correct
+            // before failing the whole stage on it.
+            try {
+                AiResponse retryResponse = provider.invoke(
+                        buildCorrectionPrompt(prompt, response.content(), firstFailure.getMessage()));
+                changeSet = extractChangeSet(retryResponse.content());
+            } catch (Exception secondFailure) {
+                return StageOutcome.failed(TRANSLATOR.translate(secondFailure));
+            }
         }
 
         BranchApplier.ApplyResult result;
@@ -153,7 +182,17 @@ public final class ImplementationAiExecutor implements StageExecutor {
                         + "'search' to make it unique. Edits within one file are applied in the order "
                         + "listed, each against the result of the previous one. Never include line numbers "
                         + "or diff/patch syntax anywhere -- this is search-and-replace, not a unified "
-                        + "diff.\n\n");
+                        + "diff.\n\n"
+                        + "CR-066: your entire reply MUST be a single, complete, valid JSON document and "
+                        + "NOTHING else -- no markdown code fence (no ``` anywhere), no prose before or "
+                        + "after it, no trailing commentary. Every 'content', 'search', and 'replace' "
+                        + "string value MUST be valid JSON string content: every literal newline inside "
+                        + "multi-line file content or a multi-line snippet MUST be written as the two "
+                        + "characters backslash-n (\\n), NEVER as an actual line break inside the JSON "
+                        + "string; every literal double-quote character MUST be escaped as backslash-quote "
+                        + "(\\\"); every literal backslash MUST be escaped as two backslashes (\\\\). Do "
+                        + "not stop partway through a long file's content -- if a file is large, that is "
+                        + "still a single complete JSON string value, fully closed and valid.\n\n");
 
         if (existingFiles != null && !existingFiles.isBlank() && !"{}".equals(existingFiles.strip())) {
             prompt.append("The orchestration has already read the following existing files for you -- "
@@ -167,6 +206,17 @@ public final class ImplementationAiExecutor implements StageExecutor {
         return prompt.toString();
     }
 
+    /** CR-066: built only after a first genuine parse failure — a single, bounded, internal self-correction
+     * chance. Shows the model its own prior (bad) answer and the real reason it was refused, so the
+     * correction is grounded in the SPECIFIC mistake rather than a generic re-ask. */
+    private static String buildCorrectionPrompt(String originalPrompt, String badAnswer, String errorDetail) {
+        return originalPrompt + "\n\n---\n\nYour previous answer could not be used: " + errorDetail
+                + "\n\nYour previous answer was:\n" + truncate(badAnswer)
+                + "\n\nRespond again, from scratch, with ONLY a single valid JSON document in the exact "
+                + "shape specified above -- no markdown code fence, no prose, every string value's own "
+                + "newlines and quotes correctly escaped as valid JSON.";
+    }
+
     /**
      * Validates the model's answer is a well-formed change set (INTERNAL, permanent, if not — "could not
      * even be understood"); does NOT validate that an EDIT's own search text actually matches anything, or
@@ -174,14 +224,7 @@ public final class ImplementationAiExecutor implements StageExecutor {
      * {@code INVALID_INPUT}, a different kind of fact (content understood, but wrong).
      */
     private static String extractChangeSet(String content) {
-        String text = content.strip();
-        if (text.startsWith("```")) {
-            int firstNewline = text.indexOf('\n');
-            int lastFence = text.lastIndexOf("```");
-            if (firstNewline >= 0 && lastFence > firstNewline) {
-                text = text.substring(firstNewline + 1, lastFence).strip();
-            }
-        }
+        String text = extractJsonCandidate(content);
         if (text.isBlank()) {
             throw new MalformedProviderOutputException(
                     "the model's answer is blank -- AI output is never executed as text, so an empty "
@@ -236,6 +279,44 @@ public final class ImplementationAiExecutor implements StageExecutor {
                                 + "EDIT): " + file);
             }
         }
+        return text;
+    }
+
+    /**
+     * CR-066: robust extraction of a JSON candidate from whatever the model actually said — never assumes
+     * the well-behaved shape (bare JSON, or a single LEADING fence) is the only one that occurs live. Tries,
+     * in order: (1) the first fenced block anywhere in the text, not only a leading one; (2) the whole
+     * stripped text, if it already looks like a JSON object; (3) the substring between the first {@code {}
+     * and the LAST {@code }} in the text, which tolerates stray prose before and/or after the JSON even
+     * with no fence at all. This method only ever picks a CANDIDATE string — it never itself decides the
+     * candidate is valid; {@link #extractChangeSet} still fully parses and structurally validates whatever
+     * is returned, so a wrong guess here still fails loudly rather than being applied speculatively.
+     */
+    private static String extractJsonCandidate(String content) {
+        String text = content.strip();
+
+        int fenceStart = text.indexOf("```");
+        if (fenceStart >= 0) {
+            int firstNewlineAfterFence = text.indexOf('\n', fenceStart);
+            int fenceEnd = firstNewlineAfterFence >= 0 ? text.indexOf("```", firstNewlineAfterFence) : -1;
+            if (firstNewlineAfterFence >= 0 && fenceEnd > firstNewlineAfterFence) {
+                String fenced = text.substring(firstNewlineAfterFence + 1, fenceEnd).strip();
+                if (!fenced.isBlank()) {
+                    return fenced;
+                }
+            }
+        }
+
+        if (text.startsWith("{")) {
+            return text;
+        }
+
+        int firstBrace = text.indexOf('{');
+        int lastBrace = text.lastIndexOf('}');
+        if (firstBrace >= 0 && lastBrace > firstBrace) {
+            return text.substring(firstBrace, lastBrace + 1).strip();
+        }
+
         return text;
     }
 

@@ -215,4 +215,85 @@ class ImplementationAiExecutorTest {
                 "input() carries no 'existingFiles' key -- exactly the shape every S7 dispatch had before "
                         + "this fix -- so the prompt must contain no existing-file block at all");
     }
+
+    @Test
+    @DisplayName("CR-066: a malformed FIRST answer gets exactly one bounded self-correction retry, and a "
+            + "valid SECOND answer succeeds")
+    void malformedFirstAnswerSelfCorrectsOnRetry() {
+        java.util.concurrent.atomic.AtomicInteger callCount = new java.util.concurrent.atomic.AtomicInteger();
+        StageAiProvider provider = prompt -> {
+            int call = callCount.incrementAndGet();
+            if (call == 1) {
+                return new AiResponse("claude-test-fixture", "{\"files\": [ this is not valid JSON");
+            }
+            assertTrue(prompt.contains("Your previous answer could not be used"),
+                    "the retry prompt must show the model what went wrong");
+            assertTrue(prompt.contains("this is not valid JSON"),
+                    "the retry prompt must show the model its own prior bad answer");
+            return new AiResponse("claude-test-fixture", VALID_CHANGE_SET);
+        };
+        BranchApplier applier = (taskId, changeSet) -> {
+            assertEquals(VALID_CHANGE_SET, changeSet, "the applier must receive the CORRECTED change set, "
+                    + "not the original malformed one");
+            return new BranchApplier.ApplyResult(true, "feature/T1-impl", "applied and builds");
+        };
+
+        StageOutcome outcome = new ImplementationAiExecutor(provider, applier).execute(input());
+
+        assertTrue(outcome.succeeded(), "a malformed first answer must not fail the whole stage when a "
+                + "bounded self-correction retry would have fixed it");
+        assertEquals(2, callCount.get(), "exactly one retry -- not zero, not open-ended");
+    }
+
+    @Test
+    @DisplayName("CR-066 NEGATIVE: TWO malformed answers in a row still fail the stage -- the retry is "
+            + "bounded, not open-ended")
+    void twoMalformedAnswersInARowStillFails() {
+        java.util.concurrent.atomic.AtomicInteger callCount = new java.util.concurrent.atomic.AtomicInteger();
+        StageAiProvider provider = prompt -> {
+            callCount.incrementAndGet();
+            return new AiResponse("claude-test-fixture", "still not valid JSON either time");
+        };
+        BranchApplier applier = (taskId, changeSet) -> {
+            throw new AssertionError("must never be called -- neither answer was ever usable");
+        };
+
+        StageOutcome outcome = new ImplementationAiExecutor(provider, applier).execute(input());
+
+        assertFalse(outcome.succeeded());
+        assertEquals(FailureCategory.INTERNAL, outcome.failure().category());
+        assertEquals(2, callCount.get(), "exactly two calls total -- the original plus ONE retry, never a "
+                + "third");
+    }
+
+    @Test
+    @DisplayName("CR-066: a fenced block NOT at the very start of the answer is still found and used")
+    void fencedBlockNotAtStartIsStillExtracted() {
+        StageAiProvider provider = fixedResponse(
+                "Sure, here is the change:\n\n```json\n" + VALID_CHANGE_SET + "\n```\n\nLet me know if you "
+                        + "need anything else!");
+        BranchApplier applier = (taskId, changeSet) -> {
+            assertEquals(VALID_CHANGE_SET, changeSet);
+            return new BranchApplier.ApplyResult(true, "feature/T1-impl", "applied and builds");
+        };
+
+        StageOutcome outcome = new ImplementationAiExecutor(provider, applier).execute(input());
+
+        assertTrue(outcome.succeeded());
+    }
+
+    @Test
+    @DisplayName("CR-066: JSON surrounded by stray prose with NO fence at all is still found and used")
+    void jsonSurroundedByProseWithNoFenceIsStillExtracted() {
+        StageAiProvider provider = fixedResponse(
+                "Here is my answer: " + VALID_CHANGE_SET + " -- that should do it.");
+        BranchApplier applier = (taskId, changeSet) -> {
+            assertEquals(VALID_CHANGE_SET, changeSet);
+            return new BranchApplier.ApplyResult(true, "feature/T1-impl", "applied and builds");
+        };
+
+        StageOutcome outcome = new ImplementationAiExecutor(provider, applier).execute(input());
+
+        assertTrue(outcome.succeeded());
+    }
 }

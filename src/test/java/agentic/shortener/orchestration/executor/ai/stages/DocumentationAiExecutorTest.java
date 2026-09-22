@@ -111,4 +111,28 @@ class DocumentationAiExecutorTest {
         assertFalse(outcome.succeeded());
         assertEquals(FailureCategory.INTERNAL, outcome.failure().category());
     }
+
+    @Test
+    @DisplayName("CR-066: the prompt shows the real executed behaviours as their own explicit, prominent, "
+            + "verbatim-only allow-list -- not buried inside the raw results JSON")
+    void promptShowsExplicitVerbatimAllowList() {
+        java.util.concurrent.atomic.AtomicReference<String> capturedPrompt = new java.util.concurrent.atomic
+                .AtomicReference<>();
+        StageAiProvider provider = prompt -> {
+            capturedPrompt.set(prompt);
+            return new AiResponse("claude-test-fixture",
+                    "{\"documentation\":\"x\",\"behaviorsDescribed\":[\"redirect within budget\"]}");
+        };
+
+        StageOutcome outcome = new DocumentationAiExecutor(provider).execute(input());
+
+        assertTrue(outcome.succeeded());
+        String prompt = capturedPrompt.get();
+        assertTrue(prompt.contains("- redirect within budget"),
+                "each real behaviour must appear as its own explicit, bulleted allow-list entry");
+        assertTrue(prompt.contains("- analytics recorded"));
+        assertTrue(prompt.toLowerCase().contains("verbatim") || prompt.toLowerCase().contains("copied exactly")
+                        || prompt.toLowerCase().contains("copy exactly"),
+                "the prompt must instruct verbatim, copy-paste selection, not paraphrase-from-context");
+    }
 }
