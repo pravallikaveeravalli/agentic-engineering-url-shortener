@@ -1139,6 +1139,40 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
     `docs/evidence/ds-a/attempts-26-27-finding.md`. **Still not `COMPLETED`** — S10 is now reliably reachable
     with real, tested, live-AI-authored code; S11's own gate itself has never yet been opened, blocked on
     T147's own real, separate completion.
+  - **Progress (2026-09-22, T147/CR-067, three further capped attempts)**: `docs/LIMITATIONS.md` (T147)
+    written and committed, closing attempt 26's own condition-8 blocker; S3's prompt hardened (CR-067) so
+    `qualityChecksPerformed` is stated as required on every element unconditionally, addressing attempts 18
+    and 27's own repeat finding without weakening `AmbiguityRecord`'s own deliberate dual-field invariant.
+    Three further live attempts (28, 29, 30 — this turn's own cap) were then made seeking a single continuous
+    run that also opens S11: **S7 succeeded in all three**, each a genuinely different independent
+    implementation (further proof of CR-060/064/066's own reliability), but **S8 failed in two of the three**
+    — attempt 28 did not reproduce when its exact diff was re-applied and re-tested directly (environmental,
+    not a code defect); attempt 30 reproduced exactly and is a real, diagnosed bug in that attempt's own
+    AI-generated unit test (asserting a `Content-Type` header on a bare `ResponseEntity` that only carries it
+    after real HTTP serialization) — S8's own deterministic gate catching it correctly, evidence the guard
+    works, not a defect in this codebase. Attempt 29 hit a genuine S7 compile failure whose blank error detail
+    was itself a real bug, fixed as CR-068; the original compile defect's own root cause was not captured
+    before the worktree was torn down. Full findings: `docs/evidence/ds-a/attempt-30-s8-caught-real-contenttype-test-bug-finding.md`,
+    `docs/governance/change-control/CR-067-s3-qualitychecks-unconditional-prompt.md`,
+    `docs/governance/change-control/CR-068-build-failure-detail-captures-stdout.md`.
+  - **Progress (2026-09-22, owner decision — demonstration accepted)**: rather than continue rolling for a
+    single run that also opens S11, the owner accepted **attempt 26** — the one fully clean, live S1→S10 run
+    this engagement has produced, real AI-authored code throughout, one genuine S4 clarification resolved
+    under standing delegation, S6's own real material-design gate, a real S8 pass, S9's own drift guard
+    confirming only actually-executed behavior — as the greenfield demonstration. Its real emitted feature
+    (`VersionController.java`, the `pom.xml` `build-info` binding, the `openapi.yaml` `/v1/version` path and
+    `Version` schema, `ContractFilesLintTest`'s bookkeeping bump) is now landed in this repository (commit
+    `d4e3ccf`), verified byte-identical to its real source branch before landing, and green under this
+    repository's own full `scripts/ci.sh`. `docs/evidence/ds-a/run.json` (this task's own literal Artifact
+    path) is written, reformatting that run's already-genuine captured output into a real graph export — no
+    invented data. **Left unchecked, precisely**: this task's own literal Artifact names an `S4 SKIPPED`
+    path to terminal `COMPLETED`; every real attempt this engagement has ever made has instead found genuine,
+    material ambiguity at S4 (the requirement-completeness ceiling finding), and S11's own open
+    (`AWAITING_APPROVAL`) gate has never been reached within one single continuous live run — attempt 26 was
+    stopped by two conditions since individually resolved, not re-verified end-to-end in one pass. What is
+    demonstrated, accurately: a real, governed, live AI pipeline carrying a genuine requirement through
+    ambiguity detection, a human gate, design, implementation, testing, and documentation, producing working,
+    tested, landed code — not the literal S4-skip/S11-open sequence this task's own Artifact field states.
 - [ ] T133 [P] [US3] DS-A late-ambiguity escalation — `docs/evidence/ds-a/late-ambiguity.json`
   - **Req**: **DS-A**, FR-ORC-011, EC-021 · **Scn**: **DS-A** · **ADR**: ADR-009 · **Pre**: T132, T096
   - **Deps**: T096, T132 · **Par**: yes · **Artifact**: material ambiguity emerging mid-run suspends **only the affected path**; governed clarification and impact analysis follow; resumption from the correct state after explicit approval
@@ -1149,6 +1183,15 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
   - **Deps**: T132, T133 · **Par**: yes · **Artifact**: graph export, per-stage criteria evaluation, quality checks, decomposition, executed test results, traceability matrix, **per-stage executor-mode labels**
   - **TDD**: EVIDENCE · **Validate**: bundle complete against DS-A's stated evidence list · **Docs**: — · **Trace**: DS-A
   - **Guard**: every figure in the bundle labelled measured or proposed · **Done**: seven evidence items present · **Approval**: none
+  - **Progress (2026-09-22)**: `docs/evidence/ds-a/bundle/` written — all seven named items present (graph
+    export via `../run.json`, per-stage criteria evaluation, quality checks, decomposition, executed test
+    results, traceability matrix, per-stage executor-mode labels), assembled entirely from attempt 26's own
+    already-genuine captured output; no invented test counts or reconstructed graph edges, and the one real
+    gap (attempt 26's own snapshot writer does not persist S8's exact pass/fail counts, only the node's
+    terminal state) is disclosed in place rather than filled in. **Left unchecked**: this task's own Deps
+    field names T133 (`docs/evidence/ds-a/late-ambiguity.json`) as a precondition, and T133 has not been
+    attempted — the bundle is real and complete against DS-A's greenfield evidence list, but not against this
+    task's own full stated dependency set.
 - [x] T135 [US3] DS-B brownfield impact analysis and ordering proof — `docs/evidence/ds-b/impact-analysis.md`
   - **Req**: **FR-ORC-020**, **DS-B** · **Scn**: **DS-B** · **ADR**: ADR-006 · **Pre**: T055, T107, T110
   - **Deps**: T055, T107, T110 · **Par**: no · **Artifact**: subject *"A creator's redirect traffic must be limited in aggregate across all their links, not only per link"* — FR-URL-016's third tier (PVT-014); all seven dimensions, carrying the **six substantive points** plan §11 enumerates (hot-path ownership lookup, latency against PVT-001, limiter failure posture, non-disclosure of the creator, per-code regression surface, threat-model update); **timestamp preceding the first code modification**
