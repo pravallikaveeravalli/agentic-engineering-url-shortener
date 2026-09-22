@@ -163,4 +163,102 @@ class DesignAiExecutorTest {
         assertTrue(out.has("existingFilesToModify"));
         assertEquals(0, out.get("existingFilesToModify").size());
     }
+
+    @Test
+    @DisplayName("CR-057: material design decisions round-trip into the output verbatim, no justification")
+    void materialDesignDecisionsRoundTripThroughOutput() throws Exception {
+        StageAiProvider provider = fixedResponse("{\"design\":\"add a trusted-partner read path\","
+                + "\"contractImpact\":\"new query parameter on an existing endpoint\","
+                + "\"materialDesignDecisions\":["
+                + "\"Whether trusted-partner status is a new role, a header, or an allowlist changes the "
+                + "security posture and is a genuine fork among viable alternatives\","
+                + "\"Whether expired links become visible to ALL callers or only trusted ones changes "
+                + "observable behaviour for every existing caller\"]}");
+
+        StageOutcome outcome = new DesignAiExecutor(provider, CLOCK).execute(input());
+
+        assertTrue(outcome.succeeded());
+        JsonNode out = JSON.readTree(outcome.producedArtifacts().get(0).content());
+        assertTrue(out.has("materialDesignDecisions"));
+        assertEquals(2, out.get("materialDesignDecisions").size());
+        assertFalse(out.has("nonMaterialityJustification"),
+                "a justification is only for the empty-decisions case, never alongside real decisions");
+    }
+
+    @Test
+    @DisplayName("CR-057: an empty materialDesignDecisions WITH a substantive justification is accepted, "
+            + "no gate")
+    void emptyMaterialDesignDecisionsWithSubstantiveJustificationIsAccepted() throws Exception {
+        StageAiProvider provider = fixedResponse("{\"design\":\"read the version from a new properties "
+                + "file via a new controller\",\"contractImpact\":\"none\","
+                + "\"materialDesignDecisions\":[],"
+                + "\"nonMaterialityJustification\":\"Every choice here is forced by the requirement's own "
+                + "text: a new controller, a new resource file, no auth. No viable alternative would "
+                + "change required behaviour.\"}");
+
+        StageOutcome outcome = new DesignAiExecutor(provider, CLOCK).execute(input());
+
+        assertTrue(outcome.succeeded());
+        JsonNode out = JSON.readTree(outcome.producedArtifacts().get(0).content());
+        assertTrue(out.has("materialDesignDecisions"));
+        assertEquals(0, out.get("materialDesignDecisions").size());
+        assertTrue(out.has("nonMaterialityJustification"));
+    }
+
+    @Test
+    @DisplayName("CR-007 safe default: an omitted materialDesignDecisions (older/non-compliant answer) is "
+            + "NEVER a hard failure -- it defaults to material, the gate stays safe, the design still "
+            + "succeeds")
+    void omittedMaterialityClassificationDefaultsToMaterialNotFailure() throws Exception {
+        StageAiProvider provider = fixedResponse(
+                "{\"design\":\"a wholly new controller\",\"contractImpact\":\"none\"}");
+
+        StageOutcome outcome = new DesignAiExecutor(provider, CLOCK).execute(input());
+
+        assertTrue(outcome.succeeded(), "an omitted materiality signal must default to material, not fail "
+                + "the whole design stage (CR-007's own uncertainty default)");
+        JsonNode out = JSON.readTree(outcome.producedArtifacts().get(0).content());
+        assertTrue(out.has("materialDesignDecisions"));
+        assertFalse(out.get("materialDesignDecisions").isEmpty(),
+                "an omitted classification must default to a NON-EMPTY materialDesignDecisions, so "
+                        + "Conductor's own gate check opens the architecture gate rather than silently "
+                        + "skipping it");
+    }
+
+    @Test
+    @DisplayName("CR-007 safe default: an empty materialDesignDecisions with a PLACEHOLDER justification "
+            + "(too short) also defaults to material, not a hard failure")
+    void placeholderJustificationDefaultsToMaterialNotFailure() throws Exception {
+        StageAiProvider provider = fixedResponse("{\"design\":\"a wholly new controller\","
+                + "\"contractImpact\":\"none\",\"materialDesignDecisions\":[],"
+                + "\"nonMaterialityJustification\":\"none\"}");
+
+        StageOutcome outcome = new DesignAiExecutor(provider, CLOCK).execute(input());
+
+        assertTrue(outcome.succeeded());
+        JsonNode out = JSON.readTree(outcome.producedArtifacts().get(0).content());
+        assertFalse(out.get("materialDesignDecisions").isEmpty(),
+                "a placeholder justification (CR-007: non-blank is not the same as substantive) must not "
+                        + "be trusted to suppress the gate");
+    }
+
+    @Test
+    @DisplayName("a materialDesignDecisions entry too short to be substantive is dropped, not trusted "
+            + "verbatim -- falls through to the same safe default as an empty list")
+    void tooShortMaterialDecisionEntryIsDroppedNotTrusted() throws Exception {
+        StageAiProvider provider = fixedResponse("{\"design\":\"a wholly new controller\","
+                + "\"contractImpact\":\"none\",\"materialDesignDecisions\":[\"x\"]}");
+
+        StageOutcome outcome = new DesignAiExecutor(provider, CLOCK).execute(input());
+
+        assertTrue(outcome.succeeded());
+        JsonNode out = JSON.readTree(outcome.producedArtifacts().get(0).content());
+        // The bogus "x" entry is dropped as non-substantive, leaving an effectively-empty list with no
+        // justification -- the safe default (material) still applies, it just isn't the literal "x".
+        assertFalse(out.get("materialDesignDecisions").isEmpty());
+        for (JsonNode entry : out.get("materialDesignDecisions")) {
+            assertTrue(entry.asText().length() >= 20, "no non-substantive entry should survive into the "
+                    + "output: \"" + entry.asText() + "\"");
+        }
+    }
 }

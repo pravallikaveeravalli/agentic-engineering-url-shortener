@@ -40,6 +40,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -130,9 +131,11 @@ public final class Conductor {
     private static final ObjectMapper JSON = new ObjectMapper();
 
     /** Stages whose successful execution is held at {@link StageState#AWAITING_APPROVAL} pending a human
-     * gate decision, rather than proceeding straight to {@link StageState#SUCCEEDED}. Plan &sect;5. */
+     * gate decision, rather than proceeding straight to {@link StageState#SUCCEEDED}, UNCONDITIONALLY.
+     * Plan &sect;5's own trigger for stage 11 is simply "S11" — unconditional, unlike stage 6 (CR-057:
+     * "S6 produces material design decisions", handled instead by {@link #onDesignStageSucceeded}, the
+     * same conditional shape {@link #handleClarificationGate} already gives stage 4). */
     private static final Map<Integer, GateClass> APPROVAL_REQUIRED_STAGES = Map.of(
-            6, GateClass.ARCHITECTURE_APPROVAL,
             11, GateClass.RELEASE_READINESS);
 
     /** A produced artifact key, and every additional name a downstream consumer expects it under. Neither
@@ -488,18 +491,99 @@ public final class Conductor {
         ExecutorKind executorKind =
                 outcome.attempts().get(outcome.attempts().size() - 1).outcome().executorKind();
 
-        GateClass gateClass = APPROVAL_REQUIRED_STAGES.get(stageNumber);
-        if (gateClass != null) {
-            runStore.transitionNode(runId, nodeKey, StageState.RUNNING, StageState.AWAITING_APPROVAL,
-                    "succeeded; pending human " + gateClass + " decision");
-            requestGate(runId, nodeKey, gateClass);
+        if (stageNumber == 6) {
+            onDesignStageSucceeded(runId, nodeKey, produced);
         } else {
-            runStore.transitionNode(runId, nodeKey, StageState.RUNNING, StageState.SUCCEEDED,
-                    "stage " + stageNumber + " succeeded");
+            GateClass gateClass = APPROVAL_REQUIRED_STAGES.get(stageNumber);
+            if (gateClass != null) {
+                runStore.transitionNode(runId, nodeKey, StageState.RUNNING, StageState.AWAITING_APPROVAL,
+                        "succeeded; pending human " + gateClass + " decision");
+                requestGate(runId, nodeKey, gateClass);
+            } else {
+                runStore.transitionNode(runId, nodeKey, StageState.RUNNING, StageState.SUCCEEDED,
+                        "stage " + stageNumber + " succeeded");
+            }
         }
         auditWriter.write(new AuditEvent(null, runId, "system", "STAGE_EXITED", clock.instant(),
                 "stage_node:" + nodeKey, "SUCCESS", "stage " + stageNumber + " produced " + produced.size()
                         + " artifact(s)", stageNumber, executorKind.name(), null));
+    }
+
+    /**
+     * CR-057: plan &sect;5's own trigger for the architecture gate is "S6 produces material design
+     * decisions" — conditional, exactly like {@link #handleClarificationGate}'s own reading of S3's
+     * materiality signal for S4. Reads the just-produced {@code "design"} artifact's own
+     * {@code materialDesignDecisions} array ({@link DesignAiExecutor}'s own classification — this class
+     * never re-derives materiality itself): non-empty opens {@link GateClass#ARCHITECTURE_APPROVAL}
+     * exactly as before; empty (with a substantive {@code nonMaterialityJustification} present) transitions
+     * straight to {@link StageState#SUCCEEDED}, recording that justification as the transition reason —
+     * mirroring {@link #handleClarificationGate}'s own {@code noClarificationReason} handling, so a
+     * non-gate stays inspectable, never silent. <strong>Does not trust {@link DesignAiExecutor} to have
+     * already applied CR-007's own uncertainty default</strong> — this method re-checks it independently
+     * (a field simply absent, not just unparsable JSON, is ALSO treated as material — and so is a stage 6
+     * dispatch that produced no {@code "design"}-keyed artifact at all, e.g. a test stub using a generic
+     * fallback key), so a stub, fixture, or future producer of stage 6's own output cannot silently skip
+     * the architecture gate merely by omitting or mis-keying the classification.
+     */
+    private void onDesignStageSucceeded(UUID runId, String nodeKey, List<ProducedArtifact> produced) {
+        Optional<String> design = produced.stream()
+                .filter(a -> "design".equals(a.artifactKey()))
+                .map(ProducedArtifact::content)
+                .findFirst();
+
+        boolean materialDecisionsFound = true;
+        String reason;
+        if (design.isEmpty()) {
+            reason = "stage 6 produced no 'design'-keyed artifact to read a materiality signal from -- "
+                    + "treated as material per CR-007's own uncertainty default";
+        } else {
+            String fallbackReason = null;
+            try {
+                JsonNode root = JSON.readTree(design.get());
+                JsonNode decisions = root.get("materialDesignDecisions");
+                materialDecisionsFound = decisions != null && decisions.isArray() && !decisions.isEmpty();
+                if (materialDecisionsFound) {
+                    fallbackReason = decisions.toString();
+                } else {
+                    JsonNode justification = root.get("nonMaterialityJustification");
+                    if (justification != null && justification.isTextual()
+                            && !justification.asText().isBlank()) {
+                        fallbackReason = justification.asText();
+                    } else {
+                        // CR-007's own uncertainty default, enforced here independently of
+                        // DesignAiExecutor's own guard: an empty/absent materialDesignDecisions with no
+                        // substantive justification is uncertain, and uncertain means material -- never a
+                        // silent non-gate.
+                        materialDecisionsFound = true;
+                        fallbackReason = "materialDesignDecisions was empty or absent with no substantive "
+                                + "nonMaterialityJustification -- treated as material per CR-007's own "
+                                + "uncertainty default";
+                    }
+                }
+            } catch (Exception e) {
+                // Genuinely unparsable design content reaching here (rather than DesignAiExecutor's own
+                // parse() refusing it upstream) is treated as material for the same reason -- uncertain
+                // means material, never silently proceeding.
+                materialDecisionsFound = true;
+                fallbackReason = "materiality signal could not be read from the design artifact -- treated "
+                        + "as material per CR-007's own uncertainty default: " + e.getMessage();
+            }
+            reason = fallbackReason;
+        }
+
+        if (materialDecisionsFound) {
+            runStore.transitionNode(runId, nodeKey, StageState.RUNNING, StageState.AWAITING_APPROVAL,
+                    "succeeded; pending human " + GateClass.ARCHITECTURE_APPROVAL + " decision -- material "
+                            + "design decisions: " + reason);
+            requestGate(runId, nodeKey, GateClass.ARCHITECTURE_APPROVAL);
+        } else {
+            runStore.transitionNode(runId, nodeKey, StageState.RUNNING, StageState.SUCCEEDED,
+                    "no material design decisions found: " + reason);
+        }
+        auditWriter.write(new AuditEvent(null, runId, "system", "CRITERIA_EVALUATED", clock.instant(),
+                "stage_node:" + nodeKey, "SUCCESS",
+                materialDecisionsFound ? "material design decisions found" : "no material design decisions",
+                6, null, null));
     }
 
     private void onStageFailed(UUID runId, String nodeKey, int stageNumber, RetryOutcome outcome) {

@@ -1,7 +1,11 @@
 # Finding — S7's "blind diff" design cannot reliably modify existing files
 
-**Status: OPEN. Real, decisive, twice-confirmed. Requires an owner decision on how S7 should proceed —
-not something this agent should redesign unilaterally under time pressure.**
+**Status: PARTIALLY ADDRESSED, THEN FALLEN BACK. Option 1 below (give the model real file content) was built
+as CR-055 and verified live (attempt 17) — it genuinely improved the model's output (see addendum) but did not
+reach a clean apply on the one verification attempt authorized. Per the owner's own pre-authorized timebox,
+greenfield now proceeds via option 2 (new-files-only), documented as its own record. This finding stays open
+as the honest history of what was tried and what remains true: existing-file editing through S7 is not yet
+reliable.**
 
 ## What happened
 
@@ -91,3 +95,29 @@ contract) — so this is a real, load-bearing gap in S7's own current design, no
 - No redesign of `ImplementationAiExecutor` was attempted — this is a real architecture decision, not a bug
   fix, and belongs with the owner.
 - The run's own final state (`SAFE_STOP`, S7.1 `FAILED`) was not forced past or hidden.
+
+## Addendum (2026-09-22) — CR-055 built option 1, verified live once, still corrupt-patched
+
+The owner authorized option 1 (give the model real file content, orchestration-side, executor stays pure —
+CR-055, `docs/governance/change-control/CR-055-s7-existing-file-content-injection.md`). Built, unit- and
+integration-tested (`RepoExistingFileReaderTest`, `DesignAiExecutorTest`/`ImplementationAiExecutorTest`
+additions, `ExistingFileInjectionIT` proving the real end-to-end wiring), `ci.sh` green, committed.
+
+**One live verification attempt** (`docs/evidence/ds-a/run-snapshot-ATTEMPT-17-BLOCKED-S7-corrupt-patch-
+despite-fix.md`), per the owner's own timebox ("do NOT retry, pivot immediately if it still corrupt-patches").
+Result: **genuinely improved, but still failed.** The model's `pom.xml` and `openapi.yaml` hunks this time
+carried plausible, real-looking headers referencing actual surrounding content it had genuinely been shown
+(`@@ -123,11 +123,18 @@` against `pom.xml`'s real `<plugin>` block, `@@ -330,8 +330,32 @@` and `@@ -712,8
++736,14 @@` against real `openapi.yaml` content) — a clear, real improvement over attempts 14/15's fabricated
+`@@ -1,...@@` placeholders. `git apply` still refused it: `error: corrupt patch at line 78`, inside the
+`openapi.yaml` hunk body (most likely a blank context line inside a hunk missing its required leading space
+marker — a common unified-diff formatting slip, not a line-number/content-accuracy failure this time).
+
+**Conclusion**: CR-055's fix addresses the *content-accuracy* half of the problem (confirmed: the model now
+sees, and correctly references, real content) but does not by itself guarantee *unified-diff formatting*
+correctness on every attempt — a different, narrower failure mode than before, not yet reliable. Per the
+owner's own pre-authorized timebox, no second live attempt was made; greenfield proceeds via option 2
+(new-files-only) for this turn, documented separately. CR-055 itself is not reverted — it is real, tested,
+committed infrastructure that measurably improved S7's output, and remains available for a future attempt
+(e.g. with hunk-formatting validation added before `git apply`, or a retry-once-on-malformed-patch policy) —
+that is a follow-up, not decided here.

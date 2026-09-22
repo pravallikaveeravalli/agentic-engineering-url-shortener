@@ -33,11 +33,24 @@ import java.util.UUID;
  * design output alone. If the object is present, {@link ImpactAnalysis}'s own constructor — the same seven
  * required, non-blank dimensions T107 built — is what enforces completeness; a response naming six of seven
  * dimensions is refused exactly as a response naming zero of seven design fields would be.
+ *
+ * <h2>Materiality classification — plan §5's own conditional architecture gate (CR-057)</h2>
+ *
+ * <p>Plan §5's own Human-in-the-Loop table states the architecture-approval trigger as "S6 produces
+ * <strong>material</strong> design decisions" — the same conditional shape as S3's own "S3 finds material
+ * ambiguity" trigger for S4, never unconditional. This class classifies materiality itself (CR-007's own
+ * definition, reused verbatim), the same way {@link AmbiguityDetectionAiExecutor} classifies an ambiguity's
+ * materiality; {@link agentic.shortener.orchestration.conductor.Conductor} reads the resulting
+ * {@code materialDesignDecisions} array to decide whether to open the gate at all, never this class.
  */
 public final class DesignAiExecutor implements StageExecutor {
 
     static final String INPUT_KEY = "tasks";
     static final String OUTPUT_KEY = "design";
+
+    /** Same threshold and rationale as {@link AmbiguityDetectionAiExecutor#MIN_SUBSTANTIVE_LENGTH}: a
+     * placeholder materiality decision or justification is not a substantive answer (CR-007). */
+    private static final int MIN_SUBSTANTIVE_LENGTH = 20;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -76,8 +89,27 @@ public final class DesignAiExecutor implements StageExecutor {
                 + "stage cannot see any file's real content on its own; this list is how the orchestration "
                 + "knows which files to show it. Omit or leave empty for a purely new-file change — never "
                 + "list a file this design only creates, only one it requires editing in place.\n\n"
+                + "You MUST ALSO classify whether this design contains any MATERIAL design decisions — this "
+                + "decides whether a human architect is actually consulted before implementation begins, "
+                + "so apply the predicate precisely rather than by impression: a design decision is "
+                + "MATERIAL if and only if choosing differently could alter an approved obligation (any "
+                + "functional or non-functional requirement, a gate condition, a stated scope boundary, the "
+                + "security posture, or a binding validation target), or determines which of two "
+                + "behaviours the system MUST exhibit — a genuine fork among viable alternatives, not a "
+                + "single forced or idiomatic choice with no real alternative (e.g. \"which class holds a "
+                + "getter\" is never material; \"whether a new endpoint requires authentication\" always "
+                + "is). Non-materiality must be affirmatively shown, never assumed: when classification is "
+                + "uncertain, treat it as material. List every material decision, each a substantive "
+                + "sentence naming the decision and why it is a genuine fork, under "
+                + "\"materialDesignDecisions\": an array of strings, empty if none. If — and only if — that "
+                + "array is empty, ALSO supply \"nonMaterialityJustification\": a substantive string "
+                + "stating specifically why every choice in this design was forced or idiomatic, with no "
+                + "viable alternative that would change required behaviour; omit that field when the array "
+                + "is non-empty.\n\n"
                 + "Respond with ONLY JSON, no prose: {\"design\": string, \"contractImpact\": string, "
                 + "\"existingFilesToModify\": [string, ...], "
+                + "\"materialDesignDecisions\": [string, ...], "
+                + "\"nonMaterialityJustification\": string (only when materialDesignDecisions is empty), "
                 + "\"impactAnalysis\": {\"impactedComponents\": string, \"impactedInterfaces\": string, "
                 + "\"impactedDataFlows\": string, \"impactedTests\": string, \"documentation\": string, "
                 + "\"regressionRisks\": string, \"rolloutRollback\": string} OR omit \"impactAnalysis\" "
@@ -109,6 +141,40 @@ public final class DesignAiExecutor implements StageExecutor {
             }
         }
         out.set("existingFilesToModify", existingFiles);
+
+        // Plan §5's own trigger for the architecture gate is "S6 produces MATERIAL design decisions", not
+        // unconditionally -- mirrors S4's own conditional gate on S3's materiality signal exactly. A
+        // claimed material decision must itself be substantive (CR-007 discipline, the same
+        // anti-placeholder guard AmbiguityDetectionAiExecutor already applies) -- a decision entry too
+        // short to be real content is simply dropped, not trusted, which naturally falls through to the
+        // safe default below rather than hard-failing the whole design. CR-007's own uncertainty default
+        // ("when classification is uncertain, treat as material") means an ABSENT or insufficiently
+        // justified empty list must default to MATERIAL (open the gate), never to a hard parse failure --
+        // an older or non-compliant model answer that omits this classification entirely still produces a
+        // usable design, just one a human reviews, exactly as CR-007 intends.
+        com.fasterxml.jackson.databind.node.ArrayNode materialDecisions = JSON.createArrayNode();
+        JsonNode namedDecisions = root.get("materialDesignDecisions");
+        if (namedDecisions != null && namedDecisions.isArray()) {
+            for (JsonNode decision : namedDecisions) {
+                if (decision.isTextual() && decision.asText().strip().length() >= MIN_SUBSTANTIVE_LENGTH) {
+                    materialDecisions.add(decision.asText());
+                }
+            }
+        }
+        if (materialDecisions.isEmpty()) {
+            JsonNode justificationNode = root.get("nonMaterialityJustification");
+            String justification = justificationNode != null && justificationNode.isTextual()
+                    ? justificationNode.asText() : "";
+            if (justification.strip().length() >= MIN_SUBSTANTIVE_LENGTH) {
+                out.put("nonMaterialityJustification", justification);
+            } else {
+                materialDecisions.add("non-materiality was not affirmatively shown (the model's answer "
+                        + "omitted materialDesignDecisions, or supplied an empty list with no substantive "
+                        + "nonMaterialityJustification) -- treated as material per CR-007's own uncertainty "
+                        + "default rather than assumed safe");
+            }
+        }
+        out.set("materialDesignDecisions", materialDecisions);
 
         if (root.has("impactAnalysis") && !root.get("impactAnalysis").isNull()) {
             JsonNode ia = root.get("impactAnalysis");

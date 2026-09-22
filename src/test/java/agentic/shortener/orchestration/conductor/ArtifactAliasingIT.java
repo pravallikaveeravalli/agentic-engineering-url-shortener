@@ -95,7 +95,8 @@ class ArtifactAliasingIT extends PostgresIntegrationTest {
                     + "\"qualityChecksPerformed\":\"n/a\",\"noClarificationReason\":\"nothing to check here\"}]");
             case 5 -> input -> succeeded("tasks",
                     "[{\"taskId\":\"T1\",\"requirementIds\":[\"1\"],\"dependsOn\":[]}]");
-            case 6 -> input -> succeeded("design", "{\"design\":\"stub design\"}");
+            case 6 -> input -> succeeded("design", "{\"design\":\"stub design\","
+                    + "\"materialDesignDecisions\":[\"stub material decision, kept the S6 gate exercised\"]}");
             case 7 -> input -> {
                 // The real bug this test proves and guards: reading "task" (singular), exactly as
                 // ImplementationAiExecutor.INPUT_TASK_KEY does.

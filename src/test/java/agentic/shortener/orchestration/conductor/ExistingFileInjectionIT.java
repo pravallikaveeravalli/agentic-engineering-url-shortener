@@ -108,7 +108,9 @@ class ExistingFileInjectionIT extends PostgresIntegrationTest {
             // on-disk file -- exactly what this fix reads to know what to pre-fetch.
             case 6 -> input -> succeeded("design",
                     "{\"design\":\"add build-info\",\"contractImpact\":\"none\","
-                            + "\"existingFilesToModify\":[\"pom.xml\"]}");
+                            + "\"existingFilesToModify\":[\"pom.xml\"],"
+                            + "\"materialDesignDecisions\":[\"stub material decision, kept the S6 gate "
+                            + "exercised so approveGate has a pending gate to approve\"]}");
             case 7 -> input -> {
                 capturedExistingFiles.set(input.inputArtifacts().get("existingFiles"));
                 return succeeded("branchCommit", "stub/" + input.nodeKey());
@@ -174,7 +176,9 @@ class ExistingFileInjectionIT extends PostgresIntegrationTest {
             // existingFilesToModifyDefaultsToEmptyArrayWhenOmitted still produces an EMPTY array, which
             // this branch covers too since both mean "nothing to pre-fetch").
             case 6 -> input -> succeeded("design", "{\"design\":\"a wholly new controller\","
-                    + "\"contractImpact\":\"none\",\"existingFilesToModify\":[]}");
+                    + "\"contractImpact\":\"none\",\"existingFilesToModify\":[],"
+                    + "\"materialDesignDecisions\":[\"stub material decision, kept the S6 gate exercised "
+                    + "so approveGate has a pending gate to approve\"]}");
             case 7 -> input -> {
                 keyWasPresent.set(input.inputArtifacts().containsKey("existingFiles"));
                 capturedExistingFiles.set(input.inputArtifacts().get("existingFiles"));
