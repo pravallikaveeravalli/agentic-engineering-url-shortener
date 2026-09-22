@@ -73,19 +73,29 @@ public final class AmbiguityDetectionAiExecutor implements StageExecutor {
                 + "For every ambiguity you detect, you MUST ALSO classify its MATERIALITY, using exactly "
                 + "this predicate — it decides whether a human is actually consulted, so apply it "
                 + "precisely rather than by impression:\n\n"
-                + "An ambiguity is MATERIAL_PENDING if and only if its resolution could alter an approved "
+                + "An ambiguity is MATERIAL_PENDING if and only if resolving it would change a behaviour "
+                + "the system MUST exhibit: a genuine fork, with BUILDABLE, OBSERVABLE consequences, where "
+                + "two conformant implementations would actually behave differently in a way some approved "
                 + "obligation (any functional or non-functional requirement, a gate condition, a stated "
-                + "scope boundary, the security posture, or a binding validation target), or determines "
-                + "which of two behaviours the system MUST exhibit — AND that resolution is not already "
-                + "fixed by an existing approved artifact (a schema, a domain invariant, an existing "
-                + "policy, or an already-defined contract).\n\n"
-                + "An ambiguity is NOT_MATERIAL if and only if you can AFFIRMATIVELY SHOW its resolution "
-                + "cannot alter any obligation or required behaviour — for example, because an existing "
-                + "approved artifact already fixes the answer, or because every conformant choice "
-                + "satisfies every stated obligation equally. Non-materiality must be demonstrated, never "
-                + "assumed: WHEN CLASSIFICATION IS UNCERTAIN, THE ITEM MUST BE TREATED AS MATERIAL_PENDING. "
-                + "This default is not optional — the burden of proof runs toward materiality, not away "
-                + "from it.\n\n"
+                + "scope boundary, the security posture, or a binding validation target) cares about — AND "
+                + "that fork is not already fixed by an existing approved artifact (a schema, a domain "
+                + "invariant, an existing policy, or an already-defined contract).\n\n"
+                + "An ambiguity is NOT_MATERIAL when it is ONLY a LINGUISTIC IMPERFECTION with no "
+                + "behavioural fork behind it — for example: an undefined term whose ordinary, "
+                + "plain-language meaning already suffices to implement correctly; a self-referential or "
+                + "purely summarizing clause whose deletion would change no required behaviour; an "
+                + "unbounded or unquantified phrasing that no stated obligation actually constrains; or a "
+                + "dimension already settled by a reasonable, uncontested default (such as a framework's "
+                + "own standard behaviour for an unaddressed case). Record every such item, with a "
+                + "substantive noClarificationReason explaining specifically why no behavioural fork "
+                + "exists — never drop or omit it — but do not open a gate on it. Non-materiality must be "
+                + "demonstrated, never assumed: WHEN CLASSIFICATION IS UNCERTAIN, THE ITEM MUST BE TREATED "
+                + "AS MATERIAL_PENDING. 'Uncertain' means genuinely unsure which required behaviour "
+                + "applies once the requirement is implemented — it does NOT mean the wording could be "
+                + "phrased more precisely, more formally, or more rigorously. Precision of wording alone, "
+                + "with no behavioural fork behind it, is NEVER material. This default is not optional — "
+                + "the burden of proof runs toward materiality, not away from it, for every genuine "
+                + "behavioural fork.\n\n"
                 + "Respond with ONLY a JSON array, no prose. If you find nothing, the array MUST still "
                 + "contain exactly one element with resolutionState \"NOT_MATERIAL\" naming, "
                 + "substantively, what checks you actually performed — never an empty array standing in "
@@ -156,13 +166,15 @@ public final class AmbiguityDetectionAiExecutor implements StageExecutor {
 
         String affectedPath = substantiveOrThrow(element, "affectedPath");
         String qualityChecksPerformed = substantiveOrThrow(element, "qualityChecksPerformed");
-        // A model may either omit the key entirely or include it with an explicit JSON null to mean
-        // "no reason given" — both are the same fact and must be treated identically. has() alone answers
-        // "does the key exist", not "is there a usable value", so an explicit null previously fell through
-        // to substantiveOrThrow and was rejected as malformed even though MATERIAL_PENDING correctly has
-        // no reason to give. Found live via the CR-049 compensating check, not hypothesized.
+        // A model may omit the key, include it as an explicit JSON null, or include it as an empty/blank
+        // string to mean "no reason given" -- all three are the same fact and must be treated identically,
+        // matching AmbiguityRecord's own constructor (hasReason = non-null && !isBlank()). This adapter's
+        // parsing must not be stricter than the record it builds. The null case was found live via the
+        // CR-049 compensating check; the blank-string case via the CR-052 compensating check re-run --
+        // neither hypothesized.
         JsonNode reasonNode = element.get("noClarificationReason");
-        String noClarificationReason = (reasonNode != null && !reasonNode.isNull())
+        String noClarificationReason = (reasonNode != null && !reasonNode.isNull()
+                && !reasonNode.asText().isBlank())
                 ? substantiveOrThrow(element, "noClarificationReason") : null;
 
         // Structural validation (non-blank, reason-iff-NOT_MATERIAL) reuses AmbiguityRecord's own

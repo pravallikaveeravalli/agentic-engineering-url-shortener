@@ -1,0 +1,90 @@
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+DOCKER_HOST=unix:///Users/pravallikaveeravalli/.colima/default/docker.sock
+JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+openjdk 21.0.8 2025-07-15 LTS
+[ERROR] Tests run: 17, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 0.005 s <<< FAILURE! -- in agentic.shortener.orchestration.executor.ai.stages.AmbiguityDetectionAiExecutorTest$Contract
+[ERROR] agentic.shortener.orchestration.executor.ai.stages.AmbiguityDetectionAiExecutorTest.promptStatesTheSharpenedBehavioralForkTest -- Time elapsed: 0.005 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+expected the predicate to require buildable, observable consequences, not merely a logical or linguistic distinction: You are the ambiguity-detection stage of a software requirement pipeline. Examine the normalized requirements below for: missing acceptance criteria, undefined terms, unbounded quantifiers, missing actors, self-referential constraints, contradictory bounds on the same field, and SEMANTIC CONTRADICTIONS between different concepts (the kind no structural rule alone would catch). You MUST NOT resolve any ambiguity you find — only detect and record it; a human decides.
+
+For every ambiguity you detect, you MUST ALSO classify its MATERIALITY, using exactly this predicate — it decides whether a human is actually consulted, so apply it precisely rather than by impression:
+
+An ambiguity is MATERIAL_PENDING if and only if its resolution could alter an approved obligation (any functional or non-functional requirement, a gate condition, a stated scope boundary, the security posture, or a binding validation target), or determines which of two behaviours the system MUST exhibit — AND that resolution is not already fixed by an existing approved artifact (a schema, a domain invariant, an existing policy, or an already-defined contract).
+
+An ambiguity is NOT_MATERIAL if and only if you can AFFIRMATIVELY SHOW its resolution cannot alter any obligation or required behaviour — for example, because an existing approved artifact already fixes the answer, or because every conformant choice satisfies every stated obligation equally. Non-materiality must be demonstrated, never assumed: WHEN CLASSIFICATION IS UNCERTAIN, THE ITEM MUST BE TREATED AS MATERIAL_PENDING. This default is not optional — the burden of proof runs toward materiality, not away from it.
+
+Respond with ONLY a JSON array, no prose. If you find nothing, the array MUST still contain exactly one element with resolutionState "NOT_MATERIAL" naming, substantively, what checks you actually performed — never an empty array standing in for "all clear". Each element: {"ambiguityClass": one of MISSING_ACCEPTANCE_CRITERIA|UNDEFINED_TERM|UNBOUNDED_QUANTIFIER|MISSING_ACTOR|SELF_REFERENTIAL_CONSTRAINT|CONTRADICTORY_BOUNDS|SEMANTIC_CONTRADICTION, "affectedPath": a SUBSTANTIVE description (at least one full sentence, not a bare field reference like "R1.statement") of exactly which requirement(s) or clause(s) are involved and why, "resolutionState": "MATERIAL_PENDING" or "NOT_MATERIAL" per the predicate above, "qualityChecksPerformed": substantive string, "noClarificationReason": substantive string stating SPECIFICALLY which existing approved artifact already fixes the answer, or why every conformant choice satisfies every stated obligation equally — REQUIRED when resolutionState is NOT_MATERIAL, omitted otherwise}.
+
+Normalized requirements:
+[{"statement":"x"}] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at agentic.shortener.orchestration.executor.ai.stages.AmbiguityDetectionAiExecutorTest.promptStatesTheSharpenedBehavioralForkTest(AmbiguityDetectionAiExecutorTest.java:229)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] agentic.shortener.orchestration.executor.ai.stages.AmbiguityDetectionAiExecutorTest.promptScopesUncertainToBehaviouralDoubtNotWordingPrecision -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+expected the prompt to explicitly rule out 'could be worded more precisely' as a form of materiality-relevant uncertainty: You are the ambiguity-detection stage of a software requirement pipeline. Examine the normalized requirements below for: missing acceptance criteria, undefined terms, unbounded quantifiers, missing actors, self-referential constraints, contradictory bounds on the same field, and SEMANTIC CONTRADICTIONS between different concepts (the kind no structural rule alone would catch). You MUST NOT resolve any ambiguity you find — only detect and record it; a human decides.
+
+For every ambiguity you detect, you MUST ALSO classify its MATERIALITY, using exactly this predicate — it decides whether a human is actually consulted, so apply it precisely rather than by impression:
+
+An ambiguity is MATERIAL_PENDING if and only if its resolution could alter an approved obligation (any functional or non-functional requirement, a gate condition, a stated scope boundary, the security posture, or a binding validation target), or determines which of two behaviours the system MUST exhibit — AND that resolution is not already fixed by an existing approved artifact (a schema, a domain invariant, an existing policy, or an already-defined contract).
+
+An ambiguity is NOT_MATERIAL if and only if you can AFFIRMATIVELY SHOW its resolution cannot alter any obligation or required behaviour — for example, because an existing approved artifact already fixes the answer, or because every conformant choice satisfies every stated obligation equally. Non-materiality must be demonstrated, never assumed: WHEN CLASSIFICATION IS UNCERTAIN, THE ITEM MUST BE TREATED AS MATERIAL_PENDING. This default is not optional — the burden of proof runs toward materiality, not away from it.
+
+Respond with ONLY a JSON array, no prose. If you find nothing, the array MUST still contain exactly one element with resolutionState "NOT_MATERIAL" naming, substantively, what checks you actually performed — never an empty array standing in for "all clear". Each element: {"ambiguityClass": one of MISSING_ACCEPTANCE_CRITERIA|UNDEFINED_TERM|UNBOUNDED_QUANTIFIER|MISSING_ACTOR|SELF_REFERENTIAL_CONSTRAINT|CONTRADICTORY_BOUNDS|SEMANTIC_CONTRADICTION, "affectedPath": a SUBSTANTIVE description (at least one full sentence, not a bare field reference like "R1.statement") of exactly which requirement(s) or clause(s) are involved and why, "resolutionState": "MATERIAL_PENDING" or "NOT_MATERIAL" per the predicate above, "qualityChecksPerformed": substantive string, "noClarificationReason": substantive string stating SPECIFICALLY which existing approved artifact already fixes the answer, or why every conformant choice satisfies every stated obligation equally — REQUIRED when resolutionState is NOT_MATERIAL, omitted otherwise}.
+
+Normalized requirements:
+[{"statement":"x"}] ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at agentic.shortener.orchestration.executor.ai.stages.AmbiguityDetectionAiExecutorTest.promptScopesUncertainToBehaviouralDoubtNotWordingPrecision(AmbiguityDetectionAiExecutorTest.java:257)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] Failures: 
+[ERROR]   AmbiguityDetectionAiExecutorTest.promptScopesUncertainToBehaviouralDoubtNotWordingPrecision:257 expected the prompt to explicitly rule out 'could be worded more precisely' as a form of materiality-relevant uncertainty: You are the ambiguity-detection stage of a software requirement pipeline. Examine the normalized requirements below for: missing acceptance criteria, undefined terms, unbounded quantifiers, missing actors, self-referential constraints, contradictory bounds on the same field, and SEMANTIC CONTRADICTIONS between different concepts (the kind no structural rule alone would catch). You MUST NOT resolve any ambiguity you find — only detect and record it; a human decides.
+
+For every ambiguity you detect, you MUST ALSO classify its MATERIALITY, using exactly this predicate — it decides whether a human is actually consulted, so apply it precisely rather than by impression:
+
+An ambiguity is MATERIAL_PENDING if and only if its resolution could alter an approved obligation (any functional or non-functional requirement, a gate condition, a stated scope boundary, the security posture, or a binding validation target), or determines which of two behaviours the system MUST exhibit — AND that resolution is not already fixed by an existing approved artifact (a schema, a domain invariant, an existing policy, or an already-defined contract).
+
+An ambiguity is NOT_MATERIAL if and only if you can AFFIRMATIVELY SHOW its resolution cannot alter any obligation or required behaviour — for example, because an existing approved artifact already fixes the answer, or because every conformant choice satisfies every stated obligation equally. Non-materiality must be demonstrated, never assumed: WHEN CLASSIFICATION IS UNCERTAIN, THE ITEM MUST BE TREATED AS MATERIAL_PENDING. This default is not optional — the burden of proof runs toward materiality, not away from it.
+
+Respond with ONLY a JSON array, no prose. If you find nothing, the array MUST still contain exactly one element with resolutionState "NOT_MATERIAL" naming, substantively, what checks you actually performed — never an empty array standing in for "all clear". Each element: {"ambiguityClass": one of MISSING_ACCEPTANCE_CRITERIA|UNDEFINED_TERM|UNBOUNDED_QUANTIFIER|MISSING_ACTOR|SELF_REFERENTIAL_CONSTRAINT|CONTRADICTORY_BOUNDS|SEMANTIC_CONTRADICTION, "affectedPath": a SUBSTANTIVE description (at least one full sentence, not a bare field reference like "R1.statement") of exactly which requirement(s) or clause(s) are involved and why, "resolutionState": "MATERIAL_PENDING" or "NOT_MATERIAL" per the predicate above, "qualityChecksPerformed": substantive string, "noClarificationReason": substantive string stating SPECIFICALLY which existing approved artifact already fixes the answer, or why every conformant choice satisfies every stated obligation equally — REQUIRED when resolutionState is NOT_MATERIAL, omitted otherwise}.
+
+Normalized requirements:
+[{"statement":"x"}] ==> expected: <true> but was: <false>
+[ERROR]   AmbiguityDetectionAiExecutorTest.promptStatesTheSharpenedBehavioralForkTest:229 expected the predicate to require buildable, observable consequences, not merely a logical or linguistic distinction: You are the ambiguity-detection stage of a software requirement pipeline. Examine the normalized requirements below for: missing acceptance criteria, undefined terms, unbounded quantifiers, missing actors, self-referential constraints, contradictory bounds on the same field, and SEMANTIC CONTRADICTIONS between different concepts (the kind no structural rule alone would catch). You MUST NOT resolve any ambiguity you find — only detect and record it; a human decides.
+
+For every ambiguity you detect, you MUST ALSO classify its MATERIALITY, using exactly this predicate — it decides whether a human is actually consulted, so apply it precisely rather than by impression:
+
+An ambiguity is MATERIAL_PENDING if and only if its resolution could alter an approved obligation (any functional or non-functional requirement, a gate condition, a stated scope boundary, the security posture, or a binding validation target), or determines which of two behaviours the system MUST exhibit — AND that resolution is not already fixed by an existing approved artifact (a schema, a domain invariant, an existing policy, or an already-defined contract).
+
+An ambiguity is NOT_MATERIAL if and only if you can AFFIRMATIVELY SHOW its resolution cannot alter any obligation or required behaviour — for example, because an existing approved artifact already fixes the answer, or because every conformant choice satisfies every stated obligation equally. Non-materiality must be demonstrated, never assumed: WHEN CLASSIFICATION IS UNCERTAIN, THE ITEM MUST BE TREATED AS MATERIAL_PENDING. This default is not optional — the burden of proof runs toward materiality, not away from it.
+
+Respond with ONLY a JSON array, no prose. If you find nothing, the array MUST still contain exactly one element with resolutionState "NOT_MATERIAL" naming, substantively, what checks you actually performed — never an empty array standing in for "all clear". Each element: {"ambiguityClass": one of MISSING_ACCEPTANCE_CRITERIA|UNDEFINED_TERM|UNBOUNDED_QUANTIFIER|MISSING_ACTOR|SELF_REFERENTIAL_CONSTRAINT|CONTRADICTORY_BOUNDS|SEMANTIC_CONTRADICTION, "affectedPath": a SUBSTANTIVE description (at least one full sentence, not a bare field reference like "R1.statement") of exactly which requirement(s) or clause(s) are involved and why, "resolutionState": "MATERIAL_PENDING" or "NOT_MATERIAL" per the predicate above, "qualityChecksPerformed": substantive string, "noClarificationReason": substantive string stating SPECIFICALLY which existing approved artifact already fixes the answer, or why every conformant choice satisfies every stated obligation equally — REQUIRED when resolutionState is NOT_MATERIAL, omitted otherwise}.
+
+Normalized requirements:
+[{"statement":"x"}] ==> expected: <true> but was: <false>
+[ERROR] Tests run: 17, Failures: 2, Errors: 0, Skipped: 0
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project shortener: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /Users/pravallikaveeravalli/Projects/agentic-engineering-url-shortener/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

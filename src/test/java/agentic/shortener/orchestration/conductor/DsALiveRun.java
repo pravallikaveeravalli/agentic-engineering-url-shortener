@@ -72,12 +72,14 @@ class DsALiveRun extends PostgresIntegrationTest {
     private static final String CLI = "claude";
     private static final String MODEL = "claude-sonnet-5";
     private static final Path REPO_ROOT = Paths.get("").toAbsolutePath();
-    // CR-051: the expiry-endpoint requirement (CR-048/049/050) is retired from this role -- five live
-    // attempts across two independent models established a genuine requirement-completeness-ceiling
-    // finding (docs/evidence/ds-a/requirement-completeness-ceiling-finding.md), kept as evidence, not
-    // forced further. This is a genuinely minimal replacement subject, chosen honestly for a small enough
-    // surface that completeness is actually achievable (no auth, no inputs, a fixed output, no failure
-    // mode by design) -- see docs/evidence/ds-a/design.md's "Current subject (CR-051)".
+    // CR-052: simplified from CR-051's wording after attempt 6 showed the closing "no failure mode by
+    // design" clause backfired -- 3 of 4 MATERIAL_PENDING findings traced to that one clause (an
+    // undefined term, a self-referential critique of its own scoping, an unbounded-quantifier critique
+    // of its own phrasing), none of which changed any required behavior, since the other clauses already
+    // state the endpoint's entire behavior unconditionally. CR-052 removed the clause and sharpened S3's
+    // own materiality predicate (AmbiguityDetectionAiExecutor.buildPrompt) to CR-007's real bar --
+    // behavioural fork with buildable, observable consequences, not linguistic imperfection -- see
+    // docs/evidence/ds-a/design.md's "Current subject (CR-052)".
     private static final String REQUIREMENT =
             "Add a public GET /v1/version endpoint that requires no authentication, accepts no path or "
                     + "query parameters, and always returns HTTP 200 with Content-Type: application/json, "
@@ -86,9 +88,7 @@ class DsALiveRun extends PostgresIntegrationTest {
                     + "implementation -- it is never computed, never read from a build manifest, never "
                     + "derived from git or environment state, and never changes without a deliberate code "
                     + "edit to this endpoint itself. The endpoint performs no dependency or downstream "
-                    + "checks, reads and writes no persisted data, and has no failure mode by design: "
-                    + "process-reachable is the only condition it reports, and there is no input, state, "
-                    + "or code path by which it could ever return anything other than this exact response.";
+                    + "checks and reads and writes no persisted data.";
 
     private final Map<String, AiResponse> lastResponseByStage = new ConcurrentHashMap<>();
 

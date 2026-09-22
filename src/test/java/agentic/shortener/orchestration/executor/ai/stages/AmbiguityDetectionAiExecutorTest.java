@@ -199,6 +199,93 @@ class AmbiguityDetectionAiExecutorTest {
         }
     }
 
+    // ==============================================================================================
+    // CR-052: the materiality predicate is sharpened to CR-007's actual bar -- a genuine behavioural
+    // fork with buildable, observable consequences, not linguistic imperfection. Evidence: a trivial,
+    // auth-free, input-free, fixed-output requirement still drew MATERIAL_PENDING findings that traced
+    // to an undefined term with an ordinary meaning, a self-referential summarizing clause, and an
+    // unbounded quantifier no obligation actually constrained -- none of which changed any required,
+    // buildable behaviour. Stated generally, same discipline as CR-049's own predicate text.
+    // ==============================================================================================
+
+    @Test
+    @DisplayName("CR-052: the prompt states the sharpened behavioural-fork test, generally")
+    void promptStatesTheSharpenedBehavioralForkTest() throws Exception {
+        String[] capturedPrompt = new String[1];
+        StageAiProvider capturing = prompt -> {
+            capturedPrompt[0] = prompt;
+            return new AiResponse("claude-test-fixture", "[{"
+                    + "\"ambiguityClass\":\"MISSING_ACCEPTANCE_CRITERIA\","
+                    + "\"affectedPath\":\"n/a\",\"resolutionState\":\"NOT_MATERIAL\","
+                    + "\"qualityChecksPerformed\":\"checked\","
+                    + "\"noClarificationReason\":\"already fixed by an existing approved artifact\"}]");
+        };
+
+        new AmbiguityDetectionAiExecutor(capturing).execute(inputWith("[{\"statement\":\"x\"}]"));
+
+        String lower = capturedPrompt[0].toLowerCase();
+        assertTrue(lower.contains("behaviour") || lower.contains("behavior"),
+                "expected the predicate to be stated in terms of required behaviour: " + capturedPrompt[0]);
+        assertTrue(lower.contains("buildable") && lower.contains("observable"),
+                "expected the predicate to require buildable, observable consequences, not merely a "
+                        + "logical or linguistic distinction: " + capturedPrompt[0]);
+        assertTrue(lower.contains("linguistic imperfection") || lower.contains("linguistic"),
+                "expected the predicate to name linguistic imperfection explicitly as NOT sufficient for "
+                        + "materiality: " + capturedPrompt[0]);
+        assertTrue(lower.contains("reasonable") && lower.contains("default"),
+                "expected the predicate to state that a dimension settled by a reasonable default is "
+                        + "NOT_MATERIAL: " + capturedPrompt[0]);
+    }
+
+    @Test
+    @DisplayName("CR-052: 'uncertain' is scoped to genuine behavioural doubt, not wording precision")
+    void promptScopesUncertainToBehaviouralDoubtNotWordingPrecision() throws Exception {
+        String[] capturedPrompt = new String[1];
+        StageAiProvider capturing = prompt -> {
+            capturedPrompt[0] = prompt;
+            return new AiResponse("claude-test-fixture", "[{"
+                    + "\"ambiguityClass\":\"MISSING_ACCEPTANCE_CRITERIA\","
+                    + "\"affectedPath\":\"n/a\",\"resolutionState\":\"NOT_MATERIAL\","
+                    + "\"qualityChecksPerformed\":\"checked\","
+                    + "\"noClarificationReason\":\"already fixed by an existing approved artifact\"}]");
+        };
+
+        new AmbiguityDetectionAiExecutor(capturing).execute(inputWith("[{\"statement\":\"x\"}]"));
+
+        String lower = capturedPrompt[0].toLowerCase();
+        assertTrue(lower.contains("uncertain"), "expected the closing default to still be present");
+        assertTrue(lower.contains("precision") || lower.contains("phrased more precisely")
+                        || lower.contains("worded more precisely"),
+                "expected the prompt to explicitly rule out 'could be worded more precisely' as a form of "
+                        + "materiality-relevant uncertainty: " + capturedPrompt[0]);
+    }
+
+    @Test
+    @DisplayName("CR-052: prompt still contains ZERO DS-A-specific vocabulary after sharpening")
+    void sharpenedPromptStillContainsNoDsASpecificVocabulary() throws Exception {
+        String[] capturedPrompt = new String[1];
+        StageAiProvider capturing = prompt -> {
+            capturedPrompt[0] = prompt;
+            return new AiResponse("claude-test-fixture", "[{"
+                    + "\"ambiguityClass\":\"MISSING_ACCEPTANCE_CRITERIA\","
+                    + "\"affectedPath\":\"n/a\",\"resolutionState\":\"NOT_MATERIAL\","
+                    + "\"qualityChecksPerformed\":\"checked\","
+                    + "\"noClarificationReason\":\"already fixed by an existing approved artifact\"}]");
+        };
+
+        new AmbiguityDetectionAiExecutor(capturing).execute(inputWith("[{\"statement\":\"x\"}]"));
+
+        String lower = capturedPrompt[0].toLowerCase();
+        List<String> forbidden = List.of("expiry", "expires", "expiresat", "rounding", "round", "401",
+                "creator", "owner", "secondsremaining", "link", "version", "reachable", "reachability",
+                "health");
+        for (String term : forbidden) {
+            assertFalse(lower.contains(term),
+                    "the sharpened predicate must remain general, with zero reference to any specific "
+                            + "DS-A finding -- found term '" + term + "' in: " + capturedPrompt[0]);
+        }
+    }
+
     @Test
     @DisplayName("an explicit JSON null for noClarificationReason on a MATERIAL_PENDING record is accepted, "
             + "same as an omitted key — found live via the CR-049 compensating check")
@@ -211,6 +298,31 @@ class AmbiguityDetectionAiExecutorTest {
                 + "\"resolutionState\":\"MATERIAL_PENDING\","
                 + "\"qualityChecksPerformed\":\"searched the requirement set for a definition; found none\","
                 + "\"noClarificationReason\":null"
+                + "}]");
+
+        StageOutcome outcome = new AmbiguityDetectionAiExecutor(provider).execute(inputWith("[...]"));
+
+        assertTrue(outcome.succeeded(), outcome.succeeded() ? "" : "unexpected failure: " + outcome.failure());
+        JsonNode records = JSON.readTree(outcome.producedArtifacts().get(0).content());
+        assertEquals("MATERIAL_PENDING", records.get(0).get("resolutionState").asText());
+        assertFalse(records.get(0).has("noClarificationReason"),
+                "an inapplicable field must not resurface in the produced artifact either");
+    }
+
+    @Test
+    @DisplayName("an empty-string noClarificationReason on a MATERIAL_PENDING record is accepted, same as "
+            + "null or an omitted key — found live via the CR-052 compensating check re-run")
+    void emptyStringNoClarificationReasonOnMaterialIsAccepted() throws Exception {
+        // A real model may include the key with an explicit empty string rather than null or omitting it
+        // entirely -- all three mean "no reason given", and AmbiguityRecord's own constructor already
+        // treats blank the same as null (hasReason = non-null && !isBlank()); this adapter's own parsing
+        // must not be stricter than the record it is building.
+        StageAiProvider provider = fixedResponse("[{"
+                + "\"ambiguityClass\":\"SEMANTIC_CONTRADICTION\","
+                + "\"affectedPath\":\"R1 and R3 directly conflict on what expired means for a redirect\","
+                + "\"resolutionState\":\"MATERIAL_PENDING\","
+                + "\"qualityChecksPerformed\":\"cross-referenced the lifecycle claim in R1 against R3\","
+                + "\"noClarificationReason\":\"\""
                 + "}]");
 
         StageOutcome outcome = new AmbiguityDetectionAiExecutor(provider).execute(inputWith("[...]"));

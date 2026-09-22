@@ -1,8 +1,8 @@
 # DS-A — Greenfield run design
 
-Task T131 (revised, CR-051). Req: DS-A, FR-ORC-010. Scn: DS-A. ADR: ADR-004.
+Task T131 (revised, CR-052). Req: DS-A, FR-ORC-010. Scn: DS-A. ADR: ADR-004.
 
-## Current subject (CR-051) — a genuinely minimal requirement
+## Current subject (CR-052) — a genuinely minimal requirement, behavioural surface only
 
 **The expiry endpoint is retired from DS-A's clean-pass demonstration role.** Five live attempts against it
 (CR-048, CR-049, CR-050 — kept below as the "Retired subject" section, evidence intact, nothing deleted)
@@ -14,33 +14,44 @@ the owner's decision. DS-A's own defining property — a *complete* requirement 
 gate — is demonstrated instead on a feature chosen honestly for a small enough surface that completeness is
 actually achievable, not tuned to any specific past S3 finding.
 
+CR-051's own first minimal wording (below, superseded) added a closing "no failure mode by design" clause,
+intended to close the "what does an unhealthy response look like?" question. Live evidence
+(`docs/evidence/ds-a/pending-gate-s4-context-v1-version.md`, attempt 6) showed that clause backfired: three
+of four `MATERIAL_PENDING` findings traced to it — an undefined term ("reachable"), a self-referential
+critique of its own scoping, and an unbounded-quantifier critique of its own "for every possible input,
+state, and code path" phrasing — none of which changed any actual required, buildable behaviour, since the
+requirement's other eight clauses already state the endpoint's entire behaviour unconditionally. That result
+was the evidence CR-052 (`docs/governance/change-control/CR-052-...md`) used to sharpen S3's own materiality
+predicate to CR-007's real bar — a genuine behavioural fork, not linguistic imperfection — and, per the
+owner's own instruction, to simplify this requirement by removing the non-behavioural clause that invited
+those three findings in the first place, rather than trying to out-word a detector that was, on its own
+terms, over-firing.
+
 > Add a public `GET /v1/version` endpoint that requires no authentication, accepts no path or query
 > parameters, and always returns HTTP `200` with `Content-Type: application/json`, header `Cache-Control:
 > no-store`, and body exactly `{"version": "0.1.0-SNAPSHOT"}`. The version string is a fixed literal encoded
 > directly in the endpoint's own implementation — it is never computed, never read from a build manifest,
 > never derived from git or environment state, and never changes without a deliberate code edit to this
-> endpoint itself. The endpoint performs no dependency or downstream checks, reads and writes no persisted
-> data, and has no failure mode by design: process-reachable is the only condition it reports, and there is
-> no input, state, or code path by which it could ever return anything other than this exact response.
+> endpoint itself. The endpoint performs no dependency or downstream checks and reads and writes no
+> persisted data.
 
-**Verified against real source before adopting**: the owner's first proposal (`GET /v1/health`, a public
-liveness endpoint) was checked against the delivered codebase and found to duplicate an already-existing,
-already-approved feature — `HealthController.live()` already serves `GET /health/live` (T032, FR-URL-015,
-ADR-012): unauthenticated, no dependency checks, always `200 {"status": "UP"}`, no failure mode by design,
-in essentially the same shape the proposed wording described. Adding a second, differently-named liveness
-endpoint would itself be a Criterion-2 (Consistent) violation — a real conflict with an existing artifact,
-not a clean subject. `GET /v1/version` (the owner's own stated fallback) was verified clean instead: no
-existing route under `/v1/version` or any `/v1/` prefix collision (`/v1/`'s only existing children are
-`/v1/links` and `/v1/runs`), no existing version/build-info endpoint anywhere in the codebase, and
-`CreatorAuthFilter`'s registered patterns (`/v1/links`, `/v1/links/*`) do not cover it — unauthenticated by
-default, no filter change needed. Full detail: `docs/governance/change-control/CR-051-...md`.
+**Verified against real source before adopting** (unchanged from CR-051, restated here): the owner's first
+proposal (`GET /v1/health`, a public liveness endpoint) was checked against the delivered codebase and found
+to duplicate an already-existing, already-approved feature — `HealthController.live()` already serves
+`GET /health/live` (T032, FR-URL-015, ADR-012). Adding a second, differently-named liveness endpoint would
+itself be a Criterion-2 (Consistent) violation. `GET /v1/version` was verified clean instead: no existing
+route under `/v1/version` or any `/v1/` prefix collision, no existing version/build-info endpoint anywhere in
+the codebase, and `CreatorAuthFilter`'s registered patterns do not cover it — unauthenticated by default, no
+filter change needed.
 
 ### Well-formedness against the four criteria — genuinely, not asserted
 
 1. **Complete.** Every dimension a response could vary on is closed: status code, content type, cache
    header, and body are all stated exactly; the version string's own provenance (fixed literal, never
-   computed) is stated so no reader could imagine it varies by build; auth (none), inputs (none), and
-   failure modes (none, stated positively) are each closed rather than left silent.
+   computed) is stated so no reader could imagine it varies by build; auth (none) and inputs (none) are each
+   closed. No closing "no failure mode" clause is needed to state this — it followed already, from the other
+   clauses being unconditional — and CR-052's own finding is that adding one only introduced surface for a
+   detector to (over-)scrutinize without adding any obligation.
 2. **Consistent.** No conflict with `HealthController`'s existing liveness/readiness pair (FR-URL-015,
    ADR-012) — a version identifier is a distinct concept from process liveness or store readiness, and this
    requirement does not restate, alter, or compete with either existing probe. No conflict with the two-plane
@@ -56,6 +67,21 @@ default, no filter change needed. Full detail: `docs/governance/change-control/C
 Per `spec.md`'s DS-A section, this input MUST proceed through
 S1→S2→S3→**S4 SKIPPED**→S5→S6→S7→S8→S9‖S10→S11→S12 with no clarification gate firing; the live run (T132)
 records the quality checks performed and the explicit no-clarification reason as its own evidence of this.
+
+### Prior wording (CR-051, superseded by CR-052 above — kept as evidence)
+
+> Add a public `GET /v1/version` endpoint that requires no authentication, accepts no path or query
+> parameters, and always returns HTTP `200` with `Content-Type: application/json`, header `Cache-Control:
+> no-store`, and body exactly `{"version": "0.1.0-SNAPSHOT"}`. The version string is a fixed literal encoded
+> directly in the endpoint's own implementation — it is never computed, never read from a build manifest,
+> never derived from git or environment state, and never changes without a deliberate code edit to this
+> endpoint itself. The endpoint performs no dependency or downstream checks, reads and writes no persisted
+> data, and has no failure mode by design: process-reachable is the only condition it reports, and there is
+> no input, state, or code path by which it could ever return anything other than this exact response.
+
+Attempt 6 against this wording is preserved at
+`docs/evidence/ds-a/run-snapshot-ATTEMPT-6-STOPPED-AT-S4-minimal-v1-version-subject.md` and
+`docs/evidence/ds-a/pending-gate-s4-context-v1-version.md`.
 
 ---
 

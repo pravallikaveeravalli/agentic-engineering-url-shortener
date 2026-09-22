@@ -4,7 +4,39 @@ Status: **CLOSED as a documented finding, retired from the DS-A clean-pass role.
 longer DS-A's demonstration subject (see `docs/governance/change-control/CR-051-...md` for the replacement
 and the full rationale for retiring it). This document is the honest record of what five live attempts, two
 independent models, and one calibration fix actually showed — preserved as an asset for a reviewer, not a
-loose end.
+loose end. **See the "Correction (2026-09-22, CR-052)" section below**: part of what this document originally
+concluded was an irreducible completeness ceiling was, on later evidence, a correctable detector over-fire —
+corrected forward here, not edited out of the original text, per this repository's own governance discipline.
+
+## Correction (2026-09-22, CR-052)
+
+**What was right, and remains right, unretracted**: the five-attempt expiry arc below is real, and the two
+structural facts in "The root cause, stated plainly" are both still true and still explain most of that arc
+— S3 genuinely has no repository access, and its job genuinely is requirement completeness rather than
+system completeness.
+
+**What this document did not yet know when first written**: CR-051's own replacement subject — a maximally
+minimal, auth-free, input-free, fixed-output `GET /v1/version` endpoint, chosen specifically to test whether
+the ceiling was real or an artifact of feature richness — **also** stopped at S4 (attempt 6,
+`docs/evidence/ds-a/pending-gate-s4-context-v1-version.md`), with 3 of its 4 findings tracing to a single
+closing, summarizing clause and changing no actual required behaviour. That result showed the pattern was
+not purely about feature surface, as this document's original text concluded — part of it was S3's
+materiality classification itself over-firing on linguistic imperfection (an undefined term with an ordinary
+meaning, a clause's own internal self-reference, an unbounded phrasing no obligation constrained) rather than
+applying CR-007's actual bar (does resolving this change a required, buildable behaviour?).
+
+**The fix**: `docs/governance/change-control/CR-052-...md` sharpened S3's own materiality predicate to state
+that bar explicitly and generally, removed the non-behavioural clause from the minimal subject that invited
+those three findings, and proved — via three live re-runs of the DS-C compensating check
+(`docs/evidence/cr-052/ds-c-compensating-check.md`) — that the sharpening did not blunt genuine detection.
+
+**What remains true after the correction**: detection itself is thorough (reconfirmed, not weakened, by
+CR-052's own compensating checks), and S3's lack of repository access is an unchanged structural fact,
+orthogonal to materiality classification — restating a fact directly in the requirement text is still the
+only way to make it visible to S3, and that part of the expiry arc's own lesson stands. What changed is
+narrower: some of what looked like irreducible *completeness* pressure was, in fact, correctable
+*materiality-classification* over-firing — a real, different bug, now fixed, not evidence against the
+completeness-ceiling finding's remaining, narrower claim.
 
 ## The arc, in one line
 
