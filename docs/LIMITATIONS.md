@@ -27,7 +27,7 @@ in `tasks.md`, not silently skipped.
 S2 (normalization), S3 (ambiguity detection), S6 (design), S7 (implementation), and S9 (documentation) are
 real, live AI-capable stages (ADR-004). The same requirement, submitted twice, can produce different real
 findings, different design reasoning, and occasionally a malformed answer — this was proven repeatedly, live,
-across dozens of real dispatches this engagement (`docs/evidence/ds-a/`, `docs/evidence/ds-c/`). This is not
+across dozens of real dispatches this engagement (`docs/evidence/ds-a/`, `docs/evidence/ds-b/`, `docs/evidence/ds-c/`). This is not
 a defect to be engineered away; it is the accepted shape of a system whose whole premise is that AI output
 feeds a human gate rather than executing unchecked. What the system actually guarantees is not "the AI never
 gets it wrong" but "a wrong answer is caught before it does damage":
@@ -61,15 +61,30 @@ CR-053's own zero-runtime-behaviour control subject still drew two genuine findi
 scales with feature surface, not with runtime behaviour specifically). Completeness should be expected to
 scale with what a requirement describes, not assumed to reach zero.
 
-## 4. The deferred per-creator aggregate redirect tier
+## 4. The per-creator aggregate redirect tier — closed, and how it was actually built
 
-The per-creator aggregate rate limit (PVT-014) is deliberately deferred to the brownfield scenario (T136a),
-disclosed at its own point of deferral in `docs/delivery/baseline-omissions.md` (T055a) — this entry
-cross-references that record rather than duplicating it. **As of this disclosure, T136a has not closed it**:
-its own security gate is approved (`docs/governance/gate-decisions/ds-b/t136a-security-gate-approved.md`),
-but `AggregateRedirectLimiter` does not exist yet — the build itself is separate, later work. Until T136a
-lands, only the per-short-code tier (PVT-013, 600/min) is enforced; the multi-link aggregate case passes
-unthrottled, by design, as the brownfield scenario's own documented before-state.
+The per-creator aggregate rate limit (PVT-014) was deliberately deferred to the brownfield scenario (T136a),
+disclosed at its own point of deferral in `docs/delivery/baseline-omissions.md` (T055a). **T136a has since
+closed it**: `AggregateRedirectLimiter` exists, is wired into `RedirectController` at a new post-lookup
+checkpoint, and is enforced independently of the per-code tier — all three FR-URL-016 tiers are now built
+and enforced; `baseline-omissions.md`'s own entry reads `Closed`.
+
+**Disclosed honestly, because it matters to how this evidence should be read**: the tier's own code was
+**built directly**, not authored by a live AI dispatch through the orchestrator. Three genuine, capped, live
+orchestrator attempts were made first (`docs/evidence/ds-b/attempts-1-3-finding.md`) — retry and
+compensation were both demonstrated live and are real evidence in their own right — but none reached the
+implementation stage: two stopped on real, answerable ambiguity findings, and the third stopped on a
+genuinely new live-AI defect (fixed as CR-070, not yet re-verified live). Rather than a fourth live attempt,
+the owner directed the tier be built directly against the already-approved security-gate scope
+(`docs/governance/gate-decisions/ds-b/t136a-security-gate-approved.md`) and the already-written impact
+analysis (`docs/evidence/ds-b/impact-analysis.md`). That choice, and the reasoning behind it, is recorded in
+full at `docs/evidence/ds-b/t136a-built-directly.md` — cited here rather than duplicated, so this disclosure
+does not go stale independently of that record.
+
+**What was not captured for this tier**: PVT-001-class latency re-measurement with the ownership lookup in
+the hot path (the same T145a–d deferral, §1 above) and a fault-injection exercise of its failure posture
+(moot for this specific implementation — the security gate itself confirmed an in-process counter with no
+external store, so there is no store outage to inject).
 
 ## 5. Retention posture — indefinite, by owner decision
 
