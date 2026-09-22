@@ -46,12 +46,13 @@ management:
 
 shortener:
   ratelimit:
-    # Throttling ON by default. FR-URL-016 is two-sided and two-tier; the third tier (per-creator
-    # aggregate redirects, PVT-014) is the deliberately deferred brownfield subject and is absent
-    # here on purpose — see docs/delivery/baseline-omissions.md, not this file.
+    # Throttling ON by default. FR-URL-016 is two-sided, three-tier -- all three now enforced. T136a
+    # closed the third tier (per-creator aggregate redirects, PVT-014); see docs/delivery/baseline-
+    # omissions.md entry 1 for the deferral this closes.
     enabled: true
     creation-per-creator-per-minute: 60
     redirect-per-code-per-minute: 600
+    aggregate-per-creator-per-minute: 3000
   # own-hosts — this service's own host names, for EC-005: a destination pointing back into our own
   # short-link space is a redirect chain or a loop, and FR-URL-005 refuses it.
   #

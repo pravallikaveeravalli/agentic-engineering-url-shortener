@@ -45,9 +45,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
                 "shortener.ratelimit.creation-per-creator-per-minute=5",
-                "shortener.ratelimit.redirect-per-code-per-minute=4"
+                "shortener.ratelimit.redirect-per-code-per-minute=4",
+                "shortener.ratelimit.aggregate-per-creator-per-minute=6"
         })
-@DisplayName("T054/T055 rate limiting through HTTP")
+@DisplayName("T054/T055/T136a rate limiting through HTTP")
 class RateLimitIT extends PostgresIntegrationTest {
 
     @DynamicPropertySource
@@ -194,40 +195,43 @@ class RateLimitIT extends PostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("THE DEFERRED TIER'S BEFORE-STATE: traffic spread across links is NOT throttled")
-    void aggregateTrafficPassesUnthrottled() throws Exception {
-        // This is DS-B's before-state, and it is deliberately a PASS. FR-URL-016's third tier — PVT-014,
-        // per creator aggregated across all their links — is not built. Traffic spread across several
-        // links, each individually inside the per-code limit, therefore goes through untouched.
-        //
-        // Recorded as an omission BEFORE this test existed:
-        //   docs/delivery/baseline-omissions.md, entry 1, closed by T136a.
-        //
-        // Read carefully: a green result here does NOT mean FR-URL-016 is satisfied. It means the gap the
-        // register describes is real and reproducible, which is what makes it a demonstrable before-state
-        // rather than a claim. T057's acceptance sweep records the same thing at the slice boundary.
+    @DisplayName("T136a AFTER-STATE: traffic spread across links IS throttled once the aggregate limit is hit")
+    void aggregateTrafficIsThrottledAfterT136a() throws Exception {
+        // Was aggregateTrafficPassesUnthrottled, DS-B's own before-state
+        // (docs/delivery/baseline-omissions.md entry 1, closed by T136a). The aggregate limit is lowered
+        // to 6 for this class only (see the properties above), the same pattern already used for the
+        // other two tiers.
         List<String> codes = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
             codes.add(JSON.readTree(create("https://example.com/t055/spread/" + i).getBody())
                     .get("shortCode").asText());
         }
 
-        // Three follows each: twelve in total, comfortably past any aggregate limit set below the sum of
-        // the per-code limits, and inside the per-code limit of four for every individual code.
-        int allowed = 0;
-        for (int round = 0; round < 3; round++) {
-            for (String code : codes) {
-                if (rest.getForEntity(url("/" + code), String.class)
-                        .getStatusCode().value() == 307) {
-                    allowed++;
-                }
-            }
+        // Six follows, spread so no single code approaches its own per-code limit of four -- only the
+        // AGGREGATE tier, shared across all four codes by the same creator, can be what throttles the 7th.
+        int[] rotation = {0, 1, 2, 3, 0, 1};
+        for (int i = 0; i < 6; i++) {
+            assertEquals(307, rest.getForEntity(url("/" + codes.get(rotation[i])), String.class)
+                    .getStatusCode().value(), "follow " + (i + 1) + " of 6 is within the aggregate limit");
         }
 
-        assertEquals(12, allowed,
-                "every follow must succeed. If this starts failing, the aggregate tier has been built — "
-                        + "which is good, and means baseline-omissions.md entry 1 must be closed and "
-                        + "this test rewritten as the after-state (T136a)");
+        ResponseEntity<String> throttled = rest.getForEntity(url("/" + codes.get(2)), String.class);
+        assertEquals(429, throttled.getStatusCode().value(), throttled.getBody());
+        harness.assertConforms("/{shortCode}", "get", 429, throttled.getBody());
+
+        JsonNode body = JSON.readTree(throttled.getBody());
+        assertEquals("RATE_LIMITED", body.get("code").asText());
+        // Unlike the per-code tier (whose own non-disclosure test below refuses even the WORD "creator"),
+        // this tier's own name legitimately names the DIMENSION it throttles on -- "per-creator-aggregate"
+        // -- exactly as the already-existing, already-authenticated CreationRateLimiter.TIER
+        // ("per-creator-creation") already does. Naming which rule fired is what FR-URL-016 requires
+        // (1f); it is a different fact from disclosing anything ABOUT a specific creator (1g), which is
+        // what the assertion below actually tests.
+        assertTrue(body.get("detail").asText().contains("per-creator-aggregate"),
+                "the follower must be told which tier: " + body);
+        String text = String.valueOf(throttled.getBody());
+        assertFalse(text.contains(caller.creatorId().toString()),
+                "the owning creator's id reached a public follower: " + text);
     }
 
     @Test

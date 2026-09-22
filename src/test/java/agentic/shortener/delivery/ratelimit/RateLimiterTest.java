@@ -26,13 +26,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * T054 and T055 — the two rate-limit tiers that are built. FR-URL-016. EC-013. PVT-012, PVT-013.
+ * T054, T055, and T136a — all three rate-limit tiers FR-URL-016 defines. EC-013. PVT-012, PVT-013, PVT-014.
  *
- * <p><strong>Two of three, and the third is deferred rather than forgotten.</strong> FR-URL-016 defines
- * three tiers. The per-creator <em>aggregate</em> redirect tier (PVT-014) is deliberately deferred to the
- * brownfield scenario, and the whole defence of deferring a binding requirement is that the omission is
- * written down with a named closure. {@link #theDeferredTierIsDisclosed} asserts that record exists and
- * says what it must — because without it the deferral is indistinguishable from an oversight.
+ * <p><strong>The third tier was deferred, and is deferred no longer.</strong> The per-creator
+ * <em>aggregate</em> redirect tier (PVT-014) was deliberately deferred to the brownfield scenario
+ * (`docs/delivery/baseline-omissions.md` entry 1) and is closed by T136a, this turn.
+ * {@link #theDeferredTierIsDisclosed} still asserts the historical disclosure record itself remains
+ * intact (a closed entry is not a deleted one); {@link #theAggregateTierIsNowBuiltAndDisclosedAsClosed}
+ * asserts the register now says so.
  *
  * <p><strong>A mutable clock, not sleeping.</strong> A window is a minute long. A test that waited one
  * out would add a minute to every build and still be racy at the boundary.
@@ -241,6 +242,116 @@ class RateLimiterTest {
                 "not even the tier NAME may point at a creator: it reaches a public follower");
     }
 
+    // ------------------------------------------------------------------ T136a, per-creator aggregate redirects
+
+    @Test
+    @DisplayName("PVT-014: exactly 3000 follows a minute per creator, aggregated across every link they own")
+    void aggregateLimitIsThreeThousandPerMinutePerCreator() {
+        MovableClock clock = new MovableClock();
+        AggregateRedirectLimiter limiter = new AggregateRedirectLimiter(3000, clock);
+        UUID creator = UUID.randomUUID();
+
+        for (int i = 1; i <= 3000; i++) {
+            assertTrue(limiter.check(creator).allowed(), "follow " + i + " should be allowed");
+        }
+        assertFalse(limiter.check(creator).allowed(), "the 3001st must be refused: PVT-014 is 3000");
+    }
+
+    @Test
+    @DisplayName("the aggregate tier counts ACROSS every link a creator owns, not per code")
+    void aggregateCountsAcrossLinks() {
+        // The whole reason this tier exists (T-08, noisy neighbour): a per-code count alone cannot see
+        // that the SAME creator's several links, each individually fine, sum to a problem.
+        MovableClock clock = new MovableClock();
+        AggregateRedirectLimiter limiter = new AggregateRedirectLimiter(3, clock);
+        UUID creator = UUID.randomUUID();
+
+        assertTrue(limiter.check(creator).allowed());
+        assertTrue(limiter.check(creator).allowed());
+        assertTrue(limiter.check(creator).allowed());
+        assertFalse(limiter.check(creator).allowed(),
+                "three follows already spent the budget, regardless of which of the creator's own codes "
+                        + "each one was against — this limiter is never told a code at all");
+    }
+
+    @Test
+    @DisplayName("creators have independent aggregate budgets")
+    void aggregateCreatorsAreIndependent() {
+        MovableClock clock = new MovableClock();
+        AggregateRedirectLimiter limiter = new AggregateRedirectLimiter(2, clock);
+        UUID alice = UUID.randomUUID();
+        UUID bob = UUID.randomUUID();
+
+        limiter.check(alice);
+        limiter.check(alice);
+        assertFalse(limiter.check(alice).allowed(), "Alice is out");
+        assertTrue(limiter.check(bob).allowed(),
+                "Bob must not pay for Alice's traffic — the tier is PER CREATOR");
+    }
+
+    @Test
+    @DisplayName("the aggregate refusal NAMES ITS TIER, distinguishable from the other two")
+    void aggregateRefusalNamesItsTier() {
+        MovableClock clock = new MovableClock();
+        AggregateRedirectLimiter limiter = new AggregateRedirectLimiter(1, clock);
+        UUID creator = UUID.randomUUID();
+
+        limiter.check(creator);
+        RateLimitDecision refused = limiter.check(creator);
+
+        assertFalse(refused.allowed());
+        assertEquals(AggregateRedirectLimiter.TIER, refused.tier());
+        assertEquals("per-creator-aggregate", refused.tier());
+        assertNotEquals(CreationRateLimiter.TIER, refused.tier());
+        assertNotEquals(RedirectRateLimiter.TIER, refused.tier());
+    }
+
+    @Test
+    @DisplayName("the aggregate budget returns when the window rolls")
+    void aggregateWindowRolls() {
+        MovableClock clock = new MovableClock();
+        AggregateRedirectLimiter limiter = new AggregateRedirectLimiter(2, clock);
+        UUID creator = UUID.randomUUID();
+
+        limiter.check(creator);
+        limiter.check(creator);
+        assertFalse(limiter.check(creator).allowed());
+
+        clock.advance(Duration.ofSeconds(61));
+        assertTrue(limiter.check(creator).allowed(), "a rate limit that never released would be a ban");
+    }
+
+    @Test
+    @DisplayName("a nonsensical aggregate limit is refused at construction")
+    void aggregateLimitMustBePositive() {
+        MovableClock clock = new MovableClock();
+        assertThrows(IllegalArgumentException.class, () -> new AggregateRedirectLimiter(0, clock));
+        assertThrows(IllegalArgumentException.class, () -> new AggregateRedirectLimiter(-1, clock));
+    }
+
+    @Test
+    @DisplayName("GUARD: the aggregate tier's own DECISION never carries the creator, even though its "
+            + "CHECK does")
+    void aggregateTierDecisionCannotIdentifyTheCreator() {
+        // AggregateRedirectLimiter.check() necessarily takes a creator id -- unlike the per-code tier,
+        // there IS a creator here, by definition (FR-URL-016's own per-creator aggregation requires it).
+        // What must not exist is a path for that id to reach a public follower: RateLimitDecision -- what
+        // RedirectController actually receives and turns into an HTTP response -- has no field of type
+        // UUID anywhere, so the id this class's own input necessarily carries never appears in what a
+        // caller's response is built from, regardless of which tier produced the decision.
+        for (java.lang.reflect.RecordComponent component : RateLimitDecision.class.getRecordComponents()) {
+            assertNotEquals(UUID.class, component.getType(),
+                    "RateLimitDecision carries a UUID component '" + component.getName() + "' -- the "
+                            + "aggregate tier's own creator id must never reach the decision a public "
+                            + "follower's response is built from (FR-URL-016)");
+        }
+        assertTrue(AggregateRedirectLimiter.TIER.contains("creator"),
+                "the tier NAME may name the DIMENSION (per-creator-aggregate) -- CreationRateLimiter.TIER "
+                        + "already does the same for the authenticated creation path; naming which rule "
+                        + "fired is required by FR-URL-016 and is not the same fact as disclosing a "
+                        + "specific creator's identity");
+    }
+
     // ------------------------------------------------------------------ the deferred third tier
 
     @Test
@@ -263,23 +374,14 @@ class RateLimiterTest {
     }
 
     @Test
-    @DisplayName("the aggregate tier is genuinely ABSENT, not half-built")
-    void theAggregateTierIsNotPartiallyPresent() throws Exception {
-        // A half-built third tier would be worse than none: it would look present in a review and
-        // enforce nothing. The absence is asserted so that building it is a visible change that has to
-        // update this test and the register together.
-        try (java.util.stream.Stream<Path> sources =
-                     Files.walk(Path.of("src/main/java/agentic/shortener/delivery/ratelimit"))) {
-            for (Path file : sources.filter(f -> f.toString().endsWith(".java")).toList()) {
-                String text = Files.readString(file).lines()
-                        .map(String::stripLeading)
-                        .filter(l -> !l.startsWith("*") && !l.startsWith("//") && !l.startsWith("/*"))
-                        .reduce("", (a, b) -> a + "\n" + b);
-                assertFalse(text.contains("PVT_014") || text.contains("aggregatePerCreator"),
-                        file + " implements part of the deferred tier; if it is being built, T136a and "
-                                + "the baseline-omissions register must change with it");
-            }
-        }
+    @DisplayName("T136a: the aggregate tier's own baseline-omissions entry is now CLOSED")
+    void theAggregateTierIsNowBuiltAndDisclosedAsClosed() throws Exception {
+        // Was theAggregateTierIsNotPartiallyPresent, whose own premise (the tier is absent) T136a makes
+        // false on purpose -- AggregateRedirectLimiter now exists and is wired (PersistenceConfiguration,
+        // RedirectController). The register entry itself is the durable fact worth asserting here.
+        String text = Files.readString(Path.of("docs/delivery/baseline-omissions.md"));
+        assertTrue(text.toLowerCase(java.util.Locale.ROOT).contains("**status** | **closed**"),
+                "T136a landed; entry 1 of the baseline-omissions register's own Status field must say so");
     }
 
     // ------------------------------------------------------------------ the on-by-default guard
@@ -297,8 +399,6 @@ class RateLimiterTest {
         assertTrue(rateLimit.path("enabled").asBoolean(false), "throttling must be ON by default");
         assertEquals(60, rateLimit.path("creation-per-creator-per-minute").asInt(), "PVT-012");
         assertEquals(600, rateLimit.path("redirect-per-code-per-minute").asInt(), "PVT-013");
-        assertTrue(rateLimit.path("aggregate-per-creator-per-minute").isMissingNode(),
-                "the deferred tier must have no configuration key: a key with no enforcement behind it "
-                        + "is worse than an absence, because it reads as a working control");
+        assertEquals(3000, rateLimit.path("aggregate-per-creator-per-minute").asInt(), "PVT-014");
     }
 }

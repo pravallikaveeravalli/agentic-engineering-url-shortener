@@ -12,6 +12,7 @@ import agentic.shortener.domain.idempotency.IdempotencyRepository;
 import agentic.shortener.domain.shortcode.ShortCodeGenerator;
 import agentic.shortener.domain.link.ExpiryPolicy;
 import agentic.shortener.domain.link.ShortLinkRepository;
+import agentic.shortener.delivery.ratelimit.AggregateRedirectLimiter;
 import agentic.shortener.delivery.ratelimit.CreationRateLimiter;
 import agentic.shortener.delivery.ratelimit.RedirectRateLimiter;
 import agentic.shortener.domain.validation.AbuseGuard;
@@ -159,11 +160,19 @@ public class PersistenceConfiguration {
         return new CreationRateLimiter(limit, clock);
     }
 
-    /** PVT-013, per short code. The third tier (PVT-014) is deferred — see baseline-omissions.md. */
+    /** PVT-013, per short code. */
     @Bean
     public RedirectRateLimiter redirectRateLimiter(
             @Value("${shortener.ratelimit.redirect-per-code-per-minute}") int limit, Clock clock) {
         return new RedirectRateLimiter(limit, clock);
+    }
+
+    /** PVT-014, per creator, aggregated across every link that creator owns. T136a — closes
+     * docs/delivery/baseline-omissions.md entry 1. */
+    @Bean
+    public AggregateRedirectLimiter aggregateRedirectLimiter(
+            @Value("${shortener.ratelimit.aggregate-per-creator-per-minute}") int limit, Clock clock) {
+        return new AggregateRedirectLimiter(limit, clock);
     }
 
     @Bean

@@ -1,6 +1,7 @@
 package agentic.shortener.delivery;
 
 import agentic.shortener.application.ResolveLinkUseCase;
+import agentic.shortener.delivery.ratelimit.AggregateRedirectLimiter;
 import agentic.shortener.delivery.ratelimit.RateLimitDecision;
 import agentic.shortener.delivery.ratelimit.RedirectRateLimiter;
 import agentic.shortener.domain.analytics.AnalyticsRecordingPort;
@@ -38,6 +39,13 @@ import java.util.Objects;
  * <p><strong>Three distinguishable outcomes</strong> (T045): 404 never-issued, 410 expired, 503 store
  * failure. The collapse that must not happen is 503 into 404, and it is prevented by not catching the
  * store's failure anywhere on the way here.
+ *
+ * <p><strong>Two independent throttling checkpoints</strong> (T136a). {@link RedirectRateLimiter}
+ * (per-code) runs first, deliberately before the lookup — it protects the lookup itself. {@link
+ * AggregateRedirectLimiter} (per-creator, aggregated across every link that creator owns, PVT-014)
+ * cannot run there: its own key, the owning creator, is not known until the lookup succeeds. It runs
+ * immediately after, before analytics recording and before any redirect response is built, and only for
+ * a resolution that would actually redirect.
  */
 @RestController
 public class RedirectController {
@@ -45,13 +53,16 @@ public class RedirectController {
     private final ResolveLinkUseCase resolve;
     private final AnalyticsRecordingPort analytics;
     private final RedirectRateLimiter rateLimiter;
+    private final AggregateRedirectLimiter aggregateRateLimiter;
     private final Clock clock;
 
     public RedirectController(ResolveLinkUseCase resolve, AnalyticsRecordingPort analytics,
-                              RedirectRateLimiter rateLimiter, Clock clock) {
+                              RedirectRateLimiter rateLimiter, AggregateRedirectLimiter aggregateRateLimiter,
+                              Clock clock) {
         this.resolve = Objects.requireNonNull(resolve, "resolve");
         this.analytics = Objects.requireNonNull(analytics, "analytics");
         this.rateLimiter = Objects.requireNonNull(rateLimiter, "rateLimiter");
+        this.aggregateRateLimiter = Objects.requireNonNull(aggregateRateLimiter, "aggregateRateLimiter");
         this.clock = Objects.requireNonNull(clock, "clock");
     }
 
@@ -68,6 +79,17 @@ public class RedirectController {
         ResolveLinkUseCase.Resolution resolution = resolve.resolve(shortCode);
 
         if (resolution.outcome() == ResolveLinkUseCase.Outcome.REDIRECT) {
+            // T136a: the aggregate tier's own key (the owning creator) is not known until AFTER this
+            // lookup succeeds -- unlike the per-code check above, which deliberately runs BEFORE it. Only a
+            // live REDIRECT consumes aggregate budget: an EXPIRED or NOT_FOUND resolution is not redirect
+            // traffic against any creator's aggregate (FR-URL-016), and checked before analytics recording
+            // so a throttled request is not also counted as a served redirect.
+            RateLimitDecision aggregateLimit = aggregateRateLimiter.check(resolution.link().orElseThrow()
+                    .creatorId());
+            if (!aggregateLimit.allowed()) {
+                return throttled(aggregateLimit);
+            }
+
             // One event per redirect (FR-URL-010), through the port and never around it (ADR-014
             // Condition 2). This call cannot throw — that is the port's contract, and it is what keeps
             // EC-012 true: a resolvable link must not go dark because a counter could not be written.
@@ -103,11 +125,15 @@ public class RedirectController {
     }
 
     /**
-     * 429, naming the tier and nothing else.
+     * 429, naming the tier and nothing else — whichever tier's own {@link RateLimitDecision} refused the
+     * request, per-code or per-creator-aggregate.
      *
      * <p>FR-URL-016 forbids a throttled response disclosing the owning creator's identity to a public
-     * follower. The tier name is {@code per-code} and carries no creator, which is enforced one level
-     * down: {@link RedirectRateLimiter} has no creator parameter to disclose.
+     * follower. {@link RateLimitDecision} itself has no field that could carry one (no tier's own decision
+     * shape does — {@link RedirectRateLimiter} has no creator parameter to disclose in the first place;
+     * {@link AggregateRedirectLimiter} legitimately takes one as input but never returns it, see that
+     * class's own javadoc), so this method has nothing to leak regardless of which tier produced {@code
+     * limit}.
      */
     private static ResponseEntity<Map<String, Object>> throttled(RateLimitDecision limit) {
         Map<String, Object> body = new LinkedHashMap<>();

@@ -173,26 +173,21 @@ class BaselineOmissionsTest {
      * fails on a reflow that changed nothing. This project has now hit that shape four times.
      */
     @Test
-    @DisplayName("T057's Done: FR-URL-016's matrix row reads PARTIAL and names the closing run")
-    void frUrl016MatrixRowReadsPartial() throws Exception {
-        // T057's Done condition includes "FR-URL-016's matrix reference reads *partial* until T136a
-        // closes it". A matrix row that simply listed passing tests would be the green false link
-        // POL-TRC-001 exists to prevent — the hardest kind to find later, because everything about it
-        // looks correct.
-        //
-        // Asserted here rather than left to a reader, because the traceability matrix is exactly the
-        // artifact nobody re-reads once it is full.
+    @DisplayName("T136a's Done: FR-URL-016's matrix row is upgraded from PARTIAL to complete")
+    void frUrl016MatrixRowReadsComplete() throws Exception {
+        // Was frUrl016MatrixRowReadsPartial. T136a's own Done condition (tasks.md) is explicit: "FR-URL-016's
+        // matrix reference upgraded from partial to complete — this run is what closes it." A row that
+        // still read PARTIAL after the tier landed would be the stale claim POL-TRC-001 exists to catch —
+        // the hardest kind to find later, because everything about it used to be correct.
         String row = Files.readString(Path.of("specs/001-agentic-sdlc-url-shortener/spec.md")).lines()
                 .filter(line -> line.startsWith("| FR-URL-016 |"))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("FR-URL-016 has no traceability matrix row"));
 
-        assertTrue(row.contains("PARTIAL"),
-                "the row must say PARTIAL while two of three tiers are built: " + row);
-        assertTrue(row.contains("PVT-014"), "and name the tier that is missing: " + row);
-        assertTrue(row.contains("T136a"), "and the run that closes it: " + row);
-        assertTrue(row.contains("baseline-omissions"),
-                "and point at the register that discloses it: " + row);
+        assertFalse(row.contains("PARTIAL"),
+                "T136a landed; the row must no longer say PARTIAL: " + row);
+        assertTrue(row.contains("T136a"), "and still name the run that closed it: " + row);
+        assertTrue(row.contains("PVT-014"), "and still name all three targets, now all met: " + row);
         assertFalse(row.contains("*Implement stage*"),
                 "the placeholder must be replaced, or the row claims nothing at all: " + row);
     }

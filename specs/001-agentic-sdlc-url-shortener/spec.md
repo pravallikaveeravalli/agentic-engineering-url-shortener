@@ -2087,7 +2087,7 @@ stages. A requirement with no Design or ADR reference is an orphan in the same s
 | FR-URL-013 | US-1 | DS-B | EC-001, EC-013 | Plan §2 | ADR-002, ADR-007, ADR-014 | T040 | ConcurrentCreationIT at PVT-003 | `docs/evidence/`, CI GREEN |
 | FR-URL-014 | US-1 | DS-B | EC-010, EC-011 | Plan §2 | ADR-002, ADR-014 | T045 | RedirectIT (EC-011), CreationFailureIsolationIT (EC-010) | `docs/evidence/`, CI GREEN |
 | FR-URL-015 | US-1 | DS-B | EC-011 | Plan §2 | ADR-012 | T056 | HealthPayloadTest, ReadinessDegradationIT | `docs/evidence/`, CI GREEN |
-| FR-URL-016 | US-1 | DS-B | EC-013 | Plan §2, §8 | ADR-013 | T054, T055, **T136a pending** | **PARTIAL** — RateLimiterTest, RateLimitIT (PVT-012, PVT-013). PVT-014 **not built**: deferred to T136a, disclosed in `baseline-omissions.md` | `docs/evidence/`, CI GREEN |
+| FR-URL-016 | US-1 | DS-B | EC-013 | Plan §2, §8 | ADR-013 | T054, T055, T136a | RateLimiterTest, RateLimitIT — all three tiers (PVT-012, PVT-013, PVT-014); non-disclosure proven for both public-facing tiers | `docs/evidence/`, CI GREEN |
 | FR-URL-017 | US-1, US-5 | DS-A | EC-007 | Plan §7, §8 | ADR-010, ADR-013 | T037 | CredentialRedactionTest, CredentialTelemetryIT, scan.sh --telemetry | `docs/evidence/`, CI GREEN |
 | FR-URL-018 | US-1 | DS-A | — | Plan §2, §8 | ADR-013 | T044, T052 | AuthenticationIT, RedirectIT | `docs/evidence/`, CI GREEN |
 | FR-URL-019 | US-1, US-5 | DS-A | — | Plan §8, §Project Structure | ADR-013, ADR-012 | T052, T053 | ProvisionCreatorTest, ProvisionCreatorIT, AuthenticationIT (EC-041) | `docs/evidence/`, CI GREEN |

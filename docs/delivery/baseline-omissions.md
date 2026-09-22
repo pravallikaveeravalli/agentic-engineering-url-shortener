@@ -38,7 +38,7 @@ promise.** If it is missing, the promise has nothing underneath it.
 | Field | Value |
 |---|---|
 | **Omitted from** | Slice 3 (core URL behaviour) |
-| **Status** | Scheduled omission — **open** |
+| **Status** | **Closed** — 2026-09-22, at T136a |
 | **Recorded** | 2026-09-21, at T055a |
 
 ### 1. What is omitted
@@ -117,6 +117,21 @@ If the omission is ever to become permanent, that is a **different decision** re
 procedure in the constitution's §Exception procedure — an approving authority, a compensating control, a
 residual-risk statement and an expiry. This register is not that, and must not be read as that.
 
+### 6. Closure
+
+**T136a ran and closed this tier, 2026-09-22.** `AggregateRedirectLimiter`
+(`src/main/java/agentic/shortener/delivery/ratelimit/AggregateRedirectLimiter.java`) enforces PVT-014
+(3,000 requests/minute per creator, aggregated across every link that creator owns), independently of the
+existing per-code tier, using the same in-process fixed-window counter mechanism. Built directly rather
+than authored by a live AI dispatch through the orchestrator — three genuine, live orchestrator attempts
+were made in prior turns (real retry and compensation evidence captured, `docs/evidence/ds-b/`), and the
+owner directed this turn that the tier itself be built directly, reliably, rather than risk a further
+live-AI variance round; that choice, and the reasoning behind it, is recorded honestly in
+`docs/evidence/ds-b/` rather than presented as orchestrator output. FR-URL-016 is now MET in full — all
+three tiers implemented and enforced. Section 5 above remains as written: it was true of the state before
+this closure and stays in the record as the honest statement of what would have had to be reported had
+T136a not landed.
+
 ---
 
 ## Register integrity
@@ -126,8 +141,8 @@ These properties are asserted rather than trusted. A register nobody checks is a
 | Property | Asserted by |
 |---|---|
 | This file exists, and names PVT-014, FR-URL-016, "binding", T136a and release readiness | `RateLimiterTest.theDeferredTierIsDisclosed` |
-| The aggregate tier is genuinely absent, not half-built | `RateLimiterTest.theAggregateTierIsNotPartiallyPresent` |
-| No configuration key exists for the omitted tier | `RateLimiterTest.throttlingIsOnByDefault` |
+| This entry's own status reads Closed, now that T136a has landed | `RateLimiterTest.theAggregateTierIsNowBuiltAndDisclosedAsClosed` |
+| The configuration key for the now-built tier carries the approved target (3000) | `RateLimiterTest.throttlingIsOnByDefault` |
 | Every entry has a named closing run | `BaselineOmissionsTest.everyEntryNamesAClosingRun` |
 | This register and `docs/LIMITATIONS.md` do not disagree | T147, when `LIMITATIONS.md` is written |
 
