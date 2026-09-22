@@ -1,12 +1,67 @@
 # DS-A — Greenfield run design
 
-Task T131 (revised, CR-052). Req: DS-A, FR-ORC-010. Scn: DS-A. ADR: ADR-004.
+Task T131 (revised, CR-053). Req: DS-A, FR-ORC-010. Scn: DS-A. ADR: ADR-004.
 
 **Read this first if you're asking "why did this take so many attempts?"**:
 `docs/evidence/ds-a/requirement-completeness-ceiling-finding.md`'s own headline section states the answer
 plainly, in five points, before any of the detail below.
 
-## Current subject (CR-052) — a genuinely minimal requirement, behavioural surface only
+## Current subject (CR-053) — a zero-runtime-behaviour test-addition
+
+**The `GET /v1/version` endpoint is retired from DS-A's clean-pass demonstration role.** Ten-plus live
+attempts against it (CR-051, CR-052 — kept below as the "Retired subject" section, evidence intact, nothing
+deleted), across three requirement revisions, each genuinely and honestly reached a real gate (S4 on a real
+finding, or S6 once the owner's own ratified clarifications resolved S4). The pattern across all of them —
+now the headline of `docs/evidence/ds-a/requirement-completeness-ceiling-finding.md` — is that a real,
+non-deterministic AI detector, even sharpened to gate only on a genuine behavioural fork (CR-052), keeps
+finding *some* new material-looking item on almost any requirement that describes runtime behaviour, because
+behaviour, however minimal, still has edges.
+
+**The owner's own insight, acted on here**: choose a greenfield change with **no runtime behaviour at all**.
+A unit test verifies behaviour that already exists in already-delivered code — it introduces or changes
+nothing the system does, so there is structurally no behavioural fork for CR-052's own predicate to ever find
+material.
+
+> Add unit tests for `FixedWindowCounter`
+> (`src/main/java/agentic/shortener/delivery/ratelimit/FixedWindowCounter.java`), a package-private per-key
+> fixed-window rate counter, covering its existing, already-defined behaviour across its public surface: the
+> constructor's positive-limit validation (throws `IllegalArgumentException` for a non-positive limit, per
+> its own existing message); the `check(key, tier)` decision (returns an allowed `RateLimitDecision` while a
+> key's count within the current one-minute window is at or below the configured limit, and a throttled
+> `RateLimitDecision` once the count exceeds it, with `retryAfterSeconds` computed from the remaining time in
+> the window and floored at one second); window rollover (a key's window resets to a fresh count of one once
+> the prior window's one-minute duration has elapsed); and the pruning behaviour (an entry whose window has
+> already expired is removed once the map's size exceeds the existing 10,000-entry threshold). No
+> production-code change; this adds test coverage only, using an injected `Clock` to control time
+> deterministically, matching this codebase's own existing pattern for testing time-dependent logic.
+
+**Verified as a genuine gap, not a contrived one** (full detail: `docs/governance/change-control/CR-053-...md`):
+no `FixedWindowCounterTest`/`IT` exists; no test anywhere constructs the class directly by name. It is
+exercised only indirectly, as a private implementation detail, through `RateLimiterTest`'s own tests of its
+two callers (`CreationRateLimiter`, `RedirectRateLimiter`) — which incidentally cover the constructor guard
+and one retry-after value, but never the class's own direct contract, and never its pruning behaviour at all
+(no existing test constructs anywhere near 10,000 distinct keys).
+
+### Well-formedness against the four criteria
+
+1. **Complete.** Every dimension the requirement asks for — which methods, which behaviours, which inputs —
+   is closed by pointing at code that already, fully determines the answer; nothing is left for a test author
+   to invent or guess.
+2. **Consistent.** No conflict with any existing test or approved artifact — a pure test-coverage addition,
+   touching no production code.
+3. **Testable**, trivially — a test either exercises the stated behaviour correctly or it does not; there is
+   no accept/reject ambiguity since nothing about the production class's own behaviour is being specified or
+   changed.
+4. **Inside approved policy and architecture boundaries.** No new technology, no architectural surface at
+   all — test-only, in the same package the class already lives in, matching this codebase's own established
+   convention for package-private classes.
+
+Per `spec.md`'s DS-A section, this input MUST proceed through
+S1→S2→S3→**S4 SKIPPED**→S5→S6→S7→S8→S9‖S10→S11→S12 with no clarification gate firing.
+
+---
+
+## Retired subject (`GET /v1/version`, CR-051/CR-052) — a genuinely minimal requirement, behavioural surface only
 
 **The expiry endpoint is retired from DS-A's clean-pass demonstration role.** Five live attempts against it
 (CR-048, CR-049, CR-050 — kept below as the "Retired subject" section, evidence intact, nothing deleted)

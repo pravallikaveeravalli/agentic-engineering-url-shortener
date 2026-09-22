@@ -104,23 +104,30 @@ class DsALiveRun extends PostgresIntegrationTest {
     private static final String CLI = "claude";
     private static final String MODEL = "claude-sonnet-5";
     private static final Path REPO_ROOT = Paths.get("").toAbsolutePath();
-    // CR-052: simplified from CR-051's wording after attempt 6 showed the closing "no failure mode by
-    // design" clause backfired -- 3 of 4 MATERIAL_PENDING findings traced to that one clause (an
-    // undefined term, a self-referential critique of its own scoping, an unbounded-quantifier critique
-    // of its own phrasing), none of which changed any required behavior, since the other clauses already
-    // state the endpoint's entire behavior unconditionally. CR-052 removed the clause and sharpened S3's
-    // own materiality predicate (AmbiguityDetectionAiExecutor.buildPrompt) to CR-007's real bar --
-    // behavioural fork with buildable, observable consequences, not linguistic imperfection -- see
-    // docs/evidence/ds-a/design.md's "Current subject (CR-052)".
+    // CR-053: switched from GET /v1/version (CR-051/052) after ten-plus live attempts across three
+    // wordings all genuinely reached a real gate -- the pattern is now requirement-completeness-ceiling-
+    // finding.md's own headline: a real, non-deterministic AI detector, even sharpened to a genuine
+    // behavioural fork (CR-052), keeps finding SOME new material-looking item on almost any requirement
+    // that describes runtime behaviour. The owner's own insight: pick a subject with NO runtime behaviour
+    // at all. A unit test verifies behaviour that already exists in already-delivered code -- it forks
+    // nothing, by construction -- see docs/evidence/ds-a/design.md's "Current subject (CR-053)".
     private static final String REQUIREMENT =
-            "Add a public GET /v1/version endpoint that requires no authentication, accepts no path or "
-                    + "query parameters, and always returns HTTP 200 with Content-Type: application/json, "
-                    + "header Cache-Control: no-store, and body exactly {\"version\": \"0.1.0-SNAPSHOT\"}. "
-                    + "The version string is a fixed literal encoded directly in the endpoint's own "
-                    + "implementation -- it is never computed, never read from a build manifest, never "
-                    + "derived from git or environment state, and never changes without a deliberate code "
-                    + "edit to this endpoint itself. The endpoint performs no dependency or downstream "
-                    + "checks and reads and writes no persisted data.";
+            "Add unit tests for FixedWindowCounter "
+                    + "(src/main/java/agentic/shortener/delivery/ratelimit/FixedWindowCounter.java), a "
+                    + "package-private per-key fixed-window rate counter, covering its existing, "
+                    + "already-defined behaviour across its public surface: the constructor's "
+                    + "positive-limit validation (throws IllegalArgumentException for a non-positive "
+                    + "limit, per its own existing message); the check(key, tier) decision (returns an "
+                    + "allowed RateLimitDecision while a key's count within the current one-minute window "
+                    + "is at or below the configured limit, and a throttled RateLimitDecision once the "
+                    + "count exceeds it, with retryAfterSeconds computed from the remaining time in the "
+                    + "window and floored at one second); window rollover (a key's window resets to a "
+                    + "fresh count of one once the prior window's one-minute duration has elapsed); and "
+                    + "the pruning behaviour (an entry whose window has already expired is removed once "
+                    + "the map's size exceeds the existing 10,000-entry threshold). No production-code "
+                    + "change; this adds test coverage only, using an injected Clock to control time "
+                    + "deterministically, matching this codebase's own existing pattern for testing "
+                    + "time-dependent logic.";
 
     /** The real human deciding S4's clarification gate below — never this agent, never "system". */
     private static final String OWNER_ACTOR = "Pravallika Veeravalli";
