@@ -1062,6 +1062,24 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
     decided here: `docs/evidence/ds-a/s7-existing-file-diff-finding.md`. No third attempt was made — two
     identical-class failures is decisive, not a roll worth repeating. `RunState` is `SAFE_STOP`
     (`GitWorktreeBranchApplier`'s own cleanup left no stray branch either time). S8 onward not reached.
+  - **Progress (2026-09-22, CR-060/062)**: `ImplementationAiExecutor` rebuilt to author a JSON change set
+    (CREATE full-content, or EDIT search/replace pairs against real content) instead of a unified diff —
+    real coding-agent shape, applied deterministically by `GitWorktreeBranchApplier` — proven on a real
+    `pom.xml` edit plus a real `.java` edit with a genuine `javac` compile check
+    (`GitWorktreeBranchApplierTest`). With that fix and a clean, minimal requirement (CR-062, no
+    implementation-workaround clauses), sanity-checked in isolation at S3 first (CR-063 found and fixed a
+    real matcher regression before the full run), the live pipeline reached **S7 — SUCCEEDED, for the first
+    time in this task's entire history**: a real `pom.xml` build-info edit, a real `contracts/openapi.yaml`
+    path/schema entry, a real new `VersionController.java`, all genuinely correct (reproduced and inspected
+    directly). **S8 then correctly failed**: the real fast-tier suite (775 tests) found exactly one failure,
+    `ContractFilesLintTest`'s own hardcoded OpenAPI path count (8, change-controlled since CR-013), now
+    stale by exactly the one path this feature legitimately adds. Diagnosed as a real, disclosed, structural
+    scope gap — S6's own `existingFilesToModify` names files the FEATURE needs touching, not files whose own
+    assertions merely depend on the SHAPE of one of those files — not a defect in CR-060, S6, or S7, and not
+    silently patched (bumping the count on `main` ahead of the feature landing would assert something false
+    about `main`'s own current state). Full finding, options disclosed, not decided here:
+    `docs/evidence/ds-a/attempt-21-s7-succeeded-s8-finding.md`. Run correctly reached `SAFE_STOP` (branch
+    `ds-run/T1-039d59ef` kept as real evidence). **Still not `COMPLETED`** — S9 onward not reached.
 - [ ] T133 [P] [US3] DS-A late-ambiguity escalation — `docs/evidence/ds-a/late-ambiguity.json`
   - **Req**: **DS-A**, FR-ORC-011, EC-021 · **Scn**: **DS-A** · **ADR**: ADR-009 · **Pre**: T132, T096
   - **Deps**: T096, T132 · **Par**: yes · **Artifact**: material ambiguity emerging mid-run suspends **only the affected path**; governed clarification and impact analysis follow; resumption from the correct state after explicit approval
