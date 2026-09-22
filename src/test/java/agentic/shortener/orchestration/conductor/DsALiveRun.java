@@ -145,19 +145,21 @@ class DsALiveRun extends PostgresIntegrationTest {
     // CR-059: owner's own simpler, fully self-contained, new-files-only wording, replacing CR-056/058's
     // own accreted attempts at the same goal -- a static/placeholder version value is explicitly accepted
     // as honest for this demonstration feature, removing the SNAPSHOT-wording trap entirely rather than
-    // patching around it again.
+    // patching around it again. RETIRED by CR-062 below -- kept here as historical trail only, per this
+    // constant's own established convention; CR-059's own record is unedited (immutable).
+    //
+    // CR-062: CR-060 fixed the real capability every prior wording above was working around -- S7 can now
+    // genuinely edit existing files (proven on pom.xml + a real .java file, with a real compile check).
+    // The new-files-only constraint, the placeholder-value clause, and the OpenAPI-follow-up carve-out were
+    // never part of the actual feature; they existed only to route around a real limitation that no longer
+    // exists. This is the clean requirement -- the real feature, nothing else -- so the code-writer decides
+    // its own real implementation (build-info via a real pom.xml edit; a real OpenAPI contract entry) on
+    // its own real merits, sanity-checked at S3 in isolation before any full run (docs/evidence/ds-a's own
+    // sanity-check record, this same turn).
     private static final String REQUIREMENT =
-            "Add a public endpoint GET /v1/version -- no authentication, no path/query parameters -- "
-                    + "returning HTTP 200, Content-Type: application/json, body "
-                    + "{\"version\": \"<the application version string>\"}, and header "
-                    + "Cache-Control: no-store. The version value must be sourced from a NEW classpath "
-                    + "resource (e.g. a new version.properties file under src/main/resources) that this "
-                    + "change creates and reads at runtime -- NOT Spring Boot's build-info mechanism, which "
-                    + "would require editing pom.xml. A static, honestly-disclosed placeholder version "
-                    + "value committed directly into that new resource file is acceptable for this "
-                    + "demonstration feature. Do not modify pom.xml or any other existing file: only new "
-                    + "source, resource, and test files may be added. Do not modify the OpenAPI contract "
-                    + "file either -- note its own missing entry as a documented follow-up instead.";
+            "Add a public endpoint GET /v1/version that requires no authentication and takes no path or "
+                    + "query parameters, returning HTTP 200 with Content-Type: application/json, body "
+                    + "{\"version\": \"<the application's version>\"}, and header Cache-Control: no-store.";
 
     /** The real human deciding S4's clarification gate below — never this agent, never "system". */
     private static final String OWNER_ACTOR = "Pravallika Veeravalli";
@@ -566,10 +568,18 @@ class DsALiveRun extends PostgresIntegrationTest {
                             "hardcoded", "hardcoding", "hardcode", "computed", "manifest")) {
                 question = VERSION_VALUE_QUESTION;
                 answer = VERSION_VALUE_CLARIFICATION;
-            } else if (containsWord(lower, "parameter") || lower.contains("query string")
-                    || lower.contains("path segment") || (containsWord(lower, "access")
+            } else if (containsAnyWord(lower, "parameter", "parameters", "credential", "credentials")
+                    || lower.contains("query string") || lower.contains("path segment")
+                    || (containsWord(lower, "access")
                     && containsAnyWord(lower, "auth", "authentication", "authorization",
                             "authenticated", "authorized", "unauthenticated", "unauthorized"))) {
+                // CR-063: sanity-checked before the clean-requirement full run -- "parameter" alone (from
+                // CR-061's own word-boundary fix) does not match the real, live plural "parameters" S3
+                // actually produced ("...client nonetheless sends query parameters..."), a genuine
+                // regression \bparameter\b introduced; and "credential(s)" is added as its own standalone
+                // trigger, since ACCESS_CLARIFICATION's own substance ("no credential required, no
+                // error-input handling beyond the framework default") already answers a credential-related
+                // finding even when the literal word "access" is not itself present in that finding's text.
                 question = ACCESS_QUESTION;
                 answer = ACCESS_CLARIFICATION;
             } else {

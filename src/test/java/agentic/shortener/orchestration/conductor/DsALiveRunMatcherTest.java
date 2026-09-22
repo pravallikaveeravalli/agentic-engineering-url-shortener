@@ -87,4 +87,40 @@ class DsALiveRunMatcherTest {
         assertFalse(DsALiveRun.containsAnyWord(text, "logging", "metrics", "tracing", "observability"),
                 "'trace identifier' must not match 'tracing' -- different word, no boundary collision");
     }
+
+    @Test
+    @DisplayName("CR-063: the real clean-requirement sanity check's own output found a genuine regression -- "
+            + "the plural 'parameters' must still match, not only the singular 'parameter'")
+    void pluralParametersStillMatches() {
+        // Verbatim from the real, live sanity-check output (docs/evidence/ds-a's own sanity-check record).
+        String realText = ("Requirement 1a states the endpoint 'accepts no path parameters and no query "
+                + "parameters' but does not state the required behavior when a client nonetheless sends "
+                + "query parameters").toLowerCase();
+
+        assertFalse(DsALiveRun.containsWord(realText, "parameter"),
+                "the singular word 'parameter' alone (CR-061's own fix) does NOT match this real text, "
+                        + "which only uses the plural -- this was the real, live regression CR-063 found");
+        assertTrue(DsALiveRun.containsAnyWord(realText, "parameter", "parameters", "credential",
+                        "credentials"),
+                "the plural form must be matched too, or a real routine finding falls through to "
+                        + "'unanswered' unnecessarily");
+    }
+
+    @Test
+    @DisplayName("CR-063: a credential-related finding matches even when the word 'access' is not itself "
+            + "present in its own text")
+    void credentialFindingMatchesWithoutTheWordAccess() {
+        // Verbatim from the real, live sanity-check output.
+        String realText = ("Requirement 1b specifies only that 'requests without credentials SHALL NOT be "
+                + "rejected on authentication grounds' -- it does not state the required behavior when a "
+                + "request DOES include credentials and those credentials are invalid or malformed").toLowerCase();
+
+        assertFalse(DsALiveRun.containsWord(realText, "access"),
+                "this real finding's own text does not use the word 'access' at all");
+        assertTrue(DsALiveRun.containsAnyWord(realText, "parameter", "parameters", "credential",
+                        "credentials"),
+                "'credential'/'credentials' must be its own standalone trigger -- ACCESS_CLARIFICATION's "
+                        + "own substance ('no credential required, no error-input handling beyond the "
+                        + "framework default') already answers this without needing 'access' to co-occur");
+    }
 }
