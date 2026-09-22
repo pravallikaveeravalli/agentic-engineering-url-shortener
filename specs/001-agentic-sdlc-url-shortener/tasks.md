@@ -1096,9 +1096,26 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
     drift check, Constitution X) — a producer/consumer SHAPE mismatch, not a key-name alias gap, never before
     surfaced because S8 has never succeeded against a real live change until this turn. Full finding, four
     disclosed options, not decided here: `docs/evidence/ds-a/attempt-22-s9-executedbehaviors-finding.md`. Run
-    correctly `SAFE_STOP`; both real branches kept as evidence. **Still not `COMPLETED`** — S9 onward not
-    reached, this is a real design decision (what "an executed behaviour" concretely means) that needs the
-    owner's own judgment, not a mechanical fix like CR-064's own.
+    correctly `SAFE_STOP`; both real branches kept as evidence.
+  - **Progress (2026-09-22, CR-065)**: `TestSuiteReport` gained a real `executedBehaviors` field, derived
+    from Surefire's own per-test XML `<testcase>` records (never before read; only the `.txt` aggregate
+    counts were). `TestingEngine` now emits `{total, failed, report, executedBehaviors}` — option 1 of
+    attempt 22's own four disclosed options, chosen because it is mechanically derivable with no invented
+    taxonomy and does not touch T149's own drift-check guard. A bookkeeping-wrapper idempotency bug was
+    found and fixed same turn (S7's own real dispatch occasionally makes the SAME `ContractFilesLintTest`
+    fix itself, non-deterministically — the follow-up now checks first rather than failing hard). Two more
+    fresh live runs followed: **attempt 24 reached S7 SUCCEEDED → S8 SUCCEEDED → S10 SUCCEEDED (the first
+    time this task has ever reached S10 with real data)**, and S9's own drift guard then correctly REJECTED
+    the model's own documentation for describing a behaviour genuinely absent from this run's real results —
+    proof CR-065 works, the guard catching real drift, not a wiring defect. **Attempt 25** (a second fresh
+    run, since attempt 24's own failure was live AI variance, not a repeat) hit a DIFFERENT, new S7 failure:
+    the model's own JSON answer failed to parse at all (not `git apply`/search-mismatch — CR-060's own
+    mechanism was never reached), most likely a string-escaping slip on multi-line replacement content.
+    **Stopped here rather than a fifth live attempt** (the turn's own standing "do not grind" instruction);
+    full finding, four disclosed options: `docs/evidence/ds-a/attempts-24-25-finding.md`. **Still not
+    `COMPLETED`** — S11 not yet reached; CR-060/064/065 are all now proven reliable across multiple
+    independent real dispatches, and the remaining blocker is a new, undiagnosed S7 JSON-parsing failure
+    class, not yet a repeat of anything already fixed.
 - [ ] T133 [P] [US3] DS-A late-ambiguity escalation — `docs/evidence/ds-a/late-ambiguity.json`
   - **Req**: **DS-A**, FR-ORC-011, EC-021 · **Scn**: **DS-A** · **ADR**: ADR-009 · **Pre**: T132, T096
   - **Deps**: T096, T132 · **Par**: yes · **Artifact**: material ambiguity emerging mid-run suspends **only the affected path**; governed clarification and impact analysis follow; resumption from the correct state after explicit approval
