@@ -98,6 +98,7 @@ Deterministically assembled by `SummaryAssembler` from recorded repository evide
 - T080 delivered src/main/java/agentic/shortener/orchestration/store/JdbcRunStore.java (`src/main/java/agentic/shortener/orchestration/store/JdbcRunStore.java`)
 - T081 delivered src/main/java/agentic/shortener/orchestration/lineage/ArtifactProvenance.java (`src/main/java/agentic/shortener/orchestration/lineage/ArtifactProvenance.java`)
 - T082 delivered src/main/java/agentic/shortener/orchestration/lineage/ (`src/main/java/agentic/shortener/orchestration/lineage/`)
+- T082a delivered src/main/java/agentic/shortener/orchestration/api/RunSubmissionController.java (`src/main/java/agentic/shortener/orchestration/api/RunSubmissionController.java`)
 - T107 delivered src/main/java/agentic/shortener/orchestration/impact/ImpactAnalysis.java (`src/main/java/agentic/shortener/orchestration/impact/ImpactAnalysis.java`)
 - T083 delivered src/main/java/agentic/shortener/orchestration/reliability/FailureEnvelope.java (`src/main/java/agentic/shortener/orchestration/reliability/FailureEnvelope.java`)
 - T084 delivered src/main/java/agentic/shortener/orchestration/reliability/RetryRuling.java (`src/main/java/agentic/shortener/orchestration/reliability/RetryRuling.java`)
@@ -144,6 +145,26 @@ Deterministically assembled by `SummaryAssembler` from recorded repository evide
 - T126 delivered docs/ (`docs/`)
 - T127 delivered specs/001-agentic-sdlc-url-shortener/quickstart.md (`specs/001-agentic-sdlc-url-shortener/quickstart.md`)
 - T128 delivered docs/REVIEWER-GUIDE.md (`docs/REVIEWER-GUIDE.md`)
+- T129 delivered src/main/java/agentic/shortener/orchestration/summary/SummaryAssembler.java (`src/main/java/agentic/shortener/orchestration/summary/SummaryAssembler.java`)
+- T129 delivered docs/ENGINEERING-SUMMARY.md (`docs/ENGINEERING-SUMMARY.md`)
+- T131 delivered docs/evidence/ds-a/design.md (`docs/evidence/ds-a/design.md`)
+- T131a delivered src/main/java/agentic/shortener/orchestration/conductor/Conductor.java (`src/main/java/agentic/shortener/orchestration/conductor/Conductor.java`)
+- T131b delivered src/main/java/agentic/shortener/orchestration/api/GateDecisionController.java (`src/main/java/agentic/shortener/orchestration/api/GateDecisionController.java`)
+- T131c delivered src/main/java/agentic/shortener/orchestration/conductor/GitWorktreeBranchApplier.java (`src/main/java/agentic/shortener/orchestration/conductor/GitWorktreeBranchApplier.java`)
+- T131d delivered src/main/java/agentic/shortener/orchestration/executor/ai/GeminiCliStageAiProvider.java (`src/main/java/agentic/shortener/orchestration/executor/ai/GeminiCliStageAiProvider.java`)
+- T131d delivered src/main/java/agentic/shortener/orchestration/reliability/ProviderRateLimitedException.java (`src/main/java/agentic/shortener/orchestration/reliability/ProviderRateLimitedException.java`)
+- T132 delivered docs/evidence/ds-a/run.json (`docs/evidence/ds-a/run.json`)
+- T134 delivered docs/evidence/ds-a/bundle/ (`docs/evidence/ds-a/bundle/`)
+- T135 delivered docs/evidence/ds-b/impact-analysis.md (`docs/evidence/ds-b/impact-analysis.md`)
+- T136 delivered docs/evidence/ds-b/run.json (`docs/evidence/ds-b/run.json`)
+- T136a delivered src/main/java/agentic/shortener/delivery/ratelimit/AggregateRedirectLimiter.java (`src/main/java/agentic/shortener/delivery/ratelimit/AggregateRedirectLimiter.java`)
+- T137 delivered docs/evidence/ds-b/test-results/ (`docs/evidence/ds-b/test-results/`)
+- T138 delivered docs/evidence/ds-c/silence.json (`docs/evidence/ds-c/silence.json`)
+- T139 delivered docs/evidence/ds-c/replan.json (`docs/evidence/ds-c/replan.json`)
+- T140 delivered docs/evidence/ds-c/rejection.json (`docs/evidence/ds-c/rejection.json`)
+- T144 delivered docs/evidence/red-phase/index.md (`docs/evidence/red-phase/index.md`)
+- T147 delivered docs/LIMITATIONS.md (`docs/LIMITATIONS.md`)
+- T148 delivered docs/evidence/governance-index.md (`docs/evidence/governance-index.md`)
 
 ## Decisions and rejected alternatives
 
@@ -176,8 +197,8 @@ Deterministically assembled by `SummaryAssembler` from recorded repository evide
 
 ## Executed validation and results
 
-- fast tier: 729 tests run, 0 failures, 0 errors, 0 skipped (`target/surefire-reports`)
-- integration tier: 364 tests run, 0 failures, 0 errors, 1 skipped (`target/failsafe-reports`)
+- fast tier: 792 tests run, 0 failures, 0 errors, 0 skipped (`target/surefire-reports`)
+- integration tier: 381 tests run, 0 failures, 0 errors, 1 skipped (`target/failsafe-reports`)
 - every measured figure this project reports is labelled MEASURED-with-conditions or PROPOSED-with-basis rather than a bare number (T121), and the MTTR method's declared population and exclusions are recorded (`docs/evidence/mttr-method.md`)
 
 ## Residual risks and limitations
@@ -254,9 +275,14 @@ Deterministically assembled by `SummaryAssembler` from recorded repository evide
 - a deliberate red-phase capture is recorded (a real failure, then the fix): 20260921T211543Z-T129-summary-assembler.txt (`docs/evidence/red-phase/20260921T211543Z-T129-summary-assembler.txt`)
 - a deliberate red-phase capture is recorded (a real failure, then the fix): 20260921T220000Z-T096-ec019-downstream-invalidation.txt (`docs/evidence/red-phase/20260921T220000Z-T096-ec019-downstream-invalidation.txt`)
 - a deliberate red-phase capture is recorded (a real failure, then the fix): 20260921T221500Z-T096-ec030-cycle-rejection.txt (`docs/evidence/red-phase/20260921T221500Z-T096-ec030-cycle-rejection.txt`)
+- a deliberate red-phase capture is recorded (a real failure, then the fix): 20260921T221619Z-T131a-conductor-executor-kind-violation.txt (`docs/evidence/red-phase/20260921T221619Z-T131a-conductor-executor-kind-violation.txt`)
+- a deliberate red-phase capture is recorded (a real failure, then the fix): 20260921T222857Z-T131c-branch-applier-and-test-runner.txt (`docs/evidence/red-phase/20260921T222857Z-T131c-branch-applier-and-test-runner.txt`)
 - a deliberate red-phase capture is recorded (a real failure, then the fix): 20260921T223000Z-T111-audit-writer.txt (`docs/evidence/red-phase/20260921T223000Z-T111-audit-writer.txt`)
 - a deliberate red-phase capture is recorded (a real failure, then the fix): 20260921T223500Z-T112-correlation-context.txt (`docs/evidence/red-phase/20260921T223500Z-T112-correlation-context.txt`)
+- a deliberate red-phase capture is recorded (a real failure, then the fix): 20260921T223932Z-T131b-gate-decision-advance-unhandled-exception.txt (`docs/evidence/red-phase/20260921T223932Z-T131b-gate-decision-advance-unhandled-exception.txt`)
 - a deliberate red-phase capture is recorded (a real failure, then the fix): 20260921T224500Z-T113-governance-immutability-scan.txt (`docs/evidence/red-phase/20260921T224500Z-T113-governance-immutability-scan.txt`)
+- a deliberate red-phase capture is recorded (a real failure, then the fix): 20260921T225003Z-T082a-self-inflicted-secret-scan-match.txt (`docs/evidence/red-phase/20260921T225003Z-T082a-self-inflicted-secret-scan-match.txt`)
+- a deliberate red-phase capture is recorded (a real failure, then the fix): 20260921T231711Z-T131d-gemini-429-misclassification.txt (`docs/evidence/red-phase/20260921T231711Z-T131d-gemini-429-misclassification.txt`)
 - a deliberate red-phase capture is recorded (a real failure, then the fix): 20260921T235000Z-T114-stage-telemetry-spring-wiring.txt (`docs/evidence/red-phase/20260921T235000Z-T114-stage-telemetry-spring-wiring.txt`)
 - a deliberate red-phase capture is recorded (a real failure, then the fix): 20260921T240000Z-T115-failure-event-duration-consistency.txt (`docs/evidence/red-phase/20260921T240000Z-T115-failure-event-duration-consistency.txt`)
 - a deliberate red-phase capture is recorded (a real failure, then the fix): 20260921T240500Z-T117-human-wait-window-clipping.txt (`docs/evidence/red-phase/20260921T240500Z-T117-human-wait-window-clipping.txt`)
@@ -269,4 +295,10 @@ Deterministically assembled by `SummaryAssembler` from recorded repository evide
 - a deliberate red-phase capture is recorded (a real failure, then the fix): 20260921T245500Z-T108-stale-artifact-query.txt (`docs/evidence/red-phase/20260921T245500Z-T108-stale-artifact-query.txt`)
 - a deliberate red-phase capture is recorded (a real failure, then the fix): 20260921T250000Z-T109-T110-traceability-relative-path-resolution.txt (`docs/evidence/red-phase/20260921T250000Z-T109-T110-traceability-relative-path-resolution.txt`)
 - a deliberate red-phase capture is recorded (a real failure, then the fix): 20260921T250500Z-T110a-missing-evidence-artifact-detection.txt (`docs/evidence/red-phase/20260921T250500Z-T110a-missing-evidence-artifact-detection.txt`)
+- a deliberate red-phase capture is recorded (a real failure, then the fix): 20260922T003330Z-tasks-to-task-artifact-alias-missing.txt (`docs/evidence/red-phase/20260922T003330Z-tasks-to-task-artifact-alias-missing.txt`)
+- a deliberate red-phase capture is recorded (a real failure, then the fix): 20260922T004037Z-CR049-s3-materiality-classification-missing.txt (`docs/evidence/red-phase/20260922T004037Z-CR049-s3-materiality-classification-missing.txt`)
+- a deliberate red-phase capture is recorded (a real failure, then the fix): 20260922T005100Z-normalization-duplicate-externalIds-accepted.txt (`docs/evidence/red-phase/20260922T005100Z-normalization-duplicate-externalIds-accepted.txt`)
+- a deliberate red-phase capture is recorded (a real failure, then the fix): 20260922T022152Z-CR052-materiality-sharpening-missing.txt (`docs/evidence/red-phase/20260922T022152Z-CR052-materiality-sharpening-missing.txt`)
+- a deliberate red-phase capture is recorded (a real failure, then the fix): 20260922T022710Z-CR052-blank-noClarificationReason-rejected.txt (`docs/evidence/red-phase/20260922T022710Z-CR052-blank-noClarificationReason-rejected.txt`)
+- a deliberate red-phase capture is recorded (a real failure, then the fix): index.md (`docs/evidence/red-phase/index.md`)
 
