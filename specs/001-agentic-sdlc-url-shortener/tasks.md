@@ -1046,11 +1046,23 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
   - **Deps**: T132, T133 · **Par**: yes · **Artifact**: graph export, per-stage criteria evaluation, quality checks, decomposition, executed test results, traceability matrix, **per-stage executor-mode labels**
   - **TDD**: EVIDENCE · **Validate**: bundle complete against DS-A's stated evidence list · **Docs**: — · **Trace**: DS-A
   - **Guard**: every figure in the bundle labelled measured or proposed · **Done**: seven evidence items present · **Approval**: none
-- [ ] T135 [US3] DS-B brownfield impact analysis and ordering proof — `docs/evidence/ds-b/impact-analysis.md`
+- [x] T135 [US3] DS-B brownfield impact analysis and ordering proof — `docs/evidence/ds-b/impact-analysis.md`
   - **Req**: **FR-ORC-020**, **DS-B** · **Scn**: **DS-B** · **ADR**: ADR-006 · **Pre**: T055, T107, T110
   - **Deps**: T055, T107, T110 · **Par**: no · **Artifact**: subject *"A creator's redirect traffic must be limited in aggregate across all their links, not only per link"* — FR-URL-016's third tier (PVT-014); all seven dimensions, carrying the **six substantive points** plan §11 enumerates (hot-path ownership lookup, latency against PVT-001, limiter failure posture, non-disclosure of the creator, per-code regression surface, threat-model update); **timestamp preceding the first code modification**
   - **TDD**: EVIDENCE · **Validate**: ordering asserted by timestamp comparison against the first commit touching `delivery/ratelimit/` · **Docs**: new file · **Trace**: DS-B, matrix FR-ORC-020
   - **Guard**: the analysis MUST NOT be reconstructed after the change; the ordering proof is what makes that claim checkable · **Done**: seven dimensions; ordering proven · **Approval**: none
+  - **Done (2026-09-22)**: `docs/evidence/ds-b/impact-analysis.md` — all seven dimensions (components,
+    interfaces, data flows, tests, docs, regression risks, rollout/rollback), the six substantive points
+    each explicitly located in a summary table. Real findings, not template filler: `ShortLink` already
+    carries `creatorId`, so no new DB round-trip is structurally required, but the aggregate check must move
+    to a NEW post-lookup checkpoint since the per-code tier's own pre-lookup ordering can't supply a creator
+    id that isn't known until after the lookup; the limiter failure-posture question is named and explicitly
+    left open for T136a's own security gate, not resolved here; the exact `RateLimiterTest`/`RateLimitIT`
+    assertions expected to flip once the tier is real are named (`theAggregateTierIsNotPartiallyPresent`,
+    `throttlingIsOnByDefault`, `aggregateTrafficPassesUnthrottled`). Ordering proof: no
+    `AggregateRedirectLimiter.java` exists yet, and `git log -- .../delivery/ratelimit/` shows no commit
+    after this analysis's own commit touches that directory, independently checkable by any reviewer.
+    Analysis only — no code changes; T136a's own real code is a separate, later, owner-gated turn.
 - [ ] T136 [US3] DS-B executed run with injected retry and compensation — `docs/evidence/ds-b/run.json`
   - **Req**: DS-B, FR-ORC-014, FR-ORC-016 · **Scn**: **DS-B** · **ADR**: ADR-003 · **Pre**: T055, T135, T085, T090
   - **Deps**: T055, T085, T090, T135 · **Par**: no · **Artifact**: transient `UNAVAILABLE` → two-vote retry → success; one irreversible effect → compensation, **labelled as compensation** — both inside the **aggregate-tier** run
