@@ -124,15 +124,40 @@ class DsALiveRun extends PostgresIntegrationTest {
     // architecture approval (docs/governance/gate-decisions/ds-a/s6-architecture-approved.md) still
     // covers it; see CR-056 for why that record's own "build-info" wording no longer matches this run's
     // real output, and why that is not a silently-broken governance claim.
+    //
+    // CR-058: attempt 18's real, live S3 output (docs/evidence/ds-a/run-snapshot-ATTEMPT-18-...) found the
+    // CR-056 wording genuinely ambiguous -- ruling out pom.xml/build-info with no replacement default
+    // named left two real, material forks (what determines the actual returned value; what happens if the
+    // file is missing/malformed at runtime). Per CR-057's own finding, the RIGHT fix is here, at the
+    // source, not a weakened classifier: the mechanism is now fully specified (a fixed literal in a new,
+    // build-time-bundled resource file, never pom.xml, never resource filtering) and the missing-file
+    // question is foreclosed by construction (a classpath resource committed to source control cannot be
+    // absent at runtime short of build corruption, which is out of this endpoint's own scope).
+    //
+    // CR-058 addendum: attempt 19's real, live S3 output found THIS wording's own "current release
+    // version" phrase a genuine SEMANTIC_CONTRADICTION against pom.xml's real <version>0.1.0-SNAPSHOT --
+    // "SNAPSHOT" is Maven's own term of art for a pre-release build, the semantic opposite of "release".
+    // Attempt 19 also surfaced a SEPARATE, more serious finding: this driver's own keyword-matching
+    // clarification logic mismatched that real finding to a stale, contradictory pre-written answer meant
+    // for a different question -- see docs/evidence/ds-a/s4-clarification-matching-stale-answer-finding.md.
+    // FIXED below (SEMANTIC_CONTRADICTION is now never auto-matched to any routine answer, on principle).
+    //
+    // CR-059: owner's own simpler, fully self-contained, new-files-only wording, replacing CR-056/058's
+    // own accreted attempts at the same goal -- a static/placeholder version value is explicitly accepted
+    // as honest for this demonstration feature, removing the SNAPSHOT-wording trap entirely rather than
+    // patching around it again.
     private static final String REQUIREMENT =
-            "Add a public endpoint GET /v1/version that requires no authentication, takes no path or "
-                    + "query parameters, and returns HTTP 200 with Content-Type: application/json, body "
-                    + "{\"version\": \"<the application build version string>\"}, and header "
-                    + "Cache-Control: no-store. The version value must be sourced from a NEW, dedicated "
-                    + "resource file created for this purpose (e.g. a new .properties file under "
-                    + "src/main/resources) -- never by modifying pom.xml or any other existing file's "
-                    + "build configuration. This change must not modify any existing file: only new "
-                    + "source, resource, and test files may be added.";
+            "Add a public endpoint GET /v1/version -- no authentication, no path/query parameters -- "
+                    + "returning HTTP 200, Content-Type: application/json, body "
+                    + "{\"version\": \"<the application version string>\"}, and header "
+                    + "Cache-Control: no-store. The version value must be sourced from a NEW classpath "
+                    + "resource (e.g. a new version.properties file under src/main/resources) that this "
+                    + "change creates and reads at runtime -- NOT Spring Boot's build-info mechanism, which "
+                    + "would require editing pom.xml. A static, honestly-disclosed placeholder version "
+                    + "value committed directly into that new resource file is acceptable for this "
+                    + "demonstration feature. Do not modify pom.xml or any other existing file: only new "
+                    + "source, resource, and test files may be added. Do not modify the OpenAPI contract "
+                    + "file either -- note its own missing entry as a documented follow-up instead.";
 
     /** The real human deciding S4's clarification gate below — never this agent, never "system". */
     private static final String OWNER_ACTOR = "Pravallika Veeravalli";
@@ -499,14 +524,28 @@ class DsALiveRun extends PostgresIntegrationTest {
             }
             String affectedPath = element.get("affectedPath").asText();
             String lower = affectedPath.toLowerCase();
+            String ambiguityClass = element.get("ambiguityClass").asText();
 
             // Matched against the owner's own standing delegation
             // (docs/governance/delegations/routine-clarification-delegation.md) -- never an answer this
             // agent invents. Anything that does not match one of these falls through to
             // unansweredFindings and is reported, never silently resolved.
+            //
+            // A SEMANTIC_CONTRADICTION is NEVER matched to a pre-written routine answer, on principle, not
+            // merely for the one case that surfaced it: by definition it names an internal inconsistency
+            // in THIS run's own requirement wording, which no answer written before that wording existed
+            // could have anticipated. Attempt 19 found this live and real: a SEMANTIC_CONTRADICTION whose
+            // own text happened to contain the word "literal" was matched to VERSION_VALUE_CLARIFICATION
+            // (a routine sourcing-mechanism answer that does not address the contradiction at all, and
+            // directly contradicts this run's own requirement text) -- see
+            // docs/evidence/ds-a/s4-clarification-matching-stale-answer-finding.md. Excluding the whole
+            // class here, rather than patching the one keyword collision, closes the general failure mode.
             String question;
             String answer;
-            if (lower.contains("content-type") || lower.contains("application/json")) {
+            if ("SEMANTIC_CONTRADICTION".equals(ambiguityClass)) {
+                unansweredFindings.add(affectedPath);
+                continue;
+            } else if (lower.contains("content-type") || lower.contains("application/json")) {
                 question = CONTENT_TYPE_QUESTION;
                 answer = CONTENT_TYPE_CLARIFICATION;
             } else if (lower.contains("cache-control") || lower.contains("no-store")) {
@@ -522,8 +561,10 @@ class DsALiveRun extends PostgresIntegrationTest {
                 question = NON_GET_METHOD_QUESTION;
                 answer = NON_GET_METHOD_CLARIFICATION;
             } else if (lower.contains("version") && (lower.contains("source") || lower.contains("build")
-                    || lower.contains("literal") || lower.contains("hardcod")
-                    || lower.contains("computed") || lower.contains("manifest"))) {
+                    || lower.contains("hardcod") || lower.contains("computed")
+                    || lower.contains("manifest"))) {
+                // "literal" deliberately dropped from this OR-list (attempt 19's own real collision) --
+                // too generic a word to reliably identify THIS specific question versus an unrelated one.
                 question = VERSION_VALUE_QUESTION;
                 answer = VERSION_VALUE_CLARIFICATION;
             } else if (lower.contains("parameter") || lower.contains("query string")
