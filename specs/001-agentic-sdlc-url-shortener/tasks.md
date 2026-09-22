@@ -1036,6 +1036,19 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
   - **Deps**: T131, T131a, T131b, T131c, T131d · **Par**: no · **Artifact**: path S1→S2→S3→**S4 `SKIPPED`**→S5→S6→S7 fan-out→S8→S9∥S10→S11→S12, terminal `COMPLETED`
   - **TDD**: EVIDENCE · **Validate**: stage 4 `SKIPPED`; **requirement-quality checks recorded**; **`no_clarification_reason` populated**; decomposition, API/schema impacts, and acceptance criteria all present · **Docs**: — · **Trace**: DS-A row in the matrix
   - **Guard**: **a clarification gate MUST NOT fire merely to demonstrate that gates exist.** This is the task that proves governance is not theatre — a well-formed requirement passes through without an artificial stop, while the quality checks that justified skipping are on the record · **Done**: skip recorded with its justification; run `COMPLETED` · **Approval**: none
+  - **Progress (2026-09-22)**: twelve live attempts across four subjects (full arc:
+    `docs/evidence/ds-a/requirement-completeness-ceiling-finding.md`). The twelfth — `GET /v1/version`
+    (CR-054), routine S4 findings resolved under the owner's standing delegation
+    (`docs/governance/delegations/routine-clarification-delegation.md`) — reached **S6, `AWAITING_APPROVAL`**,
+    the furthest any live attempt has gone: S4 did not `SKIP` (two real, routine findings genuinely fired and
+    were resolved through the governed clarification path, not an artificial gate), S5 ran for real
+    (decomposition), S6 opened its own real architecture gate. `docs/evidence/ds-a/
+    run-snapshot-ATTEMPT-12-RESUMED-TO-S6-new-feature-under-delegation.md`,
+    `docs/evidence/ds-a/pending-gate-s6-context-new-feature.md`. **Not yet `COMPLETED`** — this task's own
+    literal Artifact (`S4 SKIPPED`, terminal `COMPLETED`) is not what this run produced, and is not claimed
+    here; the owner's own S6 and S11 decisions are still needed before `docs/evidence/ds-a/run.json` can be
+    written as a true terminal record. Left unchecked honestly rather than marked done against a different
+    outcome than its own Artifact field states.
 - [ ] T133 [P] [US3] DS-A late-ambiguity escalation — `docs/evidence/ds-a/late-ambiguity.json`
   - **Req**: **DS-A**, FR-ORC-011, EC-021 · **Scn**: **DS-A** · **ADR**: ADR-009 · **Pre**: T132, T096
   - **Deps**: T096, T132 · **Par**: yes · **Artifact**: material ambiguity emerging mid-run suspends **only the affected path**; governed clarification and impact analysis follow; resumption from the correct state after explicit approval
