@@ -333,6 +333,30 @@ paths:
                     checks:
                       store: "DOWN"
 
+  /v1/version:
+    get:
+      tags: [operations]
+      summary: Report the running application version
+      operationId: getVersion
+      description: >
+        Returns the application's current version, sourced from the build (FR-URL-1f). Public and
+        unauthenticated, like the other operations endpoints (CN-012).
+      security: []
+      responses:
+        '200':
+          description: Version reported
+          headers:
+            Cache-Control:
+              required: true
+              schema: { type: string, enum: ["no-store"] }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Version' }
+              examples:
+                version:
+                  value:
+                    version: "0.1.0-SNAPSHOT"
+
   /v1/runs:
     post:
       tags: [orchestration]
@@ -714,6 +738,13 @@ components:
           type: object
           additionalProperties: { type: string, enum: [UP, DOWN] }
           description: Dependency names and states only. Never connection details.
+
+    Version:
+      type: object
+      required: [version]
+      additionalProperties: false
+      properties:
+        version: { type: string }
 
     RunInspection:
       type: object

@@ -149,9 +149,10 @@ class ContractFilesLintTest {
                         .path("properties").path("ai").isMissingNode(),
                 "CreateRunRequest.ai was removed by CR-029");
 
-        // Eight paths after CR-013 added createRun and recordGateDecision.
-        assertEquals(8, document.path("paths").size(),
-                "CR-013 took the document to eight paths; a different count means the document and "
+        // Nine paths after CR-013 added createRun and recordGateDecision, and CR-064
+        // added GET /v1/version.
+        assertEquals(9, document.path("paths").size(),
+                "CR-064 took the document to nine paths; a different count means the document and "
                         + "the record disagree");
     }
 
