@@ -103,12 +103,22 @@ class EngineBehaviourTest {
         }
 
         @Test
-        @DisplayName("a passing suite produces the results artifact")
-        void passingSuite() {
+        @DisplayName("a passing suite produces the results artifact, CR-065: real executedBehaviors too")
+        void passingSuite() throws Exception {
             StageOutcome outcome = executorUnderTest().execute(validInput());
             assertTrue(outcome.succeeded());
             assertEquals("test-results", outcome.producedArtifacts().get(0).artifactKey());
-            assertTrue(outcome.producedArtifacts().get(0).content().contains("0 failures"));
+            String content = outcome.producedArtifacts().get(0).content();
+            assertTrue(content.contains("0 failures"));
+
+            com.fasterxml.jackson.databind.JsonNode json =
+                    new com.fasterxml.jackson.databind.ObjectMapper().readTree(content);
+            assertEquals(42, json.get("total").asInt());
+            assertEquals(0, json.get("failed").asInt());
+            assertTrue(json.get("executedBehaviors").isArray());
+            assertTrue(json.get("executedBehaviors").size() > 0,
+                    "CR-065: a passing suite must report which real behaviours it verified, or S9's own "
+                            + "drift guard can never accept any documentation at all");
         }
 
         @Test

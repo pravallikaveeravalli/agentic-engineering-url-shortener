@@ -8,6 +8,9 @@ import agentic.shortener.orchestration.executor.StageOutcome;
 import agentic.shortener.orchestration.reliability.FailureCategory;
 import agentic.shortener.orchestration.reliability.FailureEnvelope;
 import agentic.shortener.orchestration.reliability.ProviderFailureTranslator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.List;
 import java.util.Objects;
@@ -41,6 +44,8 @@ public final class TestingEngine implements StageExecutor {
     static final String INPUT_KEY = "branch";
     static final String OUTPUT_KEY = "test-results";
 
+    private static final ObjectMapper JSON = new ObjectMapper();
+
     private final TestSuiteRunner runner;
 
     public TestingEngine(TestSuiteRunner runner) {
@@ -72,7 +77,21 @@ public final class TestingEngine implements StageExecutor {
         }
 
         return StageOutcome.succeeded(
-                List.of(new ProducedArtifact(OUTPUT_KEY, report.report(), List.of(INPUT_KEY))),
+                List.of(new ProducedArtifact(OUTPUT_KEY, toJson(report), List.of(INPUT_KEY))),
                 ExecutorKind.DETERMINISTIC);
+    }
+
+    /** CR-065: {@code "report"} keeps the existing human-readable summary verbatim — added alongside, never
+     * renamed or removed, for any other consumer already reading it — and {@code "executedBehaviors"} is
+     * the real, per-test list {@link agentic.shortener.orchestration.executor.ai.stages.
+     * DocumentationAiExecutor}'s own drift guard (S9) requires. */
+    private static String toJson(TestSuiteReport report) {
+        ObjectNode root = JSON.createObjectNode();
+        root.put("total", report.total());
+        root.put("failed", report.failed());
+        root.put("report", report.report());
+        ArrayNode behaviors = root.putArray("executedBehaviors");
+        report.executedBehaviors().forEach(behaviors::add);
+        return root.toString();
     }
 }

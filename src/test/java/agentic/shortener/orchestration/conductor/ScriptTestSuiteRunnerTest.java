@@ -69,6 +69,68 @@ class ScriptTestSuiteRunnerTest {
     }
 
     @Test
+    @DisplayName("CR-065: a passing suite's real executedBehaviors are derived from Surefire's own XML "
+            + "testcase records")
+    void executedBehaviorsDerivedFromRealXmlReportsWhenSuitePasses() throws Exception {
+        String script = "#!/bin/sh\n"
+                + "mkdir -p target/surefire-reports\n"
+                + "cat > target/surefire-reports/fixture.OneTest.txt <<'EOF'\n"
+                + "Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.01 s -- in fixture.OneTest\n"
+                + "EOF\n"
+                + "cat > target/surefire-reports/TEST-fixture.OneTest.xml <<'EOF'\n"
+                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                + "<testsuite name=\"fixture.OneTest\" tests=\"2\" failures=\"0\" errors=\"0\" skipped=\"0\">\n"
+                + "  <testcase name=\"firstBehavior\" classname=\"fixture.OneTest\" time=\"0.001\"/>\n"
+                + "  <testcase name=\"secondBehavior\" classname=\"fixture.OneTest\" time=\"0.001\"/>\n"
+                + "</testsuite>\n"
+                + "EOF\n"
+                + "exit 0\n";
+
+        ScriptTestSuiteRunner runner = new ScriptTestSuiteRunner(repo, testCommand(script));
+
+        TestSuiteReport report = runner.run(branchRef);
+
+        assertEquals(2, report.total());
+        assertEquals(0, report.failed());
+        assertEquals(List.of("fixture.OneTest.firstBehavior", "fixture.OneTest.secondBehavior"),
+                report.executedBehaviors(),
+                "each real <testcase> must become 'ClassName.methodName' in executedBehaviors");
+        assertTrue(report.report().contains("2 tests run"),
+                "the existing human-readable summary must still be present, unchanged, alongside the new "
+                        + "list -- CR-065 adds, it does not replace");
+    }
+
+    @Test
+    @DisplayName("CR-065 REGRESSION: a FAILING suite reports NO executedBehaviors -- only a genuinely "
+            + "passing run's own tests are ever named as verified")
+    void failingSuiteReportsNoExecutedBehaviors() throws Exception {
+        String script = "#!/bin/sh\n"
+                + "mkdir -p target/surefire-reports\n"
+                + "cat > target/surefire-reports/fixture.OneTest.txt <<'EOF'\n"
+                + "Tests run: 2, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.01 s -- in fixture.OneTest\n"
+                + "EOF\n"
+                + "cat > target/surefire-reports/TEST-fixture.OneTest.xml <<'EOF'\n"
+                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                + "<testsuite name=\"fixture.OneTest\" tests=\"2\" failures=\"1\" errors=\"0\" skipped=\"0\">\n"
+                + "  <testcase name=\"passingBehavior\" classname=\"fixture.OneTest\" time=\"0.001\"/>\n"
+                + "  <testcase name=\"failingBehavior\" classname=\"fixture.OneTest\" time=\"0.001\"><failure "
+                + "message=\"boom\"/></testcase>\n"
+                + "</testsuite>\n"
+                + "EOF\n"
+                + "exit 1\n";
+
+        ScriptTestSuiteRunner runner = new ScriptTestSuiteRunner(repo, testCommand(script));
+
+        TestSuiteReport report = runner.run(branchRef);
+
+        assertEquals(1, report.failed());
+        assertTrue(report.executedBehaviors().isEmpty(),
+                "a failing suite's own passing test must not be claimed as a verified behaviour -- "
+                        + "TestingEngine never reaches its succeeded path here anyway, but the report "
+                        + "itself must not pre-populate a list nothing will ever read as trustworthy");
+    }
+
+    @Test
     @DisplayName("no surefire-reports directory produced: reported as a real, non-invented outcome")
     void noReportsDirectoryIsReportedHonestly() throws Exception {
         String script = "#!/bin/sh\nexit 1\n"; // fails before ever reaching Surefire

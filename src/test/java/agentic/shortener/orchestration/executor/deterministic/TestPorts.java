@@ -25,7 +25,9 @@ final class TestPorts {
     /** All three ports answering successfully, deterministically. */
     static EnginePorts working() {
         return new EnginePorts(
-                branch -> new TestSuiteReport(42, 0, "42 tests, 0 failures against " + branch),
+                branch -> new TestSuiteReport(42, 0, "42 tests, 0 failures against " + branch,
+                        java.util.List.of("agentic.shortener.FixtureTest.behaviorOne",
+                                "agentic.shortener.FixtureTest.behaviorTwo")),
                 artifacts -> new PolicyVerdict(false, "12 checks evaluated, 0 blocking"),
                 artifacts -> new ReadinessVerdict(true, "9 blocking conditions evaluated, 0 unmet"));
     }
@@ -33,7 +35,8 @@ final class TestPorts {
     /** A failing suite: the change under test is not acceptable, which is not an infrastructure failure. */
     static EnginePorts failingSuite() {
         return new EnginePorts(
-                branch -> new TestSuiteReport(42, 3, "42 tests, 3 failures against " + branch),
+                branch -> new TestSuiteReport(42, 3, "42 tests, 3 failures against " + branch,
+                        java.util.List.of()),
                 working().policyEvaluator(), working().readinessEvaluator());
     }
 
