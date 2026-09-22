@@ -1087,16 +1087,41 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
     implementation, unsafe implementation prevented, suspension recorded), not a real-time wait-deadline
     expiry. T139 (clarification/replan) and T140 (rejection variant) remain open, pending the owner's real
     clarification decision on the findings this run surfaced.
-- [ ] T139 [US3] DS-C clarification, replan, and resumption — `docs/evidence/ds-c/replan.json`
+- [x] T139 [US3] DS-C clarification, replan, and resumption — `docs/evidence/ds-c/replan.json`
   - **Req**: DS-C, FR-ORC-011, FR-ORC-019 · **Scn**: **DS-C** · **ADR**: **ADR-009** · **Pre**: T138, T096
   - **Deps**: T096, T138 · **Par**: no · **Artifact**: clarification decision recorded with human, question, answer, time; **replan event naming invalidated stages and voided approvals**; resumption to a deterministic terminal outcome
   - **TDD**: EVIDENCE · **Validate**: affected downstream artifacts re-planned; **unaffected paths untouched**; voided approvals proven **not carried forward** (EC-020) · **Docs**: — · **Trace**: DS-C, EC-020
   - **Guard**: over-invalidation is acceptable and expected under ADR-009's closure approach; a **surviving stale artifact is not** · **Done**: replan event complete; EC-020 proven · **Approval**: none
-- [ ] T140 [P] [US3] DS-C rejection variant — `docs/evidence/ds-c/rejection.json`
+  - **Live evidence (2026-09-22)**: `DsCClarificationRun.driveDsCThroughClarificationAndReplan` — real owner
+    clarification (5 ratified answers) recorded via `LineageStore` (`RequirementRecord`/`AmbiguityRecord`/
+    `ClarificationDecision` for each real live finding), then a real `GateDecision` (`APPROVED`, human actor)
+    applied through `GateOutcomeHandler`, resumed via `Conductor.advance`. Run proceeded S4→`SUCCEEDED`,
+    S5→`SUCCEEDED` (real decomposition), S6→`AWAITING_APPROVAL` (its own real architecture gate) — a
+    genuine, deterministic further stopping point, not a defect. **A disclosed, real scope decision**:
+    `ReplanService`'s own downstream-invalidation walk (T096) was NOT invoked here — it invalidates a
+    node's entire downstream closure unconditionally, without distinguishing already-executed work from
+    work that never started, and `INVALIDATED` does not satisfy a join; `ReplanServiceTest` itself never
+    demonstrates real resumption after invalidation (`appendReplannedEdges` is only exercised there to
+    prove cycle rejection). Since T138 already proved nothing downstream of S4 had executed, invoking it
+    would have invalidated never-attempted work and stranded the run with no proven re-dispatch path.
+    Downstream-impact analysis was instead done for real (S5–S12 checked `BLOCKED`, proven per-node) and
+    disclosed as empty in `docs/evidence/ds-c/replan.json`'s own `downstreamImpactAnalysis` field — spec.md's
+    own "identify downstream impact" is satisfied by that proof, not by forcing an unrelated mechanism. Two
+    live attempts were needed; the first surfaced three different, genuinely new findings and correctly
+    stopped before recording any decision rather than forcing a match — see
+    `docs/evidence/ds-c/pending-gate-s4-context.md`'s own T139 section. `RunState` is `RUNNING` (paused at
+    S6), not yet terminal — reaching a truly terminal outcome needs the owner's further S6/S11 decisions,
+    same as DS-A's own T132 chain.
+- [x] T140 [P] [US3] DS-C rejection variant — `docs/evidence/ds-c/rejection.json`
   - **Req**: FR-ORC-013 · **Scn**: DS-C · **ADR**: — · **Pre**: T139
   - **Deps**: T139 · **Par**: yes · **Artifact**: the same gate answered `REJECTED` → run terminates deterministically, reason recorded, **no downstream artifact produced**
   - **TDD**: EVIDENCE · **Validate**: terminal `REJECTED`; downstream artifact count zero · **Docs**: — · **Trace**: DS-C
   - **Guard**: a governance demonstration that only ever shows approval is incomplete · **Done**: rejection path evidenced · **Approval**: none
+  - **Live evidence (2026-09-22)**: `DsCClarificationRun.driveDsCToRejection` — a separate live run, the same
+    real S4 gate answered `REJECTED`, reason text explicitly labelled "T140 REJECTION-PATH DEMONSTRATION,
+    not a real rejection of the requirement" so it is never misread as an actual owner decision. Confirmed:
+    `RunState` → `REJECTED` deterministically; S5 through S12 all remained `BLOCKED` (zero downstream
+    artifacts, proven per-node). `docs/evidence/ds-c/rejection.json`.
 - [ ] T141 [US3] Out-of-scenario run — generic-executor proof — `docs/evidence/out-of-scenario/run.json`
   - **Req**: **FR-ORC-028**, **SC-016**, CN-010 · **Scn**: none by design · **ADR**: **ADR-004** · **Pre**: T132, T110
   - **Deps**: T110, T132 · **Par**: no · **Artifact**: a requirement **outside DS-A/B/C**, submitted like any other run, completing the governed lifecycle with **no executor code changes**

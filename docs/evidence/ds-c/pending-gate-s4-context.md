@@ -1,5 +1,24 @@
 # DS-C live run — pending S4 clarification gate, context for the owner
 
+## T139 update — owner's clarification recorded, run resumed to S6 (2026-09-22)
+
+The owner reviewed the five findings below and ratified real answers for all of them (the central
+resolution: an expired link's mapping survives, only redirect eligibility for normal callers changes; plus
+trusted-partner identity, the 168-hour boundary, denied-access analytics, and metadata scope). Full record:
+`docs/governance/gate-decisions/ds-c/s4-central-contradiction-clarification.md`,
+`docs/evidence/ds-c/replan.json`, `docs/evidence/ds-c/pending-gate-s6-context.md` (the run now paused, for
+real, at S6's own architecture-approval gate).
+
+**Two live attempts were needed.** The first (`runId` `2494b6c8-2917-4bc8-9cc0-af29bb97b85f`) produced a
+more elaborated normalization (S2 itself introduced an "expired" vs. "deleted" distinction not present in
+the literal three-sentence input) and surfaced three genuinely new, unanswered findings: an expired-link
+response contract (status code/body/landing-page redirect), what happens on request to a *deleted* (as
+opposed to merely time-expired) link, and whether a trusted-partner's post-expiry redirect itself counts
+toward the analytics-retention requirement. None matched any of the five ratified answers, so — per this
+project's own standing discipline — the driver stopped before recording any decision, rather than forcing a
+match. The second attempt (`runId` `e89583ac-a79b-404f-aad6-9f50547ca44d`) produced six real findings, all
+of which matched one of the five ratified answers, and resumed cleanly to S6.
+
 Task T138. `runId`: `b7f0e522-0a39-4de1-a76d-8ec18d02a9e1`. Full machine-readable evidence:
 `docs/evidence/ds-c/silence.json`. This document is the human-readable companion — what the real,
 live contradiction is, and what the owner needs to decide to unblock it. **No clarification decision is

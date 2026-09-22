@@ -1,0 +1,53 @@
+{
+  "task" : "T140",
+  "label" : "REJECTION-PATH DEMONSTRATION -- not a real owner rejection of the requirement",
+  "scenario" : "DS-C",
+  "runId" : "192816bd-b9a1-4928-859a-4309436610c8",
+  "requirement" : "Short links expire after a week. Redirect analytics are retained indefinitely. Expired links should still redirect for trusted partners.",
+  "gateOutcome" : "REJECTED",
+  "runState" : "REJECTED",
+  "downstreamArtifactCount" : 0,
+  "s3RealResponse" : [ {
+    "ambiguityClass" : "UNDEFINED_TERM",
+    "affectedPath" : "R1c ('trusted partner') and the parenthetical '(non-trusted-partner)' in R1a both depend on the term 'trusted partner' without specifying how the system determines, at request time, that a given requester is one — e.g. API key, mutual TLS client cert, IP allowlist, signed header, or session-based auth claim.",
+    "resolutionState" : "MATERIAL_PENDING",
+    "qualityChecksPerformed" : "Searched both requirements for any definition, cross-reference, or pointer to an authentication/authorization mechanism for 'trusted partner'; checked whether an external schema, IdP, or partner registry is named anywhere in the normalized set — none is present.",
+    "noClarificationReason" : null
+  }, {
+    "ambiguityClass" : "MISSING_ACTOR",
+    "affectedPath" : "R1c introduces the concept of a requester being 'identified as a trusted partner' but names no actor or process responsible for granting, storing, or revoking that trusted-partner status (e.g. an admin/operator role, a partner onboarding workflow, or an external identity provider).",
+    "resolutionState" : "MATERIAL_PENDING",
+    "qualityChecksPerformed" : "Checked R1a-R1c and any implied roles for a governance/administration actor over partner trust status; none of the three requirements names one, and no referenced policy or contract elsewhere in this set fixes it.",
+    "noClarificationReason" : null
+  }, {
+    "ambiguityClass" : "MISSING_ACCEPTANCE_CRITERIA",
+    "affectedPath" : "R1a states standard requests to an expired short link 'SHALL NOT be redirected to the original URL' but specifies no required response for that case (e.g. HTTP 404 vs 410 Gone vs a custom 'link expired' page vs redirect to a fallback URL).",
+    "resolutionState" : "MATERIAL_PENDING",
+    "qualityChecksPerformed" : "Reviewed R1a's full text and R1c for any stated fallback behavior or status code; confirmed none is given, and checked whether an existing API contract or error-handling policy is referenced elsewhere in the normalized set — it is not.",
+    "noClarificationReason" : null
+  }, {
+    "ambiguityClass" : "MISSING_ACCEPTANCE_CRITERIA",
+    "affectedPath" : "R1c permits trusted-partner requests to bypass expiration, and R1b requires indefinite retention of 'redirect analytics data (e.g., click/access events) for every short link,' but neither requirement states whether a trusted-partner bypass access must be recorded/flagged distinctly from a standard pre-expiration access for audit purposes.",
+    "resolutionState" : "MATERIAL_PENDING",
+    "qualityChecksPerformed" : "Cross-checked R1b's analytics scope ('every short link', unqualified by requester type or expiration state) against R1c's bypass mechanism to see whether a distinguishing field or audit obligation is implied or stated; found the analytics requirement is silent on requester classification, and no data schema for analytics events is defined elsewhere in this set.",
+    "noClarificationReason" : null
+  }, {
+    "ambiguityClass" : "UNBOUNDED_QUANTIFIER",
+    "affectedPath" : "R1c's trusted-partner bypass of the 7-day expiration ('the system SHALL still redirect the request to the original URL, bypassing the standard expiration behavior') states no outer time bound or condition under which trusted-partner access itself would ever stop, leaving open whether the bypass is permanent for the life of the link or subject to some other unstated limit.",
+    "resolutionState" : "MATERIAL_PENDING",
+    "qualityChecksPerformed" : "Searched R1c and the other two requirements for any secondary time bound, revocation trigger, or maximum-duration clause applying to trusted-partner access; none exists, and R1b's indefinite-retention clause governs analytics data only, not redirect availability, so it does not settle this question.",
+    "noClarificationReason" : null
+  }, {
+    "ambiguityClass" : "SEMANTIC_CONTRADICTION",
+    "affectedPath" : "Checked whether R1a's use of 'expire a short link' (suggesting the link ceases to function/exist) conflicts with R1c's requirement that expired links must still resolve for trusted partners, and with R1b's requirement that analytics for every link be retained indefinitely (implying the underlying link mapping must persist past expiration).",
+    "resolutionState" : "NOT_MATERIAL",
+    "qualityChecksPerformed" : "Traced the logical dependency across all three requirements: R1a itself scopes the non-redirect behavior explicitly to 'standard (non-trusted-partner) requests,' R1c is drafted as an explicit, non-conflicting exception to that same scoped rule, and R1b's indefinite retention is consistent with (indeed necessitates) the underlying short-link mapping persisting past the 7-day mark so that both trusted-partner redirects and analytics attribution remain possible.",
+    "noClarificationReason" : "The three requirements are internally consistent by their own explicit wording — R1a's prohibition is pre-scoped to exclude trusted partners, and R1c is framed as a stated exception rather than a competing rule — so every conformant implementation resolves 'expire' the same way (redirect suppression for standard requests only, with underlying data persisting); there is no second reading of 'expire' that a conformant implementation could adopt instead."
+  }, {
+    "ambiguityClass" : "UNDEFINED_TERM",
+    "affectedPath" : "R1a's expiration computation ('exactly 7 days (168 hours) after its creation timestamp') does not state the timezone, calendar convention, or clock source for 'creation timestamp'.",
+    "resolutionState" : "NOT_MATERIAL",
+    "qualityChecksPerformed" : "Considered whether timezone or calendar ambiguity in 'creation timestamp' could produce differing expiration instants across conformant implementations.",
+    "noClarificationReason" : "A 'creation timestamp' in a software system is a standard, uncontested default: an instant-based value (e.g., UTC epoch or an equivalent absolute instant), and adding a fixed 168-hour duration to an absolute instant yields the same expiration instant regardless of any timezone used for display — so no behavioral fork exists between conformant implementations on this point."
+  } ]
+}

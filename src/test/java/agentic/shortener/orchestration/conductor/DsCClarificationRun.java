@@ -423,6 +423,20 @@ class DsCClarificationRun extends PostgresIntegrationTest {
         UUID runId = conductor.submit(StageTemplate.standard(), "policy-set-1.1.0", REQUIREMENT);
         conductor.advance(runId);
 
+        for (PersistedNode node : runStore.persistedNodes(runId)) {
+            System.out.println("DS-C REJECTION VARIANT: node " + node.nodeKey() + " -> " + node.state());
+        }
+        try (var c = connection();
+             var st = c.createStatement();
+             var rs = st.executeQuery("SELECT node_key, from_state, to_state, reason FROM state_transition "
+                     + "WHERE run_id = '" + runId + "' ORDER BY state_transition_id")) {
+            System.out.println("DS-C REJECTION VARIANT: full state transition history:");
+            while (rs.next()) {
+                System.out.println("  " + rs.getString("node_key") + ": " + rs.getString("from_state")
+                        + " -> " + rs.getString("to_state") + " (" + rs.getString("reason") + ")");
+            }
+        }
+
         StageState s4State = runStore.node(runId, "S4").orElseThrow().state();
         assertEquals(StageState.AWAITING_APPROVAL, s4State,
                 "expected the real, live contradiction to open S4's gate before this demonstration answers "
