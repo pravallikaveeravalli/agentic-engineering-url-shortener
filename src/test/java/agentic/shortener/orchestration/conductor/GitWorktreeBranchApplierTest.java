@@ -268,6 +268,29 @@ class GitWorktreeBranchApplierTest {
         assertFalse(branches.isBlank(), "expected the branch to still exist: " + result.branchRef());
     }
 
+    @Test
+    @DisplayName("CR-068: a build failure's own real diagnostic text reaches the failure detail even when "
+            + "the injected build command writes it to STDOUT, never stderr -- exactly how Maven's real "
+            + "compile errors print under -q")
+    void buildFailureDetailCapturesStdoutNotOnlyStderr() throws Exception {
+        // A shell command writing its own diagnostic to stdout and exiting non-zero -- the same shape a
+        // real `./scripts/build.sh -q compile` failure has (confirmed empirically, this same turn: a real
+        // Maven compile error under -q writes ~2.4KB to stdout and ZERO bytes to stderr).
+        GitWorktreeBranchApplier applier = new GitWorktreeBranchApplier(repo, "main",
+                List.of("sh", "-c", "echo 'cannot find symbol: class ThisDoesNotExist' && exit 1"));
+
+        String changeSet = "{\"files\":[{\"path\":\"widget.txt\",\"action\":\"EDIT\",\"edits\":["
+                + "{\"search\":\"line two\",\"replace\":\"a real compile-error shape, on stdout only\"}]}]}";
+
+        BranchApplier.ApplyResult result = applier.apply("T909", changeSet);
+
+        assertFalse(result.buildable());
+        assertTrue(result.detail().contains("cannot find symbol: class ThisDoesNotExist"),
+                "the real diagnostic text (written to stdout by the injected command, exactly as Maven's "
+                        + "own compile errors are under -q) must reach the failure detail, not be silently "
+                        + "dropped because it wasn't on stderr: " + result.detail());
+    }
+
     private static ProcessRunner.Result run(Path dir, String... argv) throws Exception {
         ProcessRunner.Result result = ProcessRunner.run(List.of(argv), dir, java.time.Duration.ofSeconds(30));
         if (!result.succeeded()) {

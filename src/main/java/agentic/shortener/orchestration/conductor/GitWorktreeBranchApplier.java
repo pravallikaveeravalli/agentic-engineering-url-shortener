@@ -128,9 +128,16 @@ public final class GitWorktreeBranchApplier implements BranchApplier {
         ProcessRunner.Result build = ProcessRunner.run(buildCommand, worktree, BUILD_TIMEOUT);
         removeWorktree(worktree);
         if (!build.succeeded()) {
+            // CR-068: a real, live attempt (docs/evidence/ds-a's own attempt 2, this turn) reported this
+            // detail as blank -- confirmed, empirically, not assumed: Maven's own real compile errors under
+            // -q (this class's own default build command) print to STDOUT, never stderr, so build.stderr()
+            // alone is silently useless on exactly the failure this message exists to explain. Both
+            // streams are now included; a build command that DOES report to stderr (a future injected one,
+            // or a different real toolchain) still has its own output shown too, never dropped.
+            String detail = (build.stdout() + "\n" + build.stderr()).strip();
             // Branch kept deliberately — see class javadoc.
             return new ApplyResult(false, branchName, "change set applied and committed on " + branchName
-                    + " but does not compile: " + build.stderr());
+                    + " but does not compile: " + detail);
         }
 
         return new ApplyResult(true, branchName, "applied, committed on " + branchName + ", compiles cleanly");
