@@ -152,3 +152,27 @@ DF-002, DF-003, and DF-005 are all resolved (by ADR-014, CR-003, CR-017/CR-004, 
 respectively); **DF-004 remains open by design** — a run-level retry circuit breaker and an email/webhook
 expiry notification for suspended runs, both recorded and deliberately not adopted, out of scope for this
 assessment.
+
+## 12. Red-phase (test-first) evidence coverage is partial
+
+The red-phase evidence audit (`docs/evidence/red-phase/index.md`) indexes the failing-test-first evidence
+across the build and reports, honestly, that explicit red-before-green evidence covers well under half the
+task universe by raw identifier count; that two capture formats coexist (genuine captured console/stack-trace
+logs versus narrative write-ups closer to mutation/regression testing than strict test-first TDD); and that
+commit history alone cannot prove red-before-green ordering (only a few standalone `test(...)` commits exist).
+One timestamp anomaly is flagged as unconfirmed rather than asserted red-first. **Stated plainly**: the
+red-first discipline was genuinely followed and captured for a substantial portion of the build, but it is not
+uniformly evidenced across every task — the audit names exactly which tasks lack explicit red-phase evidence
+rather than claiming blanket coverage.
+
+## 13. Later governance approvals are conversational assent, not formal gate records
+
+The governance-evidence index (`docs/evidence/governance-index.md`) discloses that, from CR-050 onward, several
+change-control approvals are recorded as the owner's **conversational approval** rather than a separately
+materialized formal gate decision — flagged per this repository's own rule (`CLAUDE.md`) that conversational
+assent is not a formal gate decision. The program-level gates (Gate 01–07) and the in-run scenario gates
+(the S4/S6/S11 clarifications and approvals) are materialized as formal `docs/governance/gate-decisions/`
+records carrying actor, outcome, timestamp, and reason; the later requirement-clarification and change-control
+approvals, made rapidly during the build endgame, are recorded as genuine owner decisions in the change-control
+records themselves, without the full separate gate-record ceremony. **Stated plainly**: the approval trail is
+complete and honestly attributed, but its formality is not uniform across the whole timeline.
