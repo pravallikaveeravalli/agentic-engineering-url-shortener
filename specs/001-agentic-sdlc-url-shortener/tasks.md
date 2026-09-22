@@ -1067,11 +1067,26 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
   - **Deps**: T136 · **Par**: yes · **Artifact**: throttling outcomes for the multi-link case before and after, plus the **unregressed per-code tier** and the **re-measured redirect latency** against PVT-001
   - **TDD**: EVIDENCE · **Validate**: before-state shows the multi-link traffic passing **unthrottled**; after-state shows it **throttled with the aggregate tier named and the creator not named** · **Docs**: — · **Trace**: DS-B
   - **Guard**: a green after-state alone proves nothing; the before-state is what makes it evidence · **Done**: both states captured · **Approval**: none
-- [ ] T138 [US3] DS-C ambiguity detection and silence path — `docs/evidence/ds-c/silence.json`
+- [x] T138 [US3] DS-C ambiguity detection and silence path — `docs/evidence/ds-c/silence.json`
   - **Req**: **DS-C**, FR-ORC-010, SC-005 · **Scn**: **DS-C** · **ADR**: ADR-008 · **Pre**: T061, T110
   - **Deps**: T061, T110 · **Par**: no · **Artifact**: input *"Links should expire after a week but remain available for historical analytics indefinitely, and expired links should still redirect for trusted partners"*; conflict flagged with the conflicting elements **named**; **silence path demonstrated first** → `SAFE_STOP` with deadlines disclosed in the original ask
   - **TDD**: EVIDENCE · **Validate**: ambiguity detected **before** implementation; unsafe implementation prevented; suspension recorded · **Docs**: new file · **Trace**: DS-C, SC-005
   - **Guard**: **the orchestrator MUST NOT resolve the ambiguity by inference.** Demonstrating silence *before* the answer is what proves the gate is real · **Done**: conflict named; silence produces suspension · **Approval**: none
+  - **Live evidence (2026-09-22)**: `DsCLiveRun` (T138), driven through the real, unmodified `Conductor` against
+    the real Claude CLI adapter — `docs/evidence/ds-c/silence.json`,
+    `docs/evidence/ds-c/pending-gate-s4-context.md`. Input used is spec.md's own canonical §DS-C
+    demonstration text, verbatim (the same three-sentence form CR-049's and CR-052's own live compensating
+    checks already used, semantically identical to this task's own quoted Artifact string, wording not
+    forced to match token-for-token) — a real `SEMANTIC_CONTRADICTION` classified `MATERIAL_PENDING` fired
+    (5 `MATERIAL_PENDING` findings total, 2 correctly-reasoned `NOT_MATERIAL`), `Conductor` opened S4's real
+    gate, S5–S12 stayed `BLOCKED` (proven structurally: the live driver's own executor map supports only
+    S1–S3, so reaching any later stage would itself have failed the test), run `RUNNING`, not terminal. The
+    silence→`SAFE_STOP`-on-timeout mechanism itself (the wait-deadline elapsing with no decision) is proven
+    separately, deterministically, by `SilenceTest`/`SilenceTestFalsifiabilityTest`/`SafeStopAndRetentionIT`
+    — this live run demonstrates the three things its own **Validate** line actually names (detection before
+    implementation, unsafe implementation prevented, suspension recorded), not a real-time wait-deadline
+    expiry. T139 (clarification/replan) and T140 (rejection variant) remain open, pending the owner's real
+    clarification decision on the findings this run surfaced.
 - [ ] T139 [US3] DS-C clarification, replan, and resumption — `docs/evidence/ds-c/replan.json`
   - **Req**: DS-C, FR-ORC-011, FR-ORC-019 · **Scn**: **DS-C** · **ADR**: **ADR-009** · **Pre**: T138, T096
   - **Deps**: T096, T138 · **Par**: no · **Artifact**: clarification decision recorded with human, question, answer, time; **replan event naming invalidated stages and voided approvals**; resumption to a deterministic terminal outcome
