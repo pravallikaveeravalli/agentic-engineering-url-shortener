@@ -11,6 +11,8 @@ import agentic.shortener.orchestration.reliability.FailureCategory;
 import agentic.shortener.orchestration.reliability.FailureEnvelope;
 import agentic.shortener.orchestration.reliability.MalformedProviderOutputException;
 import agentic.shortener.orchestration.reliability.ProviderFailureTranslator;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.Objects;
@@ -22,23 +24,32 @@ import java.util.Objects;
  * change from the design output (this class's own prompt/parse half), <strong>the engine applies it on a
  * branch</strong> ({@link BranchApplier}, this class's port — see that interface's own javadoc for why S8's
  * real suite is NOT re-run here), and <strong>the real suite verifies</strong> separately, as S8
- * ({@code TestingEngine}, already built) — S7's own plan-table postcondition is "patch applied on branch,
+ * ({@code TestingEngine}, already built) — S7's own plan-table postcondition is "change applied on branch,
  * buildable", nothing further.
  *
- * <h2>AI output is never executed as text</h2>
+ * <h2>Search/replace and full-file content, not a unified diff (CR-060)</h2>
  *
- * <p>The model's answer is a unified diff. It is handed to {@link BranchApplier}, which applies it with
- * {@code git apply} (or equivalent) and reports whether the result builds — never interpreted, evaluated,
- * or run as a script. A failing patch being caught by that pipeline is the governance working as designed,
- * not a failed demonstration (this task's own Guard).
+ * <p>Earlier versions of this class asked the model for a unified diff (line-numbered {@code @@} hunks).
+ * That format requires the model to invent exact line numbers and surrounding context for a file it has
+ * never itself opened — CR-055 gave it the real file content to read, but real, live attempts (docs/evidence/
+ * ds-a's own attempts 14, 15, 17, 19) still produced hunks {@code git apply} rejected as corrupt, even with
+ * accurate content shown. Real coding agents do not ask a model to author line-numbered patches blind; they
+ * use a format the model is good at — an exact snippet to find, and its replacement — and apply it
+ * deterministically, never fuzzily. This class now asks for exactly that: per file, either the full content
+ * of a NEW file, or one or more search/replace pairs against an EXISTING file (whose real content it was
+ * already shown, via the same {@link #INPUT_EXISTING_FILES_KEY} CR-055 introduced). {@link BranchApplier}
+ * performs the actual string search/replace or file write, deterministically, in the isolated worktree — this
+ * class still authors nothing to disk itself and still never executes AI output as text.
  *
- * <h2>Why a build failure is {@code INVALID_INPUT}, not {@code INTERNAL}</h2>
+ * <h2>Why a build failure — or a search block that does not match — is {@code INVALID_INPUT}, not
+ * {@code INTERNAL}</h2>
  *
  * <p>{@code INTERNAL} in this package means "the model's answer could not even be understood" (malformed
- * JSON, a missing field). A patch that parses fine as a diff but does not build is a different kind of
- * fact — a defect in content this class understood perfectly — and the plan table's own Failure class
- * column calls this case "conflict = permanent": {@code INVALID_INPUT}, never retried on the identical
- * patch, routing back to S7 for a fresh attempt rather than proposed as a transient failure.
+ * JSON, a missing field, an unrecognized {@code action}). A change set that parses fine but whose search text
+ * does not match the real file content exactly once, or that does not build once applied, is a different kind
+ * of fact — content this class understood perfectly, that turned out to be wrong — and the plan table's own
+ * Failure class column calls this case "conflict = permanent": {@code INVALID_INPUT}, never retried on the
+ * identical change set, routing back to S7 for a fresh attempt rather than proposed as a transient failure.
  */
 public final class ImplementationAiExecutor implements StageExecutor {
 
@@ -50,6 +61,7 @@ public final class ImplementationAiExecutor implements StageExecutor {
     static final String INPUT_EXISTING_FILES_KEY = "existingFiles";
     static final String OUTPUT_KEY = "branchCommit";
 
+    private static final ObjectMapper JSON = new ObjectMapper();
     private static final ProviderFailureTranslator TRANSLATOR =
             ProviderFailureTranslator.forSubprocessProvider();
 
@@ -86,23 +98,23 @@ public final class ImplementationAiExecutor implements StageExecutor {
             return StageOutcome.failed(TRANSLATOR.translate(e));
         }
 
-        String patch;
+        String changeSet;
         try {
-            patch = extractPatch(response.content());
+            changeSet = extractChangeSet(response.content());
         } catch (Exception e) {
             return StageOutcome.failed(TRANSLATOR.translate(e));
         }
 
         BranchApplier.ApplyResult result;
         try {
-            result = branchApplier.apply(taskId(task), patch);
+            result = branchApplier.apply(taskId(task), changeSet);
         } catch (Exception e) {
             return StageOutcome.failed(TRANSLATOR.translate(e));
         }
 
         if (!result.buildable()) {
             // Routes back to S7 within the bound — a caught failure, not a thrown one, and never
-            // retryable on the identical patch (plan table: "conflict = permanent").
+            // retryable on the identical change set (plan table: "conflict = permanent").
             return StageOutcome.failed(
                     new FailureEnvelope(FailureCategory.INVALID_INPUT, result.detail(), false));
         }
@@ -116,8 +128,8 @@ public final class ImplementationAiExecutor implements StageExecutor {
     /**
      * The "do not use tools" sentence is load-bearing, not decorative. T073e's first two live attempts
      * against the Gemini CLI adapter both returned {@code status:SUCCESS} with an empty {@code response} —
-     * an agentic coding CLI, asked for a diff in a domain it can also directly edit files in, appears to
-     * enter its own tool-use loop instead of answering in text; headless (stdin from {@code /dev/null}, no
+     * an agentic coding CLI, asked to author a change in a domain it can also directly edit files in, appears
+     * to enter its own tool-use loop instead of answering in text; headless (stdin from {@code /dev/null}, no
      * interactive terminal), that loop cannot complete, and the empty string is what a CLI reports back
      * when nothing else was said. Adding this sentence — verified against a real live call, not assumed —
      * fixed it twice in a row, at the same pinned model, with no other change.
@@ -125,18 +137,28 @@ public final class ImplementationAiExecutor implements StageExecutor {
     private static String buildPrompt(String task, String design, String existingFiles) {
         StringBuilder prompt = new StringBuilder()
                 .append("You are the implementation stage of a software requirement pipeline. Author a "
-                        + "change that implements the task below, following the design. Respond with ONLY "
-                        + "a unified diff (git apply-compatible), no prose, no markdown fence, no "
-                        + "explanation before or after it. Do not use any tools. Do not read or write any "
-                        + "files yourself. Produce the diff as plain text in your final reply only.\n\n");
+                        + "change that implements the task below, following the design. Do not use any "
+                        + "tools. Do not read or write any files yourself. Produce your answer as plain "
+                        + "text JSON in your final reply only, no prose before or after it.\n\n"
+                        + "Respond with ONLY this JSON shape, no markdown fence: {\"files\": [ "
+                        + "{\"path\": string, \"action\": \"CREATE\", \"content\": string} "
+                        + "-- for a brand-new file, content is the file's ENTIRE content, OR "
+                        + "{\"path\": string, \"action\": \"EDIT\", \"edits\": [ "
+                        + "{\"search\": string, \"replace\": string}, ... ]} "
+                        + "-- for an EXISTING file, each 'search' string MUST be copied EXACTLY, "
+                        + "character-for-character (including whitespace and indentation), from the real "
+                        + "file content shown to you below -- never paraphrased, never guessed, never "
+                        + "including line numbers. Each 'search' MUST occur exactly once in the file; if "
+                        + "the same snippet appears more than once, include enough surrounding context in "
+                        + "'search' to make it unique. Edits within one file are applied in the order "
+                        + "listed, each against the result of the previous one. Never include line numbers "
+                        + "or diff/patch syntax anywhere -- this is search-and-replace, not a unified "
+                        + "diff.\n\n");
 
         if (existingFiles != null && !existingFiles.isBlank() && !"{}".equals(existingFiles.strip())) {
-            prompt.append("The orchestration has already read the following existing files for you, so "
-                            + "your diff's hunks for them MUST be byte-accurate against the EXACT content "
-                            + "shown — correct line numbers, correct context lines, nothing paraphrased or "
-                            + "guessed. A hunk that does not match this content exactly will be refused. "
-                            + "For any file NOT listed here, treat it as one you are creating new (a "
-                            + "`--- /dev/null` / `+++ b/<path>` hunk).\n\n")
+            prompt.append("The orchestration has already read the following existing files for you -- "
+                            + "every EDIT action's own 'search' text must be an exact substring of the "
+                            + "content shown here. For any file NOT listed here, use action CREATE.\n\n")
                     .append("Existing file content (JSON object, path -> exact current content):\n")
                     .append(existingFiles).append("\n\n");
         }
@@ -145,8 +167,13 @@ public final class ImplementationAiExecutor implements StageExecutor {
         return prompt.toString();
     }
 
-    /** Tolerates a markdown fence around the diff, the same accommodation every other adapter makes. */
-    private static String extractPatch(String content) {
+    /**
+     * Validates the model's answer is a well-formed change set (INTERNAL, permanent, if not — "could not
+     * even be understood"); does NOT validate that an EDIT's own search text actually matches anything, or
+     * that the result builds — those are {@link BranchApplier}'s own job, and their failure is
+     * {@code INVALID_INPUT}, a different kind of fact (content understood, but wrong).
+     */
+    private static String extractChangeSet(String content) {
         String text = content.strip();
         if (text.startsWith("```")) {
             int firstNewline = text.indexOf('\n');
@@ -155,12 +182,59 @@ public final class ImplementationAiExecutor implements StageExecutor {
                 text = text.substring(firstNewline + 1, lastFence).strip();
             }
         }
-        if (text.isBlank() || !(text.contains("--- ") || text.contains("diff --git"))) {
+        if (text.isBlank()) {
             throw new MalformedProviderOutputException(
-                    "the model's answer does not look like a unified diff (no '--- ' or 'diff --git' "
-                            + "header found). AI output is never executed as text, so an answer that is not "
-                            + "recognizably a patch is refused rather than applied speculatively. content: "
+                    "the model's answer is blank -- AI output is never executed as text, so an empty "
+                            + "answer is refused rather than applied speculatively");
+        }
+
+        JsonNode root;
+        try {
+            root = JSON.readTree(text);
+        } catch (Exception e) {
+            throw new MalformedProviderOutputException(
+                    "the model's answer does not parse as JSON. content: " + truncate(content), e);
+        }
+        JsonNode files = root.get("files");
+        if (!root.isObject() || files == null || !files.isArray() || files.isEmpty()) {
+            throw new MalformedProviderOutputException(
+                    "the model's answer must be a JSON object with a non-empty 'files' array. content: "
                             + truncate(content));
+        }
+        for (JsonNode file : files) {
+            String path = file.path("path").asText("");
+            if (path.isBlank()) {
+                throw new MalformedProviderOutputException(
+                        "a 'files' entry is missing a non-blank 'path': " + file);
+            }
+            String action = file.path("action").asText("");
+            if ("CREATE".equals(action)) {
+                if (!file.has("content") || !file.get("content").isTextual()) {
+                    throw new MalformedProviderOutputException(
+                            "a CREATE entry for '" + path + "' is missing a textual 'content' field: " + file);
+                }
+            } else if ("EDIT".equals(action)) {
+                JsonNode edits = file.get("edits");
+                if (edits == null || !edits.isArray() || edits.isEmpty()) {
+                    throw new MalformedProviderOutputException(
+                            "an EDIT entry for '" + path + "' is missing a non-empty 'edits' array: " + file);
+                }
+                for (JsonNode edit : edits) {
+                    if (!edit.has("search") || !edit.get("search").isTextual()
+                            || edit.get("search").asText().isEmpty()) {
+                        throw new MalformedProviderOutputException(
+                                "an edit for '" + path + "' is missing a non-empty 'search' string: " + edit);
+                    }
+                    if (!edit.has("replace") || !edit.get("replace").isTextual()) {
+                        throw new MalformedProviderOutputException(
+                                "an edit for '" + path + "' is missing a textual 'replace' string: " + edit);
+                    }
+                }
+            } else {
+                throw new MalformedProviderOutputException(
+                        "a 'files' entry for '" + path + "' has an unrecognized action (must be CREATE or "
+                                + "EDIT): " + file);
+            }
         }
         return text;
     }

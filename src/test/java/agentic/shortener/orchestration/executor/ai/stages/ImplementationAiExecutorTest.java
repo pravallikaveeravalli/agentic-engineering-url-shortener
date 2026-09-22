@@ -25,12 +25,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>Against a fake {@link StageAiProvider} AND a fake {@link BranchApplier} (FR-ORC-030: no live CLI, no
  * real git, no real build inside a unit test) — this task's own Validate clause verbatim: a run where an
  * AI-authored change fails verification and routes back, and a run where one passes, both with
- * executor-kind labels.
+ * executor-kind labels. CR-060: the model's own answer is now a JSON change set (CREATE full-content, or
+ * EDIT search/replace pairs) rather than a unified diff — see {@link ImplementationAiExecutor}'s own javadoc
+ * for why.
  */
 @DisplayName("T073e — S7 implementation adapter: AI authors, the applier judges buildability, never text-executed")
 class ImplementationAiExecutorTest {
 
-    private static final String VALID_DIFF = "--- a/Foo.java\n+++ b/Foo.java\n@@ -1 +1 @@\n-old\n+new\n";
+    private static final String VALID_CHANGE_SET =
+            "{\"files\":[{\"path\":\"Foo.java\",\"action\":\"CREATE\",\"content\":\"class Foo {}\"}]}";
 
     private static StageInput input() {
         return new StageInput(UUID.randomUUID(), "S7", 7, 1,
@@ -48,8 +51,8 @@ class ImplementationAiExecutorTest {
 
         @Override
         protected StageExecutor executorUnderTest() {
-            return new ImplementationAiExecutor(fixedResponse(VALID_DIFF),
-                    (taskId, patch) -> new BranchApplier.ApplyResult(true, "feature/x", "applied"));
+            return new ImplementationAiExecutor(fixedResponse(VALID_CHANGE_SET),
+                    (taskId, changeSet) -> new BranchApplier.ApplyResult(true, "feature/x", "applied"));
         }
 
         @Override
@@ -61,10 +64,10 @@ class ImplementationAiExecutorTest {
     @Test
     @DisplayName("a run where the AI-authored change PASSES verification succeeds, labelled AI")
     void passingChangeSucceeds() {
-        StageAiProvider provider = fixedResponse(VALID_DIFF);
-        BranchApplier applier = (taskId, patch) -> {
+        StageAiProvider provider = fixedResponse(VALID_CHANGE_SET);
+        BranchApplier applier = (taskId, changeSet) -> {
             assertEquals("T1", taskId);
-            assertEquals(VALID_DIFF.strip(), patch);
+            assertEquals(VALID_CHANGE_SET.strip(), changeSet);
             return new BranchApplier.ApplyResult(true, "feature/T1-impl", "applied and builds");
         };
 
@@ -78,8 +81,8 @@ class ImplementationAiExecutorTest {
     @Test
     @DisplayName("a run where the AI-authored change FAILS verification routes back, INVALID_INPUT, permanent")
     void failingChangeRoutesBack() {
-        StageAiProvider provider = fixedResponse(VALID_DIFF);
-        BranchApplier applier = (taskId, patch) ->
+        StageAiProvider provider = fixedResponse(VALID_CHANGE_SET);
+        BranchApplier applier = (taskId, changeSet) ->
                 new BranchApplier.ApplyResult(false, null, "compile error: cannot find symbol Foo");
 
         StageOutcome outcome = new ImplementationAiExecutor(provider, applier).execute(input());
@@ -87,17 +90,17 @@ class ImplementationAiExecutorTest {
         assertFalse(outcome.succeeded());
         assertEquals(FailureCategory.INVALID_INPUT, outcome.failure().category());
         assertFalse(outcome.failure().executorProposesRetryable(),
-                "plan table: conflict = permanent — the identical patch cannot un-fail by retrying");
+                "plan table: conflict = permanent — the identical change set cannot un-fail by retrying");
         assertTrue(outcome.failure().detail().contains("compile error"),
                 "the report must route back with the actual detail, or nobody can act on it");
     }
 
     @Test
-    @DisplayName("NEGATIVE: AI output is never executed as text — an answer that is not a diff is refused")
-    void nonDiffAnswerIsRefusedNotApplied() {
+    @DisplayName("NEGATIVE: AI output is never executed as text — a non-JSON answer is refused, not applied")
+    void nonJsonAnswerIsRefusedNotApplied() {
         StageAiProvider provider = fixedResponse("Sure! I'll implement this by editing Foo.java to fix it.");
-        BranchApplier applier = (taskId, patch) -> {
-            throw new AssertionError("must never be called with a non-diff answer");
+        BranchApplier applier = (taskId, changeSet) -> {
+            throw new AssertionError("must never be called with a non-JSON answer");
         };
 
         StageOutcome outcome = new ImplementationAiExecutor(provider, applier).execute(input());
@@ -107,10 +110,39 @@ class ImplementationAiExecutorTest {
     }
 
     @Test
-    @DisplayName("a markdown-fenced diff is tolerated")
-    void markdownFencedDiffIsTolerated() {
-        StageAiProvider provider = fixedResponse("```diff\n" + VALID_DIFF + "```");
-        BranchApplier applier = (taskId, patch) ->
+    @DisplayName("NEGATIVE: a change set naming an unrecognized action is refused")
+    void unrecognizedActionIsRefused() {
+        StageAiProvider provider = fixedResponse(
+                "{\"files\":[{\"path\":\"Foo.java\",\"action\":\"DELETE\"}]}");
+        BranchApplier applier = (taskId, changeSet) -> {
+            throw new AssertionError("must never be called with an unrecognized action");
+        };
+
+        StageOutcome outcome = new ImplementationAiExecutor(provider, applier).execute(input());
+
+        assertFalse(outcome.succeeded());
+        assertEquals(FailureCategory.INTERNAL, outcome.failure().category());
+    }
+
+    @Test
+    @DisplayName("NEGATIVE: an EDIT entry missing 'edits' is refused")
+    void editMissingEditsArrayIsRefused() {
+        StageAiProvider provider = fixedResponse("{\"files\":[{\"path\":\"pom.xml\",\"action\":\"EDIT\"}]}");
+        BranchApplier applier = (taskId, changeSet) -> {
+            throw new AssertionError("must never be called with a malformed EDIT entry");
+        };
+
+        StageOutcome outcome = new ImplementationAiExecutor(provider, applier).execute(input());
+
+        assertFalse(outcome.succeeded());
+        assertEquals(FailureCategory.INTERNAL, outcome.failure().category());
+    }
+
+    @Test
+    @DisplayName("a markdown-fenced change set is tolerated")
+    void markdownFencedChangeSetIsTolerated() {
+        StageAiProvider provider = fixedResponse("```json\n" + VALID_CHANGE_SET + "\n```");
+        BranchApplier applier = (taskId, changeSet) ->
                 new BranchApplier.ApplyResult(true, "feature/T1-impl", "applied and builds");
 
         StageOutcome outcome = new ImplementationAiExecutor(provider, applier).execute(input());
@@ -124,7 +156,7 @@ class ImplementationAiExecutorTest {
         StageAiProvider provider = prompt -> {
             throw new java.io.IOException("no such file or directory: claude");
         };
-        BranchApplier applier = (taskId, patch) -> {
+        BranchApplier applier = (taskId, changeSet) -> {
             throw new AssertionError("must never be called when the provider itself failed");
         };
 
@@ -136,15 +168,15 @@ class ImplementationAiExecutorTest {
 
     @Test
     @DisplayName("S7 existing-file fix: pre-fetched existing-file content, when present, reaches the prompt "
-            + "byte-accurately")
+            + "exactly")
     void existingFileContentIsIncludedInPromptWhenPresent() {
         java.util.concurrent.atomic.AtomicReference<String> capturedPrompt = new java.util.concurrent.atomic
                 .AtomicReference<>();
         StageAiProvider provider = prompt -> {
             capturedPrompt.set(prompt);
-            return new AiResponse("claude-test-fixture", VALID_DIFF);
+            return new AiResponse("claude-test-fixture", VALID_CHANGE_SET);
         };
-        BranchApplier applier = (taskId, patch) ->
+        BranchApplier applier = (taskId, changeSet) ->
                 new BranchApplier.ApplyResult(true, "feature/T1-impl", "applied and builds");
 
         StageInput input = new StageInput(UUID.randomUUID(), "S7", 7, 1,
@@ -157,10 +189,10 @@ class ImplementationAiExecutorTest {
 
         assertTrue(outcome.succeeded());
         assertTrue(capturedPrompt.get().contains("REAL-CURRENT-CONTENT"),
-                "the model must be shown the real, current content Conductor pre-fetched, so its diff "
-                        + "hunks can target real line numbers instead of guessing");
-        assertTrue(capturedPrompt.get().toLowerCase().contains("byte-accurate"),
-                "the prompt must tell the model the shown content is exact, not paraphrased or guessed");
+                "the model must be shown the real, current content Conductor pre-fetched, so its EDIT "
+                        + "search strings can target real content instead of guessing");
+        assertTrue(capturedPrompt.get().contains("already read the following existing files"),
+                "the prompt must specifically tell the model which files it was already shown");
     }
 
     @Test
@@ -171,9 +203,9 @@ class ImplementationAiExecutorTest {
                 .AtomicReference<>();
         StageAiProvider provider = prompt -> {
             capturedPrompt.set(prompt);
-            return new AiResponse("claude-test-fixture", VALID_DIFF);
+            return new AiResponse("claude-test-fixture", VALID_CHANGE_SET);
         };
-        BranchApplier applier = (taskId, patch) ->
+        BranchApplier applier = (taskId, changeSet) ->
                 new BranchApplier.ApplyResult(true, "feature/T1-impl", "applied and builds");
 
         StageOutcome outcome = new ImplementationAiExecutor(provider, applier).execute(input());

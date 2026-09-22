@@ -12,8 +12,8 @@ import java.util.Objects;
 /**
  * The real {@link ExistingFileReader}: reads a named path's real content from the repository's own working
  * tree (the same {@code repoRoot} {@link GitWorktreeBranchApplier} and {@link ScriptTestSuiteRunner} already
- * use — the base branch S7's own patch will eventually be applied against, so the content shown to the model
- * is the same content {@code git apply} will actually see).
+ * use — the base branch S7's own change set will eventually be applied against, so the content shown to the
+ * model is the same content its EDIT search strings will actually be matched against, CR-060).
  */
 public final class RepoExistingFileReader implements ExistingFileReader {
 
