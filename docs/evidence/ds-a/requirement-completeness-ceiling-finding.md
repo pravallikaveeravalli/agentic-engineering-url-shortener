@@ -51,8 +51,11 @@ Status: **CLOSED as a documented finding, retired from the DS-A clean-pass role.
 longer DS-A's demonstration subject (see `docs/governance/change-control/CR-051-...md` for the replacement
 and the full rationale for retiring it). This document is the honest record of what five live attempts, two
 independent models, and one calibration fix actually showed — preserved as an asset for a reviewer, not a
-loose end. **See the "Correction (2026-09-22, CR-052)" section below**: part of what this document originally
-concluded was an irreducible completeness ceiling was, on later evidence, a correctable detector over-fire —
+loose end. **See the "Correction (2026-09-22, CR-052)" and "Addendum (2026-09-22, CR-053)" sections below**:
+part of what this document originally concluded was an irreducible completeness ceiling was, on later
+evidence, a correctable detector over-fire (CR-052), and a further, decisive test — a zero-runtime-behaviour
+subject (CR-053) — sharpened the remaining claim: the ceiling is about describing *any* existing artifact in
+natural language precisely enough for a text-only reader, not about runtime behaviour specifically —
 corrected forward here, not edited out of the original text, per this repository's own governance discipline.
 
 ## Correction (2026-09-22, CR-052)
@@ -84,6 +87,39 @@ only way to make it visible to S3, and that part of the expiry arc's own lesson 
 narrower: some of what looked like irreducible *completeness* pressure was, in fact, correctable
 *materiality-classification* over-firing — a real, different bug, now fixed, not evidence against the
 completeness-ceiling finding's remaining, narrower claim.
+
+## Addendum (2026-09-22, CR-053) — a decisive, sharper data point: the ceiling is not about runtime behaviour alone
+
+CR-053 tested the cleanest possible control: a subject with **zero runtime behaviour** at all — a request to
+add unit tests for `FixedWindowCounter`'s existing, already-delivered, unmodified behaviour. No new behaviour
+is introduced or specified; a test either exercises what the class already does or it does not. If the
+completeness ceiling were purely about *runtime* behavioural surface, this subject should have converged
+cleanly on the first attempt — the sharpened predicate (CR-052) has nothing to find a behavioural fork in,
+since there is no new behaviour to fork.
+
+**It did not converge on the first attempt.** Two real findings remained `MATERIAL_PENDING`
+(`docs/evidence/ds-a/run-snapshot-ATTEMPT-11-STOPPED-AT-S4-fixedwindowcounter-test-subject.md`): whether the
+counter's internal state is tracked per-`key` alone or per the composite `(key, tier)` pair (the requirement
+text names both terms without settling which one indexes the tracked state), and the general fractional-
+second rounding rule for `retryAfterSeconds` above the one-second floor (the requirement's own text fixed the
+*sub*-1-second edge case explicitly but never stated floor/ceiling/round for the general case). **Six further
+findings on the same run correctly resolved `NOT_MATERIAL`**, several explicitly reasoning from "this is
+characterization testing of existing, unmodified behaviour, so the existing artifact already fixes the
+answer" — direct, positive evidence the sharpened predicate is working precisely as intended, not just
+absent.
+
+**The sharper conclusion this addendum draws**: the ceiling is not solely a property of *runtime* behavioural
+richness. It is a property of **how precisely natural language can describe *any* existing artifact** —
+whether that artifact is a runtime response or a class's own internal implementation detail — to a detector
+that reads only the text, not the code. Two of `FixedWindowCounter`'s own real implementation details (that
+the map is keyed by `key` alone, not `(key, tier)`; that `Duration.toSeconds()` truncates/floors for the
+general case) are facts a human author could restate directly in the requirement, exactly like every prior
+revision in this arc — but doing so here would mean describing internal implementation details a test-only
+change has no obligation to expose, which is a different, arguably regressive kind of "completeness" for a
+test-addition task to demand. Per the owner's own explicit hard cap for this attempt, **no further wording
+revision or subject switch was attempted** — this result stands as the turn's settled evidence: even a
+zero-runtime-behaviour subject can draw a real, defensible finding, because the object being described still
+has facts the detector cannot see except through the words used to describe it.
 
 ## The arc, in one line
 
