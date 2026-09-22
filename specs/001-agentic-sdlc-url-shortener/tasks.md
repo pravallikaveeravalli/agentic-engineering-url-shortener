@@ -1087,6 +1087,10 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
   - **TDD**: RED-FIRST · **Validate**: **before-state** — FR-URL-016's own multi-link case (traffic across several links, each **under** PVT-013) passes **unthrottled**, captured as evidence **before** the impact analysis; **after-state** — the same traffic throttled, the response **naming the aggregate tier**; **no ownership disclosure** — the throttled response is asserted byte-identical for a public follower regardless of which creator owns the link; **per-code and creation tiers unregressed**; **latency re-measured** against PVT-001 with the ownership lookup in the hot path; the declared failure posture exercised with the counter store down
   - **Docs**: plan §8 rate limiting, `docs/evidence/ds-b/`, threat model T-08 · **Trace**: matrix FR-URL-016, PVT-014, NFR-PERF-001, DS-B
   - **Guard**: **the redirect path is public and anonymous by requirement** (FR-URL-018), so counting per creator means a code → creator lookup **inside the hot path** — the design decision this whole scenario exists to expose, and it must be measured against PVT-001 rather than assumed cheap. Two negative criteria come from the requirement itself and are not optional: the throttled response **must not disclose the owning creator** to a public follower, and **PVT-014 sits deliberately below the sum of per-code limits**, which is what makes the tier bite at all. The accepted trade-off — followers of a popular creator may be throttled through no fault of their own — is documented in the threat model, not discovered by a reviewer · **Done**: before-state, after-state, non-disclosure, unregressed tiers, re-measured latency and failure posture all evidenced; **FR-URL-016’s matrix reference upgraded from *partial* to complete** — this run is what closes it · **Approval**: **REQUIRED — human owner** (**security-sensitive** change gate — an abuse control with a disclosure criterion; class settled under Decision E)
+  - **Security gate APPROVED (2026-09-22)**: `docs/governance/gate-decisions/ds-b/t136a-security-gate-approved.md`
+    — all four items (scope, in-process failure posture, the accepted trade-off, the non-disclosure bar).
+    **The build itself has not started** — `AggregateRedirectLimiter` does not exist yet; this is a separate,
+    later turn. Task left unchecked honestly.
 - [ ] T137 [P] [US3] DS-B before/after test results — `docs/evidence/ds-b/test-results/`
   - **Req**: DS-B, NFR-TST-002 · **Scn**: DS-B · **ADR**: ADR-011 · **Pre**: T136
   - **Deps**: T136 · **Par**: yes · **Artifact**: throttling outcomes for the multi-link case before and after, plus the **unregressed per-code tier** and the **re-measured redirect latency** against PVT-001
@@ -1137,6 +1141,12 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
     `docs/evidence/ds-c/pending-gate-s4-context.md`'s own T139 section. `RunState` is `RUNNING` (paused at
     S6), not yet terminal — reaching a truly terminal outcome needs the owner's further S6/S11 decisions,
     same as DS-A's own T132 chain.
+  - **Scenario accepted as demonstrated (2026-09-22)**: `docs/governance/gate-decisions/ds-c/
+    scenario-accepted-as-demonstrated.md`. The owner's own decision: DS-C's orchestration mechanism
+    (detect → clarify → replan → resume, plus T140's rejection variant) is proven; the trusted-partner
+    feature itself is **deliberately not built** — the run stays intentionally suspended at S6, which is
+    the accepted final state, not an open item. The genuine late-ambiguity replan demonstration (invalidating
+    already-executed work) remains T133's own, separate, still-open task — not implicitly closed here.
 - [x] T140 [P] [US3] DS-C rejection variant — `docs/evidence/ds-c/rejection.json`
   - **Req**: FR-ORC-013 · **Scn**: DS-C · **ADR**: — · **Pre**: T139
   - **Deps**: T139 · **Par**: yes · **Artifact**: the same gate answered `REJECTED` → run terminates deterministically, reason recorded, **no downstream artifact produced**
