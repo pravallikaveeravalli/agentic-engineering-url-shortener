@@ -102,5 +102,32 @@ change).
 
 | Item | Due at |
 |---|---|
-| The live compensating check (PART 3) must be genuinely adversarial — a real, live re-run of DS-C's own material scenario, not a stub | Same turn, immediately following this CR |
 | If a future requirement text again removes a well-established default without naming a replacement, expect S3 to correctly flag it material — that is the classifier working, not a defect to route around | Whenever this driver's own `REQUIREMENT` constant is next edited |
+
+## Addendum (2026-09-22) — the live compensating check, both halves, PASSED
+
+**Ambiguity gate (S4), real, live**: re-ran `DsCClarificationRun#driveDsCThroughClarificationAndReplan` live
+against DS-C's own canonical contradiction text. S3's real output again found real `MATERIAL_PENDING`
+findings and S4's gate opened (`S4 state=AWAITING_APPROVAL`) — the ambiguity gate did not go soft. The run
+itself did not complete end-to-end: this live pass found **two genuinely novel** material findings beyond the
+two the driver's own hardcoded answer set covers (trusted-partner bypass duration/revocation; what fields
+constitute an "analytics record"). Per the owner's own standing delegation rule, an agent never invents an
+answer nobody gave — the driver's own safety valve correctly failed loudly, naming both, rather than forcing
+past them. **This is not a CR-057 regression**: it is live model non-determinism producing additional real
+ambiguity on this pass, and the ambiguity gate's own firing was already confirmed before that point.
+
+**Architecture gate (S6), real, live**: rather than re-running the full pipeline a second time (risking
+further novel S4 findings on the way, and costing several more minutes), a scoped, single live call —
+`ArchitectureGateMaterialityCompensatingCheck` (new class, run explicitly, not part of the fast or integration
+tiers) — invoked the real `DesignAiExecutor` with DS-C's own **real**, previously-captured S5 output
+(`docs/evidence/ds-c/replan.json`'s own `s5RealResponse`, from an earlier turn of this same engagement, reused
+verbatim rather than fabricated). **Result: PASSED.** The real model returned four substantive, genuinely
+material design decisions — among them: whether `/{shortCode}`'s redirect path becomes credential-aware at
+all (a real fork against `RedirectController`'s own tested "credential-blind" architectural invariant, T044's
+guard); whether trusted-partner status extends the existing `Creator`/`CreatorCredential` domain or introduces
+a separate partner-credential type (different blast radii, different security postures); whether the new
+168-hour expiry rule rejects or clamps a caller-supplied `expiresAt` (two different API-boundary behaviours).
+Every one is a real, CR-007-grounded fork with observable consequences — not a scenario-tuned or forced result.
+
+**Conclusion**: both gates verified live, real, against genuinely material content. CR-057's own fix does not
+weaken either control.
