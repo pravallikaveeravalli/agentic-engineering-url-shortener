@@ -531,45 +531,45 @@ class DsALiveRun extends PostgresIntegrationTest {
             // agent invents. Anything that does not match one of these falls through to
             // unansweredFindings and is reported, never silently resolved.
             //
-            // A SEMANTIC_CONTRADICTION is NEVER matched to a pre-written routine answer, on principle, not
-            // merely for the one case that surfaced it: by definition it names an internal inconsistency
-            // in THIS run's own requirement wording, which no answer written before that wording existed
-            // could have anticipated. Attempt 19 found this live and real: a SEMANTIC_CONTRADICTION whose
-            // own text happened to contain the word "literal" was matched to VERSION_VALUE_CLARIFICATION
-            // (a routine sourcing-mechanism answer that does not address the contradiction at all, and
-            // directly contradicts this run's own requirement text) -- see
-            // docs/evidence/ds-a/s4-clarification-matching-stale-answer-finding.md. Excluding the whole
-            // class here, rather than patching the one keyword collision, closes the general failure mode.
+            // CR-061: WHOLE-WORD matching (\bword\b), never raw String.contains substring matching. Two
+            // real, live collisions proved substring matching unsafe: attempt 19's "literal" (a
+            // SEMANTIC_CONTRADICTION's own text happened to contain that word) and attempt 20's "source"
+            // matching inside "reSOURCE" (an UNDEFINED_TERM about the word "resource" itself). SEMANTIC_
+            // CONTRADICTION is additionally excluded as a whole class, on principle: by definition it names
+            // an internal inconsistency in THIS run's own requirement wording, which no answer written
+            // before that wording existed could have anticipated -- see
+            // docs/evidence/ds-a/s4-clarification-matching-stale-answer-finding.md for both incidents.
             String question;
             String answer;
             if ("SEMANTIC_CONTRADICTION".equals(ambiguityClass)) {
                 unansweredFindings.add(affectedPath);
                 continue;
             } else if (lower.contains("content-type") || lower.contains("application/json")) {
+                // Hyphenated/slashed compound tokens, not plain English words -- no known collision risk,
+                // substring matching is appropriate here (a word-boundary split would be awkward and adds
+                // no real safety for tokens this specific).
                 question = CONTENT_TYPE_QUESTION;
                 answer = CONTENT_TYPE_CLARIFICATION;
             } else if (lower.contains("cache-control") || lower.contains("no-store")) {
                 question = CACHE_CONTROL_QUESTION;
                 answer = CACHE_CONTROL_CLARIFICATION;
-            } else if (lower.contains("logging") || lower.contains("metrics") || lower.contains("tracing")
-                    || lower.contains("observability")) {
+            } else if (containsAnyWord(lower, "logging", "metrics", "tracing", "observability")) {
                 question = OBSERVABILITY_QUESTION;
                 answer = OBSERVABILITY_CLARIFICATION;
             } else if (lower.contains("405") || lower.contains("method not allowed")
                     || lower.contains("non-get") || lower.contains("http method")
-                    || lower.contains("unmapped")) {
+                    || containsWord(lower, "unmapped")) {
                 question = NON_GET_METHOD_QUESTION;
                 answer = NON_GET_METHOD_CLARIFICATION;
-            } else if (lower.contains("version") && (lower.contains("source") || lower.contains("build")
-                    || lower.contains("hardcod") || lower.contains("computed")
-                    || lower.contains("manifest"))) {
-                // "literal" deliberately dropped from this OR-list (attempt 19's own real collision) --
-                // too generic a word to reliably identify THIS specific question versus an unrelated one.
+            } else if (containsWord(lower, "version")
+                    && containsAnyWord(lower, "source", "sourced", "sourcing", "build", "built",
+                            "hardcoded", "hardcoding", "hardcode", "computed", "manifest")) {
                 question = VERSION_VALUE_QUESTION;
                 answer = VERSION_VALUE_CLARIFICATION;
-            } else if (lower.contains("parameter") || lower.contains("query string")
-                    || lower.contains("path segment") || (lower.contains("access")
-                    && lower.contains("auth"))) {
+            } else if (containsWord(lower, "parameter") || lower.contains("query string")
+                    || lower.contains("path segment") || (containsWord(lower, "access")
+                    && containsAnyWord(lower, "auth", "authentication", "authorization",
+                            "authenticated", "authorized", "unauthenticated", "unauthorized"))) {
                 question = ACCESS_QUESTION;
                 answer = ACCESS_CLARIFICATION;
             } else {
@@ -624,6 +624,27 @@ class DsALiveRun extends PostgresIntegrationTest {
 
         System.out.println("DS-A LIVE RUN: S4 gate decision recorded by " + OWNER_ACTOR + " (APPROVED), "
                 + "materialized at " + S4_GATE_DECISION_RECORD + ". Run resumed.");
+    }
+
+    /**
+     * CR-061: whole-word containment, never raw substring containment, for matching a real finding's own
+     * text against the delegation's standing answers. {@code lowerText} must already be lowercased (every
+     * caller passes {@code affectedPath.toLowerCase()}); {@code word} must already be lowercase too.
+     * Package-private (not {@code private}) so {@code DsALiveRunMatcherTest} can prove attempts 19/20's own
+     * real collisions are fixed, directly, without standing up a live run.
+     */
+    static boolean containsWord(String lowerText, String word) {
+        return java.util.regex.Pattern.compile("\\b" + java.util.regex.Pattern.quote(word) + "\\b")
+                .matcher(lowerText).find();
+    }
+
+    static boolean containsAnyWord(String lowerText, String... words) {
+        for (String word : words) {
+            if (containsWord(lowerText, word)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
