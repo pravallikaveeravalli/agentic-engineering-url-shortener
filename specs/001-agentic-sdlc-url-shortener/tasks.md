@@ -1214,6 +1214,23 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
   - **Deps**: T055, T085, T090, T135 · **Par**: no · **Artifact**: transient `UNAVAILABLE` → two-vote retry → success; one irreversible effect → compensation, **labelled as compensation** — both inside the **aggregate-tier** run
   - **TDD**: EVIDENCE · **Validate**: two-signature retry records present; compensation distinguishable from rollback; the **per-code tier proven still working** by pre-existing tests, not inspection; the before-state is the multi-link case passing **unthrottled** · **Docs**: — · **Trace**: DS-B
   - **Guard**: if the checkpoint at End-Day-2-PM fires, this reduces to a unit-level compensation proof **but the scenario is kept** (plan §14) · **Done**: retry and compensation both evidenced; regression caught by existing tests · **Approval**: none
+  - **Progress (2026-09-22)**: **retry genuinely demonstrated, live, twice** — `DsBLiveRun`'s own real S3
+    provider wrapper throws a real `IOException` on its first invocation only; `ProviderFailureTranslator`
+    classifies it `UNAVAILABLE`, S3's own declared retryable set includes it, and `RetryRuling`'s real
+    two-vote rule (`declared ∩ executor-proposed`) authorized a real retry both times attempted — attempt 2
+    reached the real Claude CLI and succeeded (real `RETRY_ATTEMPT_*` telemetry captured,
+    `docs/evidence/ds-b/attempts-1-3-finding.md`). **Compensation genuinely demonstrated, but as its own
+    separate, real proof** (`DsBLiveRun#compensationOnlyDemonstration` — a real `Conductor.submit()` of the
+    same aggregate-tier requirement, a real `RUN_CREATED` audit_record row, corrected by the real,
+    already-unit-tested `CompensationHandler`, T090) rather than inside a run that also completed the tier,
+    since no attempt reached S7 — precisely the plan's own pre-authorized End-Day-2-PM reduction
+    (`docs/evidence/ds-b/t136-compensation-only.md`). Three capped live full-build attempts (1–3) all
+    stopped before S7: attempts 1–2 at S4 on real, substantive, well-reasoned ambiguity findings, each
+    answered under the owner's standing delegation and grounded in an already-established fact (not
+    invented); attempt 3 at S3 itself, on a genuinely new live-AI defect (the model used a `ResolutionState`
+    value as an `ambiguityClass` value) — fixed as CR-070, not yet re-verified live. **Still not
+    `COMPLETED`** — the aggregate-tier run itself has never succeeded; see
+    `docs/evidence/ds-b/attempts-1-3-finding.md` for the full account and the owner's own disclosed options.
 - [ ] T136a [US3] Brownfield governed implementation of the per-creator aggregate redirect tier — `src/main/java/agentic/shortener/delivery/ratelimit/AggregateRedirectLimiter.java`, `docs/evidence/ds-b/aggregate-tier-run.json`
   - **Req**: **FR-URL-016**, **PVT-014**, FR-URL-018, NFR-PERF-001, FR-ORC-020 · **Scn**: **DS-B** · **ADR**: **ADR-013**, ADR-006 · **Pre**: T055, T135, T136, T107
   - **Deps**: T055, T107, T135, T136 · **Par**: no (the scenario's subject change) · **Artifact**: the third rate-limit tier the baseline deferred, **authored inside the brownfield run** — redirect traffic counted **per creator aggregated across all their links** at **PVT-014 (3,000 requests/minute)**, enforced **independently** of the per-code tier; code → owning-creator resolution added to the redirect path; a declared **limiter failure posture** for an unavailable counter store
@@ -1222,13 +1239,25 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
   - **Guard**: **the redirect path is public and anonymous by requirement** (FR-URL-018), so counting per creator means a code → creator lookup **inside the hot path** — the design decision this whole scenario exists to expose, and it must be measured against PVT-001 rather than assumed cheap. Two negative criteria come from the requirement itself and are not optional: the throttled response **must not disclose the owning creator** to a public follower, and **PVT-014 sits deliberately below the sum of per-code limits**, which is what makes the tier bite at all. The accepted trade-off — followers of a popular creator may be throttled through no fault of their own — is documented in the threat model, not discovered by a reviewer · **Done**: before-state, after-state, non-disclosure, unregressed tiers, re-measured latency and failure posture all evidenced; **FR-URL-016’s matrix reference upgraded from *partial* to complete** — this run is what closes it · **Approval**: **REQUIRED — human owner** (**security-sensitive** change gate — an abuse control with a disclosure criterion; class settled under Decision E)
   - **Security gate APPROVED (2026-09-22)**: `docs/governance/gate-decisions/ds-b/t136a-security-gate-approved.md`
     — all four items (scope, in-process failure posture, the accepted trade-off, the non-disclosure bar).
-    **The build itself has not started** — `AggregateRedirectLimiter` does not exist yet; this is a separate,
-    later turn. Task left unchecked honestly.
+  - **Progress (2026-09-22)**: three capped, real, live full-build attempts made (`DsBLiveRun`, real Claude
+    CLI, real git-worktree S7 for real existing-file edits) — none reached S7.
+    `AggregateRedirectLimiter.java` does **not** exist; no code was landed. Attempts 1–2 stopped at S4 on
+    real, answerable ambiguity findings (resolved, and the run did not have a further attempt left to
+    re-verify past them); attempt 3 stopped at S3 itself on a genuinely new live-AI defect, fixed as CR-070
+    but not yet re-verified live. Full account: `docs/evidence/ds-b/attempts-1-3-finding.md`. **The build
+    has not started for real** — task left unchecked honestly, exactly as it was before this turn, though
+    the path to it is now better understood and one real defect closer to clear.
 - [ ] T137 [P] [US3] DS-B before/after test results — `docs/evidence/ds-b/test-results/`
   - **Req**: DS-B, NFR-TST-002 · **Scn**: DS-B · **ADR**: ADR-011 · **Pre**: T136
   - **Deps**: T136 · **Par**: yes · **Artifact**: throttling outcomes for the multi-link case before and after, plus the **unregressed per-code tier** and the **re-measured redirect latency** against PVT-001
   - **TDD**: EVIDENCE · **Validate**: before-state shows the multi-link traffic passing **unthrottled**; after-state shows it **throttled with the aggregate tier named and the creator not named** · **Docs**: — · **Trace**: DS-B
   - **Guard**: a green after-state alone proves nothing; the before-state is what makes it evidence · **Done**: both states captured · **Approval**: none
+  - **Progress (2026-09-22)**: **not started.** The before-state remains real and already captured
+    (`RateLimitIT.aggregateTrafficPassesUnthrottled`, untouched, still passing). `DsBTestFollowup` (CR-069)
+    has the real, ready, hand-authored after-state test
+    (`aggregateTrafficIsThrottledAfterT136a`) prepared and committed, but it has never been applied or run —
+    it is only ever applied on top of a real S7 branch, and no attempt this turn produced one. No test
+    result exists to place in `docs/evidence/ds-b/test-results/` yet.
 - [x] T138 [US3] DS-C ambiguity detection and silence path — `docs/evidence/ds-c/silence.json`
   - **Req**: **DS-C**, FR-ORC-010, SC-005 · **Scn**: **DS-C** · **ADR**: ADR-008 · **Pre**: T061, T110
   - **Deps**: T061, T110 · **Par**: no · **Artifact**: input *"Links should expire after a week but remain available for historical analytics indefinitely, and expired links should still redirect for trusted partners"*; conflict flagged with the conflicting elements **named**; **silence path demonstrated first** → `SAFE_STOP` with deadlines disclosed in the original ask
