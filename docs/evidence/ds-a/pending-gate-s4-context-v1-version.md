@@ -1,5 +1,47 @@
 # DS-A live run, minimal `/v1/version` subject (CR-051/CR-052) — pending gate context for the owner
 
+## Attempts 8 and 9 (applying the owner's real S4 clarification) — real non-determinism, one new unanswered finding, no gate decision recorded
+
+The owner answered attempt 7's two findings (Content-Type, Cache-Control header-value exactness) directly,
+and `DsALiveRun` was extended to record that real clarification through the governed path
+(`ClarificationDecision` via `LineageStore`, then a real `GateDecision` via `GateOutcomeHandler`) and resume
+the run — see `docs/governance/gate-decisions/ds-a/s4-header-conformance-clarification.md`. Two live attempts
+followed, both real, neither forced:
+
+- **Attempt 8** (`runId` `9ac8ced0-...`, `run-snapshot-ATTEMPT-8-BLOCKED-duplicate-externalId-bug.md`): S1–S3
+  succeeded; applying the clarification crashed on a real, separate bug — S2's own contract requires only a
+  non-blank `externalId`, never uniqueness within one response, and this run's real output gave all nine
+  normalized items the identical `externalId "1"`, tripping `requirement_record`'s own uniqueness constraint
+  before the driver's own "no answer for this finding" safeguard was ever reached. **Fixed** (an ordinal
+  suffix disambiguates repeated externalIds). This attempt's own real S3 output, notably, found a
+  **different** single `MATERIAL_PENDING` item — a path-segment routing question (does `GET
+  /v1/version/extra` get the identical fixed response, or a router-level 404?) — neither Content-Type nor
+  Cache-Control recurred at all.
+- **Attempt 9** (`runId` `5d4094ee-...`,
+  `run-snapshot-ATTEMPT-9-STOPPED-AT-S4-new-unanswered-observability-finding.md`): S1–S3 succeeded with the
+  fix applied; S3's real output this time found **one** `MATERIAL_PENDING` item, again different from both
+  prior attempts — **whether ordinary request-scoped observability (access/request logging, metrics
+  emission, tracing-span writes) counts as a prohibited "dependency or downstream service check" or
+  prohibited "persisted data" write**, since the requirement text never says, and logs/metrics are
+  themselves typically persisted to a downstream service. The driver's own safeguard — never approve past a
+  finding the owner has not actually answered — worked exactly as designed: it identified this finding does
+  not match either the Content-Type or Cache-Control question and failed loudly, naming it, **before**
+  recording any `GateDecision`. No decision was recorded on this run's S4 gate.
+
+**What this shows, honestly**: across three real live calls against the identical requirement text (attempt
+7, attempt 8, attempt 9), S3 found a genuinely *different* single residual question each time — header-value
+exactness, then path-segment routing, then observability/logging scope — never the same one twice, and never
+zero. This is real, live model non-determinism in *which* residual ambiguity surfaces, not merely in wording,
+on a par with (though narrower than) the completeness-ceiling pattern the expiry-endpoint arc already
+documented. Per this turn's own standing discipline (no retry-loop chasing a clean match), this agent
+stopped after two live attempts this turn rather than trying a third hoping for a run that only reproduces
+the two pre-answered questions — that would be exactly the "keep trying until it passes" pattern this
+project's own Guard clauses forbid.
+
+## Attempt 7 (below) — the run that produced the two findings the owner already answered
+
+
+
 **This is the capped, final DS-A iteration** (owner's own explicit instruction: "one iteration, then done
 either way" after CR-052's sharpening). Attempt 7 overall — T132's seventh live attempt, second against the
 minimal `/v1/version` subject, first against CR-052's sharpened materiality predicate and simplified
