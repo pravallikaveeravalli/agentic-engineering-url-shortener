@@ -24,7 +24,63 @@ rather than route around the finding — this is what a real requirements author
 ambiguity-detection feedback, not a rigged shortcut (T131/T132's own Guard clauses forbid choosing a
 trivially easy substitute instead). This document, and the requirement below, are that revision.
 
-## The input (revised)
+**CR-048's revision itself then genuinely reached S4 twice more** (attempts 3 and 4,
+`docs/evidence/ds-a/run-snapshot-ATTEMPT-3-STOPPED-AT-S4-ambiguity-gate-revised-wording.md` and
+`...-ATTEMPT-4-STOPPED-AT-S4-post-calibration.md`), each time on different, genuine findings — attempt 3
+surfaced five new gaps (the expired-link `expiresAt` value, the boundary instant, rounding, an unbounded
+401 cross-reference, a creator/owner predicate asymmetry); attempt 4, run after CR-049 calibrated S3 to
+CR-007's materiality predicate, confirmed the calibration works (two genuine `NOT_MATERIAL` resolutions,
+cross-checked by a non-negotiable live DS-C compensating check) while still finding four open items —
+rounding, the boundary instant, link retention after expiry, and malformed-`{code}` handling — full detail
+in `docs/evidence/ds-a/pending-gate-s4-context.md`. The owner resolved all four on the record: floored
+rounding as a genuine choice, the other three as verified restatements of the delivered system's own
+existing behavior. **CR-050 folds all four in and additionally states, directly in the requirement's own
+text, every fact S3 has no way to discover on its own** (S3 reasons only over the requirement text, never
+the repository — see `pending-gate-s4-context.md`'s structural finding). The wording immediately below is
+CR-050's; CR-048's superseded wording is kept beneath it as evidence.
+
+## The input (revised, CR-050 — current)
+
+> Add a read-only endpoint `GET /v1/links/{code}/expiry` that returns, to the authenticated creator who owns
+> `{code}` and to no one else, a JSON body `{"code": <string>, "expiresAt": <ISO-8601 UTC timestamp> | null,
+> "secondsRemaining": <integer ≥ 0> | null}`.
+>
+> For a link with no configured expiration, both `expiresAt` and `secondsRemaining` are `null`.
+>
+> For a link with a configured expiration, the link is expired at and after the exact instant `expiresAt` is
+> reached — the boundary instant itself counts as expired, not as still remaining — matching this system's
+> own existing expiry rule (`ExpiryPolicy`). While not yet expired, `secondsRemaining` is the count of whole
+> seconds between the current time and `expiresAt`, rounded down (floored) — chosen deliberately so this
+> value never overstates the time actually left. Once expired, `secondsRemaining` is `0`, never negative, and
+> `expiresAt` continues to report the link's original, unaltered stored expiration timestamp — this system
+> never edits or clears a link's stored `expiresAt` once set.
+>
+> This system never deletes or purges a short link for any reason, including having expired; an unwanted
+> link is only ever transitioned to an expired state, per this system's own existing compensation policy
+> (never delete, only mark expired). Accordingly, an expired link's expiry information remains queryable
+> through this endpoint indefinitely, always in the expired shape described above, and never produces a
+> not-found response on account of having expired.
+>
+> The "owning creator" is the single creator identity already recorded as this link's owner at the time it
+> was created; this system has no concept of transferring or sharing ownership, so "the creator" and "the
+> owner" always name the same principal for any given link.
+>
+> An unauthenticated caller receives the same `401` refusal every other authenticated endpoint in this
+> system already produces. Every other caller who is not the owning creator — an authenticated creator who
+> owns a different link, a caller presenting a code that was never issued, or a caller presenting a
+> syntactically malformed code (wrong length or characters outside the code alphabet) — receives the
+> identical `404` response already used for an unknown code, so that link existence, ownership, and validity
+> are never distinguishable from one another to anyone but the owner.
+
+**Revision provenance**: this wording is CR-050, filed after attempt 4 (`docs/evidence/ds-a/run-snapshot-ATTEMPT-4-STOPPED-AT-S4-post-calibration.md`,
+`pending-gate-s4-context.md`) surfaced four open items the owner then resolved on the record — one genuine
+choice (floored rounding — "never over-report the time left"), three verified restatements of behavior the
+delivered system already has (the boundary instant per `ExpiryPolicy`; never-purged per `spec.md`'s EX-003
+and Compensation Register; malformed-code handling per `LinkController`'s unconstrained analytics-family
+route producing the same lookup-miss `404` as an unissued code). See CR-050 for the verification evidence
+and the full reconciliation. The CR-048 wording immediately below is superseded but kept as evidence.
+
+### The input (CR-048, superseded by CR-050 above — kept as evidence)
 
 > Add a read-only endpoint `GET /v1/links/{code}/expiry` that returns, to the authenticated creator that
 > owns `{code}` and to no one else, a JSON body `{"code": <string>, "expiresAt": <ISO-8601 UTC timestamp> |
@@ -47,21 +103,27 @@ the four well-formedness criteria spec.md's DS-A section states (`spec.md:1086`)
 testable, and inside approved policy and architecture boundaries** — genuinely, against the real system as
 it exists today, not asserted. T131's own Guard clause is explicit that a trivially easy input chosen to
 guarantee a clean run would be a rigged demonstration; the check below is written so a reader can verify it
-was not — every one of the six real gaps the ambiguity detector found, twice, is answered by name.
+was not — every real gap the ambiguity detector found, across four attempts, is answered by name.
 
 ## 1. Complete
 
 Every element needed to build this without further guessing is already present in the delivered system, and
-every point the ambiguity detector flagged is now pre-answered in the requirement's own text:
+every point the ambiguity detector flagged — across all four attempts, CR-048's six and CR-050's additional
+four — is now pre-answered directly in the requirement's own text:
 
-| Gap found (both models) | Resolved by this wording |
+| Gap found | Resolved by this wording |
 |---|---|
-| No unit/format for the value | `secondsRemaining` is explicitly an integer count of seconds; `expiresAt` is explicitly ISO-8601 UTC |
+| No unit/format for the value | `secondsRemaining` is explicitly an integer count of whole seconds; `expiresAt` is explicitly ISO-8601 UTC |
 | Non-expiring link undefined | Both fields explicitly `null` |
-| Already-expired link undefined | `secondsRemaining` explicitly `0`, never negative — matching `ExpiryPolicy`'s existing "at `expiresAt` the link is expired" boundary |
+| Already-expired link's `secondsRemaining` undefined | Explicitly `0`, never negative |
+| Already-expired link's `expiresAt` undefined (attempt 3 finding) | Explicitly stated: continues to report the original, unaltered stored timestamp |
+| The `now == expiresAt` boundary instant unassigned (attempts 3 and 4) | Explicitly stated in the text itself as expired — not left as a cross-reference to `ExpiryPolicy`, since S3 cannot see that file |
+| No stated rounding rule (attempts 3 and 4) | Explicitly floored — the owner's own genuine choice, "never over-report the time left" |
+| Link retention/purge after expiry unstated (attempt 4, new) | Explicitly never purged, queryable indefinitely in the expired shape — restates `spec.md`'s own EX-003/Compensation Register text directly, verified against `JdbcShortLinkRepository`/`ShortLinkRepository` (no delete method exists) |
+| Malformed `{code}` handling unstated (attempt 4, new) | Explicitly the same `404` as an unknown code — verified against `LinkController`'s unconstrained `/v1/links/{shortCode}/...` route (unlike `RedirectController`'s regex-constrained one), so a malformed code reaches the same lookup-miss `404` as an unissued one |
 | Delivery medium undefined | Explicitly a `GET` HTTP endpoint returning JSON |
-| "Owning creator" identity undefined | Tied explicitly to "authenticated creator" — the existing `CreatorAuthFilter`/creator-API-key identity, the same one `GetAnalyticsUseCase` already uses |
-| Non-owner/anonymous behavior undefined | Explicitly split: `401` for anonymous (routing-level refusal), `404` for a wrong owner (non-disclosing refusal) — see the refinement note above |
+| "Owning creator" identity undefined | Explicitly stated as a domain invariant: the creator recorded at creation time, with no ownership-transfer concept, so "creator" and "owner" always name the same principal |
+| Non-owner/anonymous behavior undefined | Explicitly split: `401` for anonymous (routing-level refusal), `404` for every other non-owner case including malformed and unissued codes (non-disclosing refusal) |
 
 - **The data already exists.** `ShortLink` carries `expiresAt` (an `Instant`), and `ExpiryPolicy`
   (`src/main/java/agentic/shortener/domain/link/ExpiryPolicy.java`, T046) already defines the expiry
@@ -121,9 +183,9 @@ Concrete accept/reject criteria, directly assertable, each naming the exact resp
 
 ## Conclusion
 
-All four criteria hold against the system as it is actually built today, and every real gap two independent
-models found in the prior wording is now answered by name in the requirement's own text — not asserted
-resolved, checked against the delivered codebase's own existing patterns line by line. Per `spec.md`'s DS-A
-section, this input MUST proceed through S1→S2→S3→**S4 SKIPPED**→S5→S6→S7→S8→S9‖S10→S11→S12 with no
-clarification gate firing, and the run (T132) must record the quality checks performed and the explicit
-no-clarification reason.
+All four criteria hold against the system as it is actually built today, and every real gap found across
+four live attempts — by two independent models, and by the owner's own materiality calibration (CR-049) —
+is now answered by name, directly in the requirement's own text, not left for S3 to infer from a codebase it
+cannot see. Per `spec.md`'s DS-A section, this input MUST proceed through
+S1→S2→S3→**S4 SKIPPED**→S5→S6→S7→S8→S9‖S10→S11→S12 with no clarification gate firing, and the run (T132)
+must record the quality checks performed and the explicit no-clarification reason.

@@ -72,18 +72,43 @@ class DsALiveRun extends PostgresIntegrationTest {
     private static final String CLI = "claude";
     private static final String MODEL = "claude-sonnet-5";
     private static final Path REPO_ROOT = Paths.get("").toAbsolutePath();
-    // CR-048: revised, fully-specified wording, after the original ("Expose the remaining time-to-expiry
-    // for a short link to its owning creator.") tested genuinely ambiguous against two independent models
-    // (see docs/evidence/ds-a/design.md's own "Revision history").
+    // CR-050: fully self-contained wording, superseding CR-048's after attempts 3 and 4 (CR-048's own
+    // wording, the second and third against a real StageAiProvider) each surfaced further genuine
+    // MATERIAL_PENDING findings -- see docs/evidence/ds-a/design.md's own "Revision history" and
+    // docs/evidence/ds-a/pending-gate-s4-context.md. CR-050 folds in the owner's four resolved open items
+    // (floored rounding as a genuine choice; the boundary instant, never-purged retention, and malformed
+    // -code handling as verified restatements of the delivered system's own existing behavior) and states
+    // every fact directly in the text itself, since S3 has no codebase visibility of its own.
     private static final String REQUIREMENT =
             "Add a read-only endpoint GET /v1/links/{code}/expiry that returns, to the authenticated "
-                    + "creator that owns {code} and to no one else, a JSON body {\"code\": <string>, "
+                    + "creator who owns {code} and to no one else, a JSON body {\"code\": <string>, "
                     + "\"expiresAt\": <ISO-8601 UTC timestamp> | null, \"secondsRemaining\": <integer >= 0> "
-                    + "| null}. For a non-expiring link both expiresAt and secondsRemaining are null; for "
-                    + "an already-expired link secondsRemaining is 0. An unauthenticated caller receives "
-                    + "the same 401 refusal every authenticated endpoint already uses; an authenticated "
-                    + "caller who does not own {code} receives the same 404 response used for an unknown "
-                    + "code.";
+                    + "| null}. For a link with no configured expiration, both expiresAt and "
+                    + "secondsRemaining are null. For a link with a configured expiration, the link is "
+                    + "expired at and after the exact instant expiresAt is reached -- the boundary instant "
+                    + "itself counts as expired, not as still remaining -- matching this system's own "
+                    + "existing expiry rule. While not yet expired, secondsRemaining is the count of whole "
+                    + "seconds between the current time and expiresAt, rounded down (floored) -- chosen "
+                    + "deliberately so this value never overstates the time actually left. Once expired, "
+                    + "secondsRemaining is 0, never negative, and expiresAt continues to report the link's "
+                    + "original, unaltered stored expiration timestamp -- this system never edits or "
+                    + "clears a link's stored expiresAt once set. This system never deletes or purges a "
+                    + "short link for any reason, including having expired; an unwanted link is only ever "
+                    + "transitioned to an expired state, per this system's own existing compensation "
+                    + "policy (never delete, only mark expired). Accordingly, an expired link's expiry "
+                    + "information remains queryable through this endpoint indefinitely, always in the "
+                    + "expired shape described above, and never produces a not-found response on account "
+                    + "of having expired. The owning creator is the single creator identity already "
+                    + "recorded as this link's owner at the time it was created; this system has no "
+                    + "concept of transferring or sharing ownership, so the creator and the owner always "
+                    + "name the same principal for any given link. An unauthenticated caller receives the "
+                    + "same 401 refusal every other authenticated endpoint in this system already "
+                    + "produces. Every other caller who is not the owning creator -- an authenticated "
+                    + "creator who owns a different link, a caller presenting a code that was never "
+                    + "issued, or a caller presenting a syntactically malformed code, meaning wrong length "
+                    + "or characters outside the code alphabet -- receives the identical 404 response "
+                    + "already used for an unknown code, so that link existence, ownership, and validity "
+                    + "are never distinguishable from one another to anyone but the owner.";
 
     private final Map<String, AiResponse> lastResponseByStage = new ConcurrentHashMap<>();
 
