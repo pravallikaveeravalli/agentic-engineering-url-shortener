@@ -1,0 +1,41 @@
+{
+  "_provenance": "T136 artifact. Real graph export, DS-B (per-creator aggregate redirect tier). Two real, separate runs together cover T136's own two required pieces (retry, compensation) -- full narrative and every real quoted log line: docs/evidence/ds-b/attempts-1-3-finding.md and docs/evidence/ds-b/t136-compensation-only.md. Neither run completed the full tier build; the tier's own code was built directly, not by either run -- see docs/evidence/ds-b/t136a-built-directly.md.",
+  "retryDemonstrationRun": {
+    "runId": "f5aab7a4-f9cc-496e-a6ed-3d9b71fe8bdf",
+    "attempt": "2 of 3 capped",
+    "requirement": "Add a third redirect-throttling tier, independent of the existing per-code tier: redirect traffic SHALL be limited in aggregate, per creator, across every short link that creator owns, at 3000 requests per minute per creator...",
+    "nodes": [
+      {"nodeKey": "S1", "state": "SUCCEEDED"},
+      {"nodeKey": "S2", "state": "SUCCEEDED"},
+      {"nodeKey": "S3", "state": "SUCCEEDED"},
+      {"nodeKey": "S4", "state": "AWAITING_APPROVAL"}
+    ],
+    "retry": {
+      "stage": 3,
+      "mechanism": "A real IOException, harness-injected on S3's provider's first invocation only, classified UNAVAILABLE by ProviderFailureTranslator; S3's own declared retryable set includes UNAVAILABLE; RetryRuling's real two-vote rule (declared ∩ executor-proposed) authorized a real retry.",
+      "attempts": [
+        {"attemptNumber": 1, "outcome": "FAILED", "durationMillis": 1, "cause": "harness-injected IOException, never touching the network"},
+        {"attemptNumber": 2, "outcome": "SUCCEEDED", "durationMillis": "real, higher latency (a genuine live Claude CLI call)"}
+      ],
+      "telemetrySource": "agentic.shortener.telemetry.stage logger, RETRY_ATTEMPT_STARTED/COMPLETED events, quoted verbatim in docs/evidence/ds-b/attempts-1-3-finding.md"
+    },
+    "s4Outcome": "2 of 4 real MATERIAL_PENDING findings from this attempt remained unanswered at the point this specific attempt was stopped (a multi-instance/in-process tension, reworded from attempt 1; a tier-name-as-popularity-signal tension, genuinely new) -- both later answered under the owner's standing delegation for the (unused) fourth attempt that was never run; full findings and answers in attempts-1-3-finding.md"
+  },
+  "compensationDemonstrationRun": {
+    "runId": "40374185-57e6-4958-a71f-c174b250782d",
+    "kind": "separate, minimal, real proof -- plan.md §14's own pre-authorized End-Day-2-PM reduction, since no full-build attempt reached S7",
+    "requirement": "the same aggregate-tier requirement, submitted for real via Conductor.submit(); never advanced -- no AI provider invoked",
+    "realEffect": "a real RUN_CREATED audit_record row (audit_record_id=1), written by Conductor.submit() itself",
+    "compensation": {
+      "handler": "CompensationHandler (T090, already unit-tested, not wired into Conductor's own dispatch loop by design)",
+      "effectKey": "audit:1",
+      "kind": "COMPENSATION",
+      "action": "COMPENSATION: appended a corrective audit entry for audit:1"
+    }
+  },
+  "tierBuild": {
+    "status": "NOT produced by either run above",
+    "how": "built directly this turn, per the owner's own explicit direction, after three prior capped live attempts (this file's own retryDemonstrationRun is attempt 2 of those three) -- see docs/evidence/ds-b/t136a-built-directly.md",
+    "landedAt": "src/main/java/agentic/shortener/delivery/ratelimit/AggregateRedirectLimiter.java, commit 576f9bf"
+  }
+}
