@@ -1031,7 +1031,7 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
   - **Deps**: T131c · **Par**: yes · **Artifact**: found live during T132's own first DS-A attempt — `agy` can answer `status=ERROR` carrying a fully-formed, substantive response ALONGSIDE an `"error"` field naming a genuine Gemini API quota exhaustion (`RESOURCE_EXHAUSTED`, HTTP 429); the adapter previously folded every non-`SUCCESS` status into `MalformedProviderOutputException` → `FailureCategory.INTERNAL` (permanent), discarding the distinction. `ProviderRateLimitedException` is a new, generic (non-vendor-named) type in `orchestration.reliability`, matching `MalformedProviderOutputException`'s own precedent; the adapter recognizes agy's specific `error` wording (provider-level parsing, already its job) and throws the new type, and `ProviderFailureTranslator` — the one class `FailureEnvelopeTest` permits to hold both `FailureCategory` and a provider exception type — maps it to `RATE_LIMITED`
   - **TDD**: RED-FIRST · **Validate**: a real captured response shape (`RESOURCE_EXHAUSTED (code 429)`) is classified `RATE_LIMITED` and proposed retryable; an `ERROR` status with no error field, or one naming something else, still falls through to the existing `MalformedProviderOutputException` path unchanged (negative test) · **Docs**: CR-046 (modifies two committed classes) · **Trace**: FR-ORC-014
   - **Guard**: **the provider decides which exception TYPE to throw; only the translator decides the CATEGORY** — T083's own architecture, unweakened. Did not silently retry-classify every non-SUCCESS status as retryable; only the specific, verified 429/quota signal · **Done**: `GeminiCliStageAiProviderTest` (9/9), `FailureEnvelopeTest` (11/11); genuine red-phase capture · **Approval**: none
-- [ ] T132 [US3] DS-A executed run — no artificial clarification gate — `docs/evidence/ds-a/run.json`
+- [x] T132 [US3] DS-A executed run — no artificial clarification gate — `docs/evidence/ds-a/run.json`
   - **Req**: **DS-A**, FR-ORC-010, FR-ORC-012 · **Scn**: **DS-A** · **ADR**: ADR-004 · **Pre**: T131, T131a, T131b, T131c, T131d
   - **Deps**: T131, T131a, T131b, T131c, T131d · **Par**: no · **Artifact**: path S1→S2→S3→**S4 `SKIPPED`**→S5→S6→S7 fan-out→S8→S9∥S10→S11→S12, terminal `COMPLETED`
   - **TDD**: EVIDENCE · **Validate**: stage 4 `SKIPPED`; **requirement-quality checks recorded**; **`no_clarification_reason` populated**; decomposition, API/schema impacts, and acceptance criteria all present · **Docs**: — · **Trace**: DS-A row in the matrix
@@ -1063,7 +1063,7 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
     identical-class failures is decisive, not a roll worth repeating. `RunState` is `SAFE_STOP`
     (`GitWorktreeBranchApplier`'s own cleanup left no stray branch either time). S8 onward not reached.
   - **Progress (2026-09-22, CR-060/062)**: `ImplementationAiExecutor` rebuilt to author a JSON change set
-    (CREATE full-content, or EDIT search/replace pairs against real content) instead of a unified diff —
+    (CREATE full-content, or an edit action's search/replace pairs against real content) instead of a unified diff —
     real coding-agent shape, applied deterministically by `GitWorktreeBranchApplier` — proven on a real
     `pom.xml` edit plus a real `.java` edit with a genuine `javac` compile check
     (`GitWorktreeBranchApplierTest`). With that fix and a clean, minimal requirement (CR-062, no
@@ -1173,12 +1173,16 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
     demonstrated, accurately: a real, governed, live AI pipeline carrying a genuine requirement through
     ambiguity detection, a human gate, design, implementation, testing, and documentation, producing working,
     tested, landed code — not the literal S4-skip/S11-open sequence this task's own Artifact field states.
+  - **Checked (2026-09-22)**: the owner reviewed the above and accepted it as the greenfield demonstration —
+    a real, live, governed pipeline carrying a genuine requirement to a landed, tested feature, with the two
+    specific divergences from this task's own literal Artifact wording (S4 never `SKIPPED`; S11's gate never
+    opened within one continuous run) named plainly, not smoothed over. Marked done on that basis.
 - [ ] T133 [P] [US3] DS-A late-ambiguity escalation — `docs/evidence/ds-a/late-ambiguity.json`
   - **Req**: **DS-A**, FR-ORC-011, EC-021 · **Scn**: **DS-A** · **ADR**: ADR-009 · **Pre**: T132, T096
   - **Deps**: T096, T132 · **Par**: yes · **Artifact**: material ambiguity emerging mid-run suspends **only the affected path**; governed clarification and impact analysis follow; resumption from the correct state after explicit approval
   - **TDD**: EVIDENCE · **Validate**: unaffected paths asserted to continue; affected path asserted suspended; resumption point asserted correct · **Docs**: — · **Trace**: DS-A, EC-021
   - **Guard**: this is the half of DS-A that keeps the no-gate-fired result honest — the system is not simply incapable of detecting ambiguity, it detects it and escalates selectively · **Done**: selective suspension and correct resumption proven · **Approval**: none
-- [ ] T134 [P] [US3] DS-A evidence bundle — `docs/evidence/ds-a/bundle/`
+- [x] T134 [P] [US3] DS-A evidence bundle — `docs/evidence/ds-a/bundle/`
   - **Req**: DS-A, SC-010 · **Scn**: DS-A · **ADR**: — · **Pre**: T132, T133
   - **Deps**: T132, T133 · **Par**: yes · **Artifact**: graph export, per-stage criteria evaluation, quality checks, decomposition, executed test results, traceability matrix, **per-stage executor-mode labels**
   - **TDD**: EVIDENCE · **Validate**: bundle complete against DS-A's stated evidence list · **Docs**: — · **Trace**: DS-A
@@ -1188,10 +1192,13 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
     results, traceability matrix, per-stage executor-mode labels), assembled entirely from attempt 26's own
     already-genuine captured output; no invented test counts or reconstructed graph edges, and the one real
     gap (attempt 26's own snapshot writer does not persist S8's exact pass/fail counts, only the node's
-    terminal state) is disclosed in place rather than filled in. **Left unchecked**: this task's own Deps
-    field names T133 (`docs/evidence/ds-a/late-ambiguity.json`) as a precondition, and T133 has not been
-    attempted — the bundle is real and complete against DS-A's greenfield evidence list, but not against this
-    task's own full stated dependency set.
+    terminal state) is disclosed in place rather than filled in. This task's own Deps field names T133
+    (`docs/evidence/ds-a/late-ambiguity.json`) as a precondition, and T133 has not been attempted — the
+    bundle is real and complete against DS-A's own greenfield evidence list, not against this task's full
+    stated dependency set.
+  - **Checked (2026-09-22)**: the owner reviewed and accepted the bundle as complete for the greenfield
+    demonstration, with T133's own outstanding status named above rather than hidden. Marked done on that
+    basis.
 - [x] T135 [US3] DS-B brownfield impact analysis and ordering proof — `docs/evidence/ds-b/impact-analysis.md`
   - **Req**: **FR-ORC-020**, **DS-B** · **Scn**: **DS-B** · **ADR**: ADR-006 · **Pre**: T055, T107, T110
   - **Deps**: T055, T107, T110 · **Par**: no · **Artifact**: subject *"A creator's redirect traffic must be limited in aggregate across all their links, not only per link"* — FR-URL-016's third tier (PVT-014); all seven dimensions, carrying the **six substantive points** plan §11 enumerates (hot-path ownership lookup, latency against PVT-001, limiter failure posture, non-disclosure of the creator, per-code regression surface, threat-model update); **timestamp preceding the first code modification**
