@@ -1,12 +1,69 @@
 # DS-A live run — pending gate context for the owner
 
-**Four attempts, all reaching S4's `UNRESOLVED_AMBIGUITY` gate, not S6's `ARCHITECTURE_APPROVAL` gate T132
-anticipated.** Attempts 3 and 4 both used the CR-048-revised, fully-specified wording; attempt 4 additionally
-ran against CR-049's calibrated S3 (the materiality-classification fix). This agent cannot decide any of
-these gates — `ActorAuthority` structurally refuses an agent-identified approving actor (FR-ORC-021) — and
-has not attempted to, and has not attempted a fifth wording revision on its own initiative, per the owner's
-own explicit instruction to stop and report rather than loop further. Full context below, attempt 4 (the
-current state, post-calibration) first.
+**Five attempts, all reaching S4's `UNRESOLVED_AMBIGUITY` gate, not S6's `ARCHITECTURE_APPROVAL` gate T132
+anticipated.** Attempts 3 and 4 used the CR-048-revised wording; attempt 4 additionally ran against CR-049's
+calibrated S3 (the materiality-classification fix); attempt 5 used CR-050's fully self-contained wording,
+which folded in the owner's four decisions from attempt 4. This agent cannot decide any of these gates —
+`ActorAuthority` structurally refuses an agent-identified approving actor (FR-ORC-021) — and has not
+attempted to, and per the owner's own explicit instruction has not attempted a sixth wording revision on its
+own initiative after attempt 5's own findings. Full context below, attempt 5 (the current state, post-CR-050)
+first.
+
+---
+
+## Attempt 5 (CR-050 wording, all four attempt-4 items folded in) — 2 new genuine findings, 1 confirms correctly NOT_MATERIAL
+
+`runId`: `b2611b9b-29e5-4f71-9589-35021c1eb195`. Requirement submitted: CR-050's fully self-contained wording
+(`docs/evidence/ds-a/design.md`'s "The input (revised, CR-050 — current)"). S1/S2/S3 all genuinely succeeded
+(real `claude-sonnet-5` calls, ~171s). Full response captured, not truncated:
+`docs/evidence/ds-a/run-snapshot-ATTEMPT-5-STOPPED-AT-S4-post-CR050.md`.
+
+**All four of attempt 4's items are gone — none recurred.** Rounding, the boundary instant, retention, and
+malformed-code handling were not flagged at all this pass; CR-050's wording closed them as intended. Six new
+findings appeared instead, from S3 reasoning over the newly-detailed text; of these, three were
+`MATERIAL_PENDING` and three `NOT_MATERIAL`. Each `MATERIAL_PENDING` finding was checked honestly against the
+real, delivered codebase — not assumed, not forced to an outcome:
+
+1. **401-vs-404 precedence when a caller is BOTH unauthenticated AND presents a malformed code** — S3's own
+   reasoning: requirement 1h mandates 401 for "an unauthenticated caller," 1i mandates 404 for "a caller
+   presenting a syntactically malformed code," and neither states which check runs first when both are true
+   of the same caller at once. **Verified against real source: the real system already resolves this.**
+   `CreatorAuthFilter` (`src/main/java/agentic/shortener/delivery/auth/CreatorAuthFilter.java`) is a genuine
+   servlet `Filter` (not a Spring `HandlerInterceptor`), registered via `FilterRegistrationBean`
+   (`AuthConfiguration.java`) against `/v1/links`, `/v1/links/*`. Servlet filters run before
+   `DispatcherServlet` resolves or invokes any controller method — a structural, servlet-spec guarantee, not
+   a routing coincidence — so the 401 check always fires first, unconditionally, regardless of whether the
+   path variable is well-formed, malformed, or unissued. **This is a real fact of the delivered system that
+   the requirement text still does not state** — the same structural class of gap CR-050 was written to
+   close, one instance of it was missed. No existing test exercises the exact joint case (malformed code +
+   no auth header) directly, though the mechanism is unconditional by construction.
+2. **No stated caching/freshness directive for `secondsRemaining`** — S3's own reasoning: requirement 1d
+   states `secondsRemaining` "MUST never overstate actual time remaining," but nothing states a
+   `Cache-Control` or freshness policy, so a caching intermediary or client cache could silently violate that
+   obligation by serving a stale value. **Verified against real source: this is genuinely unaddressed, not a
+   restatement of anything that already exists.** `LinkController.analytics` sets no `Cache-Control` header;
+   `spec.md` never states a caching/freshness policy for any JSON read endpoint (its only "cache" references
+   concern the redirect's own 307 response, `Cache-Control: no-store`, for a documented, unrelated reason —
+   `RedirectController.java`). There is no existing pattern this endpoint could inherit either way.
+3. **Whether a link can exist with no recorded creator/owner** — S3's own reasoning: requirement 1g asserts
+   the owning creator and the link's creator "MUST always be treated as the same principal," but nothing
+   states whether every link is guaranteed to have a recorded creator at all. **Verified against real source:
+   structurally impossible, and S3 in fact already classified this `NOT_MATERIAL` correctly** —
+   `ShortLink.create` requires a non-null `creatorId`; the `short_link` table's migration
+   (`V1__baseline.sql`) declares `creator_id UUID NOT NULL`; `LinkController.create` always resolves the
+   authenticated creator via the same filter, with no anonymous-creation path. S3's own stated reasoning for
+   this one matches the real system exactly.
+
+**Verdict, honestly reconciled**: two of the three `MATERIAL_PENDING` findings are genuinely open — #1
+because a true fact of the delivered system (filter-chain ordering) is still not stated in the requirement's
+own text, the exact structural class of gap CR-050 exists to close, missed for this one specific
+intersection; #2 because nothing in the delivered system or the approved spec addresses caching at all, for
+any read endpoint — this is a real, unaddressed dimension, not an oversight of restating an existing fact.
+The third correctly resolved `NOT_MATERIAL`, confirmed against real source.
+
+**Per the owner's own explicit instruction for this turn — stop and report rather than reword a further
+time — no sixth wording revision has been attempted.** These two items are reported to the owner below,
+exactly as found.
 
 ---
 
@@ -152,44 +209,46 @@ ambiguity-detection stage. Both are true at once: the feature is well-formed as 
 describing it, as actually worded, is not fully well-formed as a *specification* — and DS-A's own gate
 (`S4`) exists precisely to catch that distinction, which is what it just did, correctly.
 
-## The decision this agent cannot make (current, after attempt 4 — post-calibration)
+## The decision this agent cannot make (current, after attempt 5 — post-CR-050)
 
-**The calibration itself is no longer in question** — attempt 4 proved it works (two genuine `NOT_MATERIAL`
-resolutions with real reasoning, and the DS-C compensating check independently proved it did not go soft).
-What remains open is DS-A's own subject, given a real, now-understood structural fact: **S3 cannot see the
-codebase, only the requirement text**, so any point this agent knows is "already fixed" by an existing file
-must be restated as a fact IN the requirement for S3 to ever agree.
+**The calibration is no longer in question** — attempts 4 and 5 both proved it works (real `NOT_MATERIAL`
+resolutions with substantive reasoning each time; the DS-C compensating check independently proved it did
+not go soft). **CR-050's own approach — stating facts S3 cannot see directly in the requirement text — also
+worked**: all four of attempt 4's items are gone, none recurred. What remains is two new, genuinely open
+items, one of exactly the same structural class CR-050 was written to close (a true fact of the delivered
+system — `CreatorAuthFilter`'s filter-chain ordering — still not stated in the text), and one genuinely new
+dimension nothing in the delivered system addresses at all (caching/freshness).
 
-1. **Answer S4's gate with real clarifying decisions for the four attempt-4 findings** (rounding rule, the
-   equality-instant boundary — citing `ExpiryPolicy`'s existing rule explicitly, since S3 cannot — the
-   retention/purge branch, and malformed-`{code}` handling), and let the run continue through S4's own
-   governed clarification path. Valid, but means this run demonstrates the clarification/resume path, not
-   DS-A's own defining "no artificial gate fires" property.
-2. **Revise the wording a fourth time**, this time specifically restating the facts S3 cannot see on its own
-   (e.g. "the boundary instant is expired, per this system's existing expiry rule" written into the text
-   itself, not left for S3 to infer) plus a stated rounding rule and stated retention/malformed-code
-   behavior — and re-run. Given the pattern across three revisions (attempts 2, 3, 4 each found different
-   genuine gaps), a fourth attempt may well find yet another round; disclosed as a real, now well-established
-   risk, not hidden.
+1. **Answer S4's gate with real clarifying decisions for attempt 5's two open findings** (401-vs-404
+   precedence when a caller is both unauthenticated and presents a malformed code — resolvable by citing
+   `CreatorAuthFilter`'s real, structural filter-chain-precedes-handler guarantee; a caching/freshness
+   directive for `secondsRemaining`, which has no existing precedent to cite either way and would be a
+   genuine new decision), and let the run continue through S4's own governed clarification path.
+2. **Revise the wording a sixth time**, restating the filter-ordering fact directly and adding an explicit
+   caching statement — not attempted here, per the owner's own explicit instruction for this turn not to
+   reword further on this agent's own initiative. Given the pattern across five attempts (2 through 5 each
+   found new, genuine gaps even as prior ones closed), disclosed as a real, well-established risk: closing
+   two more may open a sixth and seventh, and diminishing but not obviously zero.
 3. **Accept that some genuine irreducible ambiguity may remain in ANY sufficiently precise natural-language
    requirement examined this thoroughly**, and decide DS-A's own "no gate fires" demonstration needs either a
    different subject entirely, or an explicit accommodation (the owner pre-clarifies once, on the record,
-   and that clarification is folded into the requirement text before the next run).
+   and that clarification is folded into the requirement text before the next run) — the same accommodation
+   already used once, for CR-050, now needed for two more items.
 4. Some other decision.
 
-This agent's own judgment, offered for the record and not acted on: the calibration fix (CR-049) was the
-right, necessary, non-negotiable step regardless of what happens next — it was a real conformance gap,
-proven by the DS-C compensating check to not have weakened detection. What DS-A's four attempts now show is
-a different, independent fact: **exhaustive natural-language completeness against a thorough detector, with
-no ability for that detector to see the codebase, has a real ceiling** — narrowing it further trades one set
-of gaps for another rather than reliably converging to zero. No preference recorded on which option to take;
-this is squarely the owner's call.
+This agent's own judgment, offered for the record and not acted on: the calibration fix (CR-049) and CR-050's
+approach of stating S3-invisible facts directly in the text are both proven working, not in question. What
+five attempts now show is a stable, independent fact: **exhaustive natural-language completeness against a
+thorough detector, with no ability for that detector to see the codebase, has a real, recurring ceiling** —
+each revision closes the items it targets and, so far, always surfaces at least one new one, without an
+observed attempt yet reaching zero. No preference recorded on which option to take; this is squarely the
+owner's call.
 
 ## What was NOT done
 
-- No gate decision was submitted for S4, or any other gate, in any of the four attempts.
-- No fifth wording revision was attempted on this agent's own initiative — the owner's own explicit
+- No gate decision was submitted for S4, or any other gate, in any of the five attempts.
+- No sixth wording revision was attempted on this agent's own initiative — the owner's own explicit
   instruction for this turn was to stop and report a genuinely material-and-open finding rather than loop,
   and this report is that stop.
-- The driver's content-capture improvement (built after attempt 2) was exercised for real in attempt 3 — the
-  full S2/S3 response content above is genuine, not reconstructed.
+- The driver's content-capture improvement (built after attempt 2) was exercised for real in attempts 3, 4,
+  and 5 — the full S2/S3 response content above is genuine, not reconstructed.
