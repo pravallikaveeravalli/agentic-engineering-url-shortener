@@ -106,14 +106,23 @@ import java.util.function.Function;
  *
  * <p>{@link StageInput#inputArtifacts()} needs to see everything a stage might read, not only what its
  * direct graph predecessor produced — S5 depends on S3/S4 in the graph (they gate whether S5 may proceed at
- * all) but reads {@code "requirements"}, which is S2's output. So this class keeps one growing
+ * all) but reads {@code "requirements"}, which is S2's own output. So this class keeps one growing
  * {@code Map&lt;String,String&gt;} of every artifact key any node has produced so far and hands every node
- * the whole thing; each executor already only reads the specific keys its own contract names. Two key
+ * the whole thing; each executor already only reads the specific keys its own contract names. Three key
  * names genuinely differ between what a producer calls its output and what a consumer expects
  * ({@code "branchCommit"}&#8594;{@code "branch"}/{@code "change"}, {@code "test-results"}&#8594;
- * {@code "results"}) — {@link #ARTIFACT_ALIASES} adds the alias as a second map entry alongside the
- * original rather than renaming it, so both spellings stay readable (S12 itself requires the original
- * {@code "test-results"} key by name).
+ * {@code "results"}, {@code "tasks"}&#8594;{@code "task"}) — {@link #ARTIFACT_ALIASES} adds the alias as a
+ * second map entry alongside the original rather than renaming it, so both spellings stay readable (S12
+ * itself requires the original {@code "test-results"} key by name). The {@code "tasks"}&#8594;{@code "task"}
+ * alias was the last one found, and found live: {@code DecompositionAiExecutor}'s own output key is
+ * {@code "tasks"} (plural), but {@code ImplementationAiExecutor}'s own input key is {@code "task"}
+ * (singular) — with {@link FanOutPlanner#singleChild()} (the whole decomposition implemented as one child,
+ * no further split), S7's single child never received the decomposition under the key its own contract
+ * names, so every real S7 dispatch behind {@code singleChild()} failed {@code INVALID_INPUT} even though S5
+ * had genuinely succeeded. No prior test in this codebase exercised the real {@code ImplementationAiExecutor}
+ * downstream of a real {@code DecompositionAiExecutor} output — {@code ConductorIT}'s own S7 coverage uses a
+ * stub that never reads either key by name — so this went unnoticed until DS-A's first real S7 dispatch
+ * (T132). See {@code ArtifactAliasingIT}.
  */
 public final class Conductor {
 
@@ -129,7 +138,8 @@ public final class Conductor {
      * alias replaces the original — both remain readable in the accumulated artifacts map. */
     private static final Map<String, List<String>> ARTIFACT_ALIASES = Map.of(
             "branchCommit", List.of("branch", "change"),
-            "test-results", List.of("results"));
+            "test-results", List.of("results"),
+            "tasks", List.of("task"));
 
     private final JdbcRunStore runStore;
     private final GateStore gateStore;
