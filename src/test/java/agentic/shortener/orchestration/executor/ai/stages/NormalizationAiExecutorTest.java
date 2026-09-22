@@ -91,6 +91,29 @@ class NormalizationAiExecutorTest {
     }
 
     @Test
+    @DisplayName("NEGATIVE: duplicate externalIds across several output records are refused, not silently "
+            + "collapsed -- found live: S5's own no-invented-scope guard could not tell distinct "
+            + "requirements apart when this went unenforced (T132's first real S5 dispatch)")
+    void duplicateExternalIdsAreRefused() {
+        // Real, live cause: with several distinct output records sharing the identical externalId, a
+        // downstream consumer (DecompositionAiExecutor) has no way to address one specific requirement --
+        // every id in the "known" set collapses to one entry, so any task that tries to reference a
+        // SPECIFIC requirement is refused as "invented scope", even though it named a real requirement.
+        StageAiProvider provider = fixedResponse("["
+                + "{\"externalId\":\"1\",\"type\":\"FUNCTIONAL\",\"statement\":\"first distinct requirement\"},"
+                + "{\"externalId\":\"1\",\"type\":\"FUNCTIONAL\",\"statement\":\"second distinct requirement\"}]");
+
+        StageOutcome outcome = new NormalizationAiExecutor(provider)
+                .execute(inputWith("a submission with two distinct requirements"));
+
+        assertFalse(outcome.succeeded());
+        assertEquals(FailureCategory.INTERNAL, outcome.failure().category());
+        assertFalse(outcome.failure().executorProposesRetryable(),
+                "a duplicate-id answer is a defect in the answer's own addressing, not a transient "
+                        + "condition -- retrying the identical prompt would not fix it on its own");
+    }
+
+    @Test
     @DisplayName("NEGATIVE: fewer output records than raw input items is refused, never coerced to empty")
     void fewerRecordsThanInputItemsIsRefused() {
         // Two raw items, blank-line separated; the model answers with only one record — an item was

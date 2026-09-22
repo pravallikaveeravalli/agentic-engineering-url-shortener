@@ -74,6 +74,12 @@ public final class NormalizationAiExecutor implements StageExecutor {
                 .append(" raw requirement item(s) below, produce one or more identified, typed, testable ")
                 .append("requirement statements. Never discard, merge, or reinterpret an item away — every ")
                 .append("item below must be covered by at least one output statement.\n\n")
+                .append("EVERY output record's externalId MUST be UNIQUE across the whole array you return — ")
+                .append("never reuse the same externalId for two different statements, even if they trace ")
+                .append("to the same raw input item. A downstream stage addresses one specific requirement ")
+                .append("by its externalId alone; two records sharing one id become indistinguishable to it. ")
+                .append("Use a distinguishing suffix per statement (e.g. \"1a\", \"1b\", \"1c\") when one raw ")
+                .append("item normalizes into several records.\n\n")
                 .append("Respond with ONLY a JSON array, no prose, where each element is: ")
                 .append("{\"externalId\": string, \"type\": \"FUNCTIONAL\" or \"NON_FUNCTIONAL\", ")
                 .append("\"statement\": string}.\n\nRaw requirement item(s):\n");
@@ -100,8 +106,21 @@ public final class NormalizationAiExecutor implements StageExecutor {
 
         ArrayNode out = JSON.createArrayNode();
         List<RequirementRecord> records = new ArrayList<>();
+        java.util.Set<String> seenExternalIds = new java.util.LinkedHashSet<>();
         for (JsonNode element : array) {
             RequirementRecord record = toRecord(element);
+            // Structural uniqueness guard: a downstream stage (S5) addresses one specific requirement by
+            // its externalId alone -- two records sharing one id are indistinguishable to it, which
+            // surfaced live as S5's own no-invented-scope guard refusing a real, correctly-addressed task
+            // the model could no longer express (T132's first real S5 dispatch). Refused here, at the
+            // source, rather than left for a downstream consumer to discover the hard way.
+            if (!seenExternalIds.add(record.externalId())) {
+                throw new MalformedProviderOutputException(
+                        "normalization produced two or more requirement records sharing externalId '"
+                                + record.externalId() + "' — a downstream stage cannot address one specific "
+                                + "requirement when its id is not unique; every output record's externalId "
+                                + "must be unique across the whole array");
+            }
             records.add(record);
             ObjectNode node = JSON.createObjectNode();
             node.put("id", record.id().toString());
