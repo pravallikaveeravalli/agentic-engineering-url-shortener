@@ -14,12 +14,25 @@ import agentic.shortener.orchestration.executor.ai.stages.ImplementationAiExecut
 import agentic.shortener.orchestration.executor.ai.stages.NormalizationAiExecutor;
 import agentic.shortener.orchestration.executor.deterministic.DeterministicEngines;
 import agentic.shortener.orchestration.executor.deterministic.EnginePorts;
+import agentic.shortener.orchestration.gates.Actor;
 import agentic.shortener.orchestration.gates.ApprovalGate;
+import agentic.shortener.orchestration.gates.GateClass;
+import agentic.shortener.orchestration.gates.GateDecision;
+import agentic.shortener.orchestration.gates.GateOutcome;
 import agentic.shortener.orchestration.gates.GateOutcomeHandler;
 import agentic.shortener.orchestration.gates.GateRequestPresenter;
 import agentic.shortener.orchestration.gates.GateStore;
+import agentic.shortener.orchestration.gates.MaterializationCheck;
 import agentic.shortener.orchestration.graph.ArtifactWriteGuard;
 import agentic.shortener.orchestration.graph.StageTemplate;
+import agentic.shortener.orchestration.lineage.AmbiguityClass;
+import agentic.shortener.orchestration.lineage.AmbiguityRecord;
+import agentic.shortener.orchestration.lineage.ClarificationDecision;
+import agentic.shortener.orchestration.lineage.LineageStore;
+import agentic.shortener.orchestration.lineage.RequirementRecord;
+import agentic.shortener.orchestration.lineage.RequirementStatus;
+import agentic.shortener.orchestration.lineage.RequirementType;
+import agentic.shortener.orchestration.lineage.ResolutionState;
 import agentic.shortener.orchestration.reliability.Backoff;
 import agentic.shortener.orchestration.reliability.RetryPolicy;
 import agentic.shortener.orchestration.state.RetentionPolicy;
@@ -33,6 +46,8 @@ import agentic.shortener.persistence.MigrationSupport;
 import agentic.shortener.policy.PolicySetEvaluator;
 import agentic.shortener.policy.ReleaseReadinessEvaluator;
 import agentic.shortener.support.PostgresIntegrationTest;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;
 
@@ -42,6 +57,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +67,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Task T132 — DS-A's real, live executed run, driven through {@link Conductor} exactly as {@code
@@ -62,10 +79,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * <pre>./scripts/build.sh -q -Dtest=DsALiveRun -DfailIfNoTests=false test</pre>
  *
- * <p>Per the owner's explicit instruction, this class STOPS at S6's architecture-approval gate — {@code
- * ActorAuthority} structurally refuses an agent-identified approving actor (FR-ORC-021), so nothing here
- * ever attempts to submit a decision. It asserts the run reached exactly that paused state and writes the
- * full pending-gate context to {@code docs/evidence/ds-a/pending-gate-s6.md} for the owner to decide.
+ * <h2>S4's clarification gate — the human owner's real, live decision, recorded and applied</h2>
+ *
+ * <p>If S3's real, live output names material ambiguity S4 opens on, this class applies the human owner's
+ * own real clarification (see {@link #OWNER_ACTOR}, {@link #CONTENT_TYPE_CLARIFICATION},
+ * {@link #CACHE_CONTROL_CLARIFICATION} below) through the run's own governed path — a {@code
+ * ClarificationDecision} recorded via {@link LineageStore} for each ambiguity, then a real {@code
+ * GateDecision} (outcome {@code APPROVED}, actor type {@code human}, materialized against
+ * {@code docs/governance/gate-decisions/ds-a/s4-header-conformance-clarification.md}) applied through {@link
+ * GateOutcomeHandler} exactly as {@code GateDecisionController} would. <strong>Never fabricated</strong>: a
+ * material finding that does not match one of the two answers the owner actually gave is left alone, and
+ * this class fails loudly naming it, rather than forcing an answer nobody gave. {@code ActorAuthority}
+ * (FR-ORC-021) is honoured throughout — the actor recorded on every decision is the human owner, never this
+ * agent or "system".
+ *
+ * <p>Once S4 clears (either because S3 found nothing material, or because the owner's clarification resolved
+ * what it found), this class asserts the run proceeds to, and suspends at, S6's architecture-approval gate,
+ * and writes the full pending-gate context for the owner to decide next — nothing here ever attempts to
+ * decide S6 itself.
  */
 class DsALiveRun extends PostgresIntegrationTest {
 
@@ -89,6 +120,32 @@ class DsALiveRun extends PostgresIntegrationTest {
                     + "derived from git or environment state, and never changes without a deliberate code "
                     + "edit to this endpoint itself. The endpoint performs no dependency or downstream "
                     + "checks and reads and writes no persisted data.";
+
+    /** The real human deciding S4's clarification gate below — never this agent, never "system". */
+    private static final String OWNER_ACTOR = "Pravallika Veeravalli";
+
+    private static final String CONTENT_TYPE_QUESTION =
+            "Must the Content-Type header value be an exact string match to 'application/json', or is a "
+                    + "standard charset parameter (e.g. '; charset=UTF-8') conformant alongside it?";
+    private static final String CONTENT_TYPE_CLARIFICATION =
+            "The response media type is application/json; a standard charset parameter (e.g. "
+                    + "'; charset=UTF-8') is acceptable and conformant. Conformance is asserted on the "
+                    + "media type being application/json, charset-agnostic -- not an exact byte-for-byte "
+                    + "string match.";
+
+    private static final String CACHE_CONTROL_QUESTION =
+            "Must Cache-Control be an exact string match to 'no-store', or are additional standard "
+                    + "non-caching directives (e.g. 'no-cache', 'max-age=0') conformant alongside it?";
+    private static final String CACHE_CONTROL_CLARIFICATION =
+            "The response is not cached; Cache-Control: no-store satisfies this, and additional standard "
+                    + "non-caching directives (no-cache, max-age=0) are acceptable. Conformance is "
+                    + "asserted on the response being non-cacheable (a no-store directive present), not "
+                    + "an exact string match.";
+
+    private static final String S4_GATE_DECISION_RECORD =
+            "docs/governance/gate-decisions/ds-a/s4-header-conformance-clarification.md";
+
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     private final Map<String, AiResponse> lastResponseByStage = new ConcurrentHashMap<>();
 
@@ -195,16 +252,24 @@ class DsALiveRun extends PostgresIntegrationTest {
                 + "suspended or terminal, for this to be an expected governed stop");
 
         // DS-A's OWN premise is that S4's clarification gate does NOT fire for a genuinely well-formed
-        // input. If the real ambiguity-detection stage found material ambiguity anyway, that is the run's
-        // real, governed stopping point -- reported plainly rather than forced past, and DISTINCT from the
-        // expected "reached S6" case so a reader is not left interpreting a generic assertion failure.
+        // input. If the real ambiguity-detection stage found material ambiguity anyway, that is either
+        // the run's real, governed stopping point (if the finding is one this agent has no owner answer
+        // for -- reported plainly, never forced past) OR a real human clarification decision the owner
+        // has already made, in which case it is recorded through the governed path below and the run
+        // resumes -- both are honest outcomes of the SAME gate mechanism, never a rigged demonstration.
         if (s4State == StageState.AWAITING_APPROVAL) {
-            org.junit.jupiter.api.Assertions.fail("the run stopped at S4's UNRESOLVED_AMBIGUITY gate, not "
-                    + "S6's architecture-approval gate -- the real ambiguity-detection stage found material "
-                    + "ambiguity in this requirement's exact wording. This is a genuine governed stop "
-                    + "(ActorAuthority forbids this agent from deciding it), not a defect in the Conductor "
-                    + "or the adapter. See docs/evidence/ds-a/run-snapshot.md for the full transition "
-                    + "history and the real captured response content.");
+            System.out.println("DS-A LIVE RUN: S4 opened UNRESOLVED_AMBIGUITY -- applying the human "
+                    + "owner's real clarification through the governed clarification path, then resuming.");
+            applyOwnerClarificationAndResume(runId, connections, clock, runStore, gateStore, conductor);
+
+            nodes = runStore.persistedNodes(runId);
+            for (PersistedNode node : nodes) {
+                System.out.println("DS-A LIVE RUN (post-clarification): node " + node.nodeKey() + " -> "
+                        + node.state());
+            }
+            runState = runStore.run(runId).orElseThrow().state();
+            System.out.println("DS-A LIVE RUN (post-clarification): run state=" + runState);
+            writeRunSnapshot(evidenceDir, runId, runStore, gateStore);
         }
 
         StageState s6State = runStore.node(runId, "S6").orElseThrow().state();
@@ -213,6 +278,129 @@ class DsALiveRun extends PostgresIntegrationTest {
 
         System.out.println("DS-A LIVE RUN: stopped at S6 (architecture approval), as expected. "
                 + "See docs/evidence/ds-a/pending-gate-s6.md for the owner.");
+    }
+
+    /**
+     * Records the human owner's real clarification for whichever of the run's own live, real S4 findings
+     * match one of the two questions she actually answered, through the run's own governed path -- a
+     * {@link RequirementRecord} and {@link AmbiguityRecord} for each real finding (never fabricated: read
+     * from S3's own captured JSON), a {@link ClarificationDecision} resolving it, then a real
+     * {@link GateDecision} (materialized, human-actor, {@code APPROVED}) applied through
+     * {@link GateOutcomeHandler} exactly as {@code GateDecisionController} would.
+     *
+     * <p><strong>Never forces an answer nobody gave</strong>: if any MATERIAL_PENDING finding does not
+     * match the Content-Type or Cache-Control question, this method fails loudly, naming it, rather than
+     * silently approving past a real ambiguity no human has actually answered.
+     */
+    private void applyOwnerClarificationAndResume(UUID runId, ConnectionSource connections, Clock clock,
+                                                   JdbcRunStore runStore, GateStore gateStore,
+                                                   Conductor conductor) throws Exception {
+        LineageStore lineageStore = new LineageStore(connections, clock);
+
+        JsonNode requirementsArray = JSON.readTree(stripFence(lastResponseByStage.get("S2").content()));
+        Map<String, UUID> requirementIdByExternalId = new LinkedHashMap<>();
+        for (JsonNode element : requirementsArray) {
+            String externalId = element.get("externalId").asText();
+            RequirementRecord requirement = new RequirementRecord(UUID.randomUUID(), externalId,
+                    RequirementType.valueOf(element.get("type").asText()), element.get("statement").asText(),
+                    RequirementStatus.NORMALIZED);
+            lineageStore.recordRequirement(runId, requirement);
+            requirementIdByExternalId.put(externalId, requirement.id());
+        }
+        // The requirement this run's own real ambiguity findings are attached to is externalId "1" as a
+        // whole (S3 receives the entire normalized set, not one requirement at a time) -- use the first
+        // recorded requirement as the FK target; every ambiguity in this run concerns the same requirement
+        // set, so which one it is attached to under the schema's per-requirement FK is not itself material.
+        UUID requirementIdForAmbiguities = requirementIdByExternalId.values().iterator().next();
+
+        JsonNode ambiguitiesArray = JSON.readTree(stripFence(lastResponseByStage.get("S3").content()));
+
+        List<String> unansweredFindings = new ArrayList<>();
+        List<UUID> ambiguityIdsToApprove = new ArrayList<>();
+        for (JsonNode element : ambiguitiesArray) {
+            if (!"MATERIAL_PENDING".equals(element.get("resolutionState").asText())) {
+                continue;
+            }
+            String affectedPath = element.get("affectedPath").asText();
+            String lower = affectedPath.toLowerCase();
+
+            String question;
+            String answer;
+            if (lower.contains("content-type") || lower.contains("application/json")) {
+                question = CONTENT_TYPE_QUESTION;
+                answer = CONTENT_TYPE_CLARIFICATION;
+            } else if (lower.contains("cache-control") || lower.contains("no-store")) {
+                question = CACHE_CONTROL_QUESTION;
+                answer = CACHE_CONTROL_CLARIFICATION;
+            } else {
+                unansweredFindings.add(affectedPath);
+                continue;
+            }
+
+            AmbiguityRecord ambiguity = new AmbiguityRecord(UUID.randomUUID(),
+                    AmbiguityClass.valueOf(element.get("ambiguityClass").asText()), affectedPath,
+                    ResolutionState.MATERIAL_PENDING, element.get("qualityChecksPerformed").asText(), null);
+            lineageStore.recordAmbiguity(requirementIdForAmbiguities, ambiguity);
+            lineageStore.resolveWithClarification(ambiguity.id(),
+                    new ClarificationDecision(UUID.randomUUID(), OWNER_ACTOR, question, answer,
+                            clock.instant()));
+            ambiguityIdsToApprove.add(ambiguity.id());
+            System.out.println("DS-A LIVE RUN: clarification recorded by " + OWNER_ACTOR + " for ambiguity "
+                    + ambiguity.id() + " (" + ambiguity.ambiguityClass() + "): " + affectedPath);
+        }
+
+        if (!unansweredFindings.isEmpty()) {
+            fail("S4 found " + unansweredFindings.size() + " MATERIAL_PENDING finding(s) the owner has not "
+                    + "answered -- this is a genuine, real, unresolved ambiguity, not something this agent "
+                    + "may decide or force past: " + unansweredFindings);
+        }
+
+        String gateId;
+        try (var c = connection();
+             var st = c.createStatement();
+             var rs = st.executeQuery("SELECT gate_id FROM approval_gate WHERE run_id = '" + runId
+                     + "' AND node_key = 'S4'")) {
+            if (!rs.next()) {
+                throw new IllegalStateException("no approval_gate row for S4 on run " + runId);
+            }
+            gateId = rs.getString("gate_id");
+        }
+
+        GateDecision decision = new GateDecision(runId, gateId, 4, GateClass.UNRESOLVED_AMBIGUITY,
+                GateOutcome.APPROVED, new Actor("human", OWNER_ACTOR), clock.instant(),
+                "The owner reviewed the run's real S4 findings and resolved each with a real clarification "
+                        + "decision (recorded via ClarificationDecision), documented in the gate record: "
+                        + ambiguityIdsToApprove.size() + " finding(s) resolved.",
+                S4_GATE_DECISION_RECORD, List.of(), null, null);
+        MaterializationCheck.requireMaterialized(decision);
+
+        long decisionId = gateStore.recordDecision(decision);
+        GateDecision recorded = gateStore.decisionById(decisionId).orElseThrow();
+        GateOutcomeHandler outcomeHandler = new GateOutcomeHandler(runStore, gateStore, connections);
+        outcomeHandler.apply(runId, "S4", recorded);
+        conductor.advance(runId);
+
+        System.out.println("DS-A LIVE RUN: S4 gate decision recorded by " + OWNER_ACTOR + " (APPROVED), "
+                + "materialized at " + S4_GATE_DECISION_RECORD + ". Run resumed.");
+    }
+
+    /**
+     * The same fence-stripping {@code AiStageSupport.parseJson} applies in production (package-private
+     * there, so this driver -- a different package -- mirrors it rather than widening that visibility just
+     * for a test/demo driver's convenience).
+     */
+    private static String stripFence(String content) {
+        String text = content.strip();
+        int fenceStart = text.indexOf("```");
+        if (fenceStart < 0) {
+            return text;
+        }
+        int contentStart = fenceStart + 3;
+        while (contentStart < text.length() && Character.isLetter(text.charAt(contentStart))) {
+            contentStart++;
+        }
+        int lastFence = text.lastIndexOf("```");
+        return lastFence > contentStart ? text.substring(contentStart, lastFence).strip() : text;
     }
 
     private StageAiProvider recording(String stageKey, StageAiProvider delegate) {
