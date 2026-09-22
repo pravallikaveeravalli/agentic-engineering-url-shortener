@@ -297,20 +297,28 @@ class DsALiveRun extends PostgresIntegrationTest {
                                                    Conductor conductor) throws Exception {
         LineageStore lineageStore = new LineageStore(connections, clock);
 
+        // A real, separate finding, live: S2's own contract requires only a non-blank externalId, never
+        // uniqueness within its own response -- and this run's real output gave every one of its nine
+        // items the identical externalId "1", which collides with requirement_record's own
+        // (run_id, external_id) uniqueness constraint (FR-ORC-012). Disambiguated here, by this driver,
+        // exactly as any real consumer of non-unique externalIds would have to -- an ordinal suffix per
+        // repeat, so all nine real statements are still faithfully recorded, none silently dropped.
         JsonNode requirementsArray = JSON.readTree(stripFence(lastResponseByStage.get("S2").content()));
         Map<String, UUID> requirementIdByExternalId = new LinkedHashMap<>();
+        Map<String, Integer> externalIdOccurrences = new LinkedHashMap<>();
         for (JsonNode element : requirementsArray) {
-            String externalId = element.get("externalId").asText();
+            String rawExternalId = element.get("externalId").asText();
+            int occurrence = externalIdOccurrences.merge(rawExternalId, 1, Integer::sum);
+            String externalId = occurrence == 1 ? rawExternalId : rawExternalId + "-" + occurrence;
             RequirementRecord requirement = new RequirementRecord(UUID.randomUUID(), externalId,
                     RequirementType.valueOf(element.get("type").asText()), element.get("statement").asText(),
                     RequirementStatus.NORMALIZED);
             lineageStore.recordRequirement(runId, requirement);
             requirementIdByExternalId.put(externalId, requirement.id());
         }
-        // The requirement this run's own real ambiguity findings are attached to is externalId "1" as a
-        // whole (S3 receives the entire normalized set, not one requirement at a time) -- use the first
-        // recorded requirement as the FK target; every ambiguity in this run concerns the same requirement
-        // set, so which one it is attached to under the schema's per-requirement FK is not itself material.
+        // Every ambiguity S3 found concerns the same normalized requirement set as a whole (S3 receives
+        // the entire set, not one requirement at a time) -- use the first recorded requirement as the FK
+        // target; which one it is attached to under the schema's per-requirement FK is not itself material.
         UUID requirementIdForAmbiguities = requirementIdByExternalId.values().iterator().next();
 
         JsonNode ambiguitiesArray = JSON.readTree(stripFence(lastResponseByStage.get("S3").content()));
