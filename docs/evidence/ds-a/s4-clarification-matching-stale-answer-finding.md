@@ -1,9 +1,12 @@
 # Finding — `DsALiveRun`'s own S4 clarification-matching logic misapplied a stale, contradictory answer to a
 genuinely new finding
 
-**Status: OPEN. Real, live, found during PART 4's greenfield rerun (attempt 19, 2026-09-22). Not fixed here —
-it concerns the trustworthiness of the routine-clarification delegation's own matching mechanism, which this
-agent should not unilaterally redesign under time pressure any more than it should redesign a gate.**
+**Status: OPEN, RECURRED ONCE AFTER A PARTIAL FIX. Real, live, found during PART 4's greenfield rerun (attempt
+19, 2026-09-22); CR-059 closed the specific class that caused attempt 19 (never auto-match a
+`SEMANTIC_CONTRADICTION`), but attempt 20 (same day, next turn) found a SECOND, structurally identical
+instance the narrower fix did not cover — see the addendum below. Not fixed further here — it concerns the
+trustworthiness of the routine-clarification delegation's own matching mechanism, which this agent should not
+unilaterally redesign a second time under time pressure any more than the first.**
 
 ## What happened
 
@@ -64,3 +67,33 @@ large turn — the same discipline this session has applied to every other genui
    route every S4 finding on a materially reworded requirement back through fresh owner review — simplest,
    most conservative, costs the delegation's own convenience.
 4. Some other decision.
+
+## Addendum (2026-09-22, next turn) — the SAME class of bug recurred once, CR-059's fix was too narrow
+
+CR-059 closed the specific trigger that caused attempt 19 (never auto-match a `SEMANTIC_CONTRADICTION`), on
+the reasoning that a contradiction is always run-specific. That reasoning was correct for that finding, but
+the underlying fragility — a plain `String.contains(...)` substring check, not a whole-word match — is more
+general than the one class excluded. Attempt 20
+(`docs/evidence/ds-a/run-snapshot-ATTEMPT-20-STOPPED-AT-S4-two-novel-findings-plus-resource-source-collision.md`)
+found it again, differently: a real `UNDEFINED_TERM` finding about what "honestly-disclosed" means (a
+documentation/format question) was auto-matched to `VERSION_VALUE_CLARIFICATION` because its own text
+contains the word **"resource"**, which itself contains **"source"** as a literal substring
+(`re` + `source` = re**source**) — the version-value branch's own `lower.contains("source")` check fired on a
+word that has nothing to do with version-sourcing at all. The applied answer was wrong here too, and in this
+instance directly self-contradictory with the run's own requirement text (the stock answer says "never a
+hardcoded arbitrary literal"; this run's own requirement explicitly permits exactly that).
+
+**This attempt's run still stopped correctly overall** — two OTHER genuinely novel findings in the same batch
+were correctly left unanswered, failing the test loudly as designed, so no incorrect answer reached S5/S6.
+But the mismatched third answer was still recorded as a real `ClarificationDecision`/`GateDecision` in that
+run's own history, attributed to the human owner without her actual review — the same governance concern as
+attempt 19, structurally, just not the one CR-059 closed.
+
+**Not fixed a second time under time pressure, on the same principle as before**: a substring-matching
+mechanism appears to have more of these collisions than any one turn can enumerate and patch reactively
+(`"literal"`, now `"resource"`⊃`"source"` — English is full of such containments). Option 1 above
+(class-matching, not just keyword-matching) or option 2 (near-exact question matching) both look more
+likely to close the whole family at once than another one-off exclusion; option 3 (retire keyword-matching
+for anything beyond the original validated set) is the most conservative and simplest to reason about. This
+is now two real, live occurrences of the same underlying fragility — worth the owner's own decision on which
+of the four options to take, rather than a third reactive patch.
