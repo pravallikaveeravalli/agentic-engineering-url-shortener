@@ -1,0 +1,31 @@
+{
+  "_provenance": "T132 artifact. Real graph export of attempt 26 -- docs/evidence/ds-a/run-snapshot-ATTEMPT-26-S7-S8-S9-S10-SUCCEEDED-S11-real-not-ready.md, node-for-node, no values invented. This engagement's live-demo driver (DsALiveRun) persists node state via JdbcRunStore/GateStore and writes a Markdown snapshot, not this JSON shape directly; this file reformats that same real, already-committed capture into a graph export, which is what this task's own Artifact line names.",
+  "runId": "462904af-d4c4-4e34-bb95-35f293e32e01",
+  "runState": "SAFE_STOP",
+  "requirement": "GET /v1/version: public, unauthenticated, no path/query params, 200 with application/json body {\"version\": \"<current version>\"} and Cache-Control: no-store",
+  "nodes": [
+    {"nodeKey": "S1", "stage": 1, "role": "SINGLETON", "state": "SUCCEEDED", "executorClass": "DETERMINISTIC"},
+    {"nodeKey": "S2", "stage": 2, "role": "SINGLETON", "state": "SUCCEEDED", "executorClass": "AI_CAPABLE"},
+    {"nodeKey": "S3", "stage": 3, "role": "SINGLETON", "state": "SUCCEEDED", "executorClass": "AI_CAPABLE"},
+    {"nodeKey": "S4", "stage": 4, "role": "SINGLETON", "state": "SUCCEEDED", "executorClass": "HUMAN_GATE"},
+    {"nodeKey": "S5", "stage": 5, "role": "SINGLETON", "state": "SUCCEEDED", "executorClass": "AI_CAPABLE"},
+    {"nodeKey": "S6", "stage": 6, "role": "SINGLETON", "state": "SUCCEEDED", "executorClass": "AI_CAPABLE"},
+    {"nodeKey": "S7", "stage": 7, "role": "FAN_OUT_PARENT", "state": "SKIPPED", "executorClass": "AI_CAPABLE"},
+    {"nodeKey": "S7.1", "stage": 7, "role": "FAN_OUT_CHILD", "state": "SUCCEEDED", "executorClass": "AI_CAPABLE"},
+    {"nodeKey": "S7.join", "stage": 7, "role": "JOIN", "state": "SKIPPED", "executorClass": "AI_CAPABLE"},
+    {"nodeKey": "S8", "stage": 8, "role": "SINGLETON", "state": "SUCCEEDED", "executorClass": "DETERMINISTIC"},
+    {"nodeKey": "S9", "stage": 9, "role": "SINGLETON", "state": "SUCCEEDED", "executorClass": "AI_CAPABLE"},
+    {"nodeKey": "S10", "stage": 10, "role": "SINGLETON", "state": "SUCCEEDED", "executorClass": "DETERMINISTIC"},
+    {"nodeKey": "S11", "stage": 11, "role": "SINGLETON", "state": "FAILED", "executorClass": "HUMAN_GATE"},
+    {"nodeKey": "S12", "stage": 12, "role": "SINGLETON", "state": "BLOCKED", "executorClass": "DETERMINISTIC"}
+  ],
+  "edges": "not separately captured by this run's own snapshot writer (DsALiveRun.writeRunSnapshot persists node state, not edge list); the fixed S1-S12 dependency graph itself is defined in specs/001-agentic-sdlc-url-shortener/contracts/workflow-state.schema.json and is the same graph every DS-A/B/C run traverses",
+  "s11Outcome": {
+    "state": "FAILED",
+    "conditionsFound": [
+      "condition 4: stale test-report residue (DsALiveRun.txt, DsCClarificationRun.txt) in this repo's own target/surefire-reports/ -- self-inflicted by this engagement's own repeated direct test invocations across turns, not a defect in the feature; fixed by cleaning target/ (a git-ignored build directory)",
+      "condition 8: docs/LIMITATIONS.md did not exist at the time of this run -- T147's own artifact, since written and committed separately"
+    ],
+    "note": "Both conditions found by this run are now individually resolved (target/ is clean in this repository state; docs/LIMITATIONS.md exists), but this exact run was never re-executed past S10 to confirm S11 opens in one continuous pass -- stated precisely rather than claimed as demonstrated."
+  }
+}

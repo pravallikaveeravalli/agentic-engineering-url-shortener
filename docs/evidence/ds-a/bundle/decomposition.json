@@ -1,0 +1,12 @@
+{
+  "_provenance": "T134 artifact component: decomposition. S5's real, raw model output from attempt 26, verbatim -- docs/evidence/ds-a/run-snapshot-ATTEMPT-26-S7-S8-S9-S10-SUCCEEDED-S11-real-not-ready.md, section 'S5 -- model claude-sonnet-5'.",
+  "tasks": [
+    {"taskId": "task-01-create-endpoint", "requirementIds": ["1a"], "dependsOn": []},
+    {"taskId": "task-02-no-auth", "requirementIds": ["1b"], "dependsOn": ["task-01-create-endpoint"]},
+    {"taskId": "task-03-ignore-params", "requirementIds": ["1c"], "dependsOn": ["task-01-create-endpoint"]},
+    {"taskId": "task-04-return-200", "requirementIds": ["1d"], "dependsOn": ["task-01-create-endpoint"]},
+    {"taskId": "task-05-content-type-header", "requirementIds": ["1e"], "dependsOn": ["task-01-create-endpoint"]},
+    {"taskId": "task-06-json-body-version", "requirementIds": ["1f"], "dependsOn": ["task-01-create-endpoint", "task-04-return-200", "task-05-content-type-header"]},
+    {"taskId": "task-07-cache-control-header", "requirementIds": ["1g"], "dependsOn": ["task-01-create-endpoint"]}
+  ]
+}
