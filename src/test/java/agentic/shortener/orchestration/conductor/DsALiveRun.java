@@ -312,8 +312,112 @@ class DsALiveRun extends PostgresIntegrationTest {
         assertEquals(StageState.AWAITING_APPROVAL, s6State,
                 "expected the run to stop exactly at S6's architecture-approval gate");
 
-        System.out.println("DS-A LIVE RUN: stopped at S6 (architecture approval), as expected. "
-                + "See docs/evidence/ds-a/pending-gate-s6.md for the owner.");
+        // S6 is now a REAL, substantive owner decision -- APPROVED, materialized against a real,
+        // already-committed governance record (docs/governance/gate-decisions/ds-a/
+        // s6-architecture-approved.md). This is NOT the routine-clarification delegation; S6 is
+        // explicitly outside its scope.
+        System.out.println("DS-A LIVE RUN: S6 architecture approved by the owner -- applying the real "
+                + "GateDecision and resuming to build the feature for real.");
+        applyRealGateDecision(runId, connections, clock, gateStore, runStore, "S6", 6,
+                GateClass.ARCHITECTURE_APPROVAL,
+                "docs/governance/gate-decisions/ds-a/s6-architecture-approved.md");
+
+        // ONE advance() call is sufficient: Conductor's own dispatch loop runs S7 (real git-worktree
+        // implementation), then S8/S9 (real fast-tier test run; real docs, concurrently), then S10 (real
+        // policy evaluation), then opens S11's own real RELEASE_READINESS gate -- blocking internally
+        // until no further node is ready, exactly as production would.
+        conductor.advance(runId);
+
+        nodes = runStore.persistedNodes(runId);
+        for (PersistedNode node : nodes) {
+            System.out.println("DS-A LIVE RUN (post-S6): node " + node.nodeKey() + " -> " + node.state());
+        }
+        for (Map.Entry<String, AiResponse> entry : lastResponseByStage.entrySet()) {
+            System.out.println("DS-A LIVE RUN (post-S6): " + entry.getKey() + " actually-used model id: "
+                    + entry.getValue().modelId());
+        }
+        try (var c = connection();
+             var st = c.createStatement();
+             var rs = st.executeQuery("SELECT node_key, from_state, to_state, reason FROM state_transition "
+                     + "WHERE run_id = '" + runId + "' ORDER BY state_transition_id")) {
+            System.out.println("DS-A LIVE RUN (post-S6): full state transition history:");
+            while (rs.next()) {
+                System.out.println("  " + rs.getString("node_key") + ": " + rs.getString("from_state")
+                        + " -> " + rs.getString("to_state") + " (" + rs.getString("reason") + ")");
+            }
+        }
+        writeRunSnapshot(evidenceDir, runId, runStore, gateStore);
+
+        RunState runStateAfterS6 = runStore.run(runId).orElseThrow().state();
+        System.out.println("DS-A LIVE RUN (post-S6): run state=" + runStateAfterS6);
+
+        StageState s7State = runStore.node(runId, "S7.1").orElseThrow().state();
+        System.out.println("DS-A LIVE RUN: S7.1 (real implementation) state=" + s7State);
+        if (s7State != StageState.SUCCEEDED) {
+            fail("S7's real implementation did not succeed (state=" + s7State + ") -- see the run "
+                    + "snapshot and state-transition history above for the real reason (a genuine build "
+                    + "failure, retry exhaustion, or an unexpected patch shape), not something to force "
+                    + "past.");
+        }
+
+        StageState s11State = runStore.node(runId, "S11").orElseThrow().state();
+        assertEquals(RunState.RUNNING, runStateAfterS6, "the run must be RUNNING (paused at S11's gate)");
+        assertEquals(StageState.AWAITING_APPROVAL, s11State,
+                "expected the run to reach, and stop at, S11's own real release-readiness gate");
+
+        Path evidenceDirB = Paths.get("docs/evidence/ds-a");
+        writePendingGateS11Context(evidenceDirB, runId, runStore, gateStore);
+
+        System.out.println("DS-A LIVE RUN: implemented for real, reached S11 (release readiness), "
+                + "AWAITING_APPROVAL. See docs/evidence/ds-a/pending-gate-s11-context.md for the owner.");
+    }
+
+    /** Applies a real, substantive `GateDecision` -- never under the routine-clarification delegation. */
+    private void applyRealGateDecision(UUID runId, ConnectionSource connections, Clock clock,
+                                       GateStore gateStore, JdbcRunStore runStore, String nodeKey,
+                                       int stageNumber, GateClass gateClass, String repositoryRecordPath)
+            throws Exception {
+        String gateId;
+        try (var c = connection();
+             var st = c.createStatement();
+             var rs = st.executeQuery("SELECT gate_id FROM approval_gate WHERE run_id = '" + runId
+                     + "' AND node_key = '" + nodeKey + "'")) {
+            if (!rs.next()) {
+                throw new IllegalStateException("no approval_gate row for " + nodeKey + " on run " + runId);
+            }
+            gateId = rs.getString("gate_id");
+        }
+        GateDecision decision = new GateDecision(runId, gateId, stageNumber, gateClass, GateOutcome.APPROVED,
+                new Actor("human", OWNER_ACTOR), clock.instant(),
+                "The owner reviewed and approved this gate's own real output; see the materialized "
+                        + "governance record for the full reason.",
+                repositoryRecordPath, List.of(), null, null);
+        MaterializationCheck.requireMaterialized(decision);
+        long decisionId = gateStore.recordDecision(decision);
+        GateDecision recorded = gateStore.decisionById(decisionId).orElseThrow();
+        GateOutcomeHandler outcomeHandler = new GateOutcomeHandler(runStore, gateStore, connections);
+        outcomeHandler.apply(runId, nodeKey, recorded);
+    }
+
+    private void writePendingGateS11Context(Path evidenceDir, UUID runId, JdbcRunStore runStore,
+                                            GateStore gateStore) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("# DS-A live run -- S11 release-readiness gate, pending context for the owner\n\n");
+        sb.append("Task T132 (CR-054). `runId`: `").append(runId).append("`.\n\n");
+        sb.append("S7 (real implementation, real git worktree branch), S8 (real fast-tier test run "
+                + "against that branch), S9 (real docs), S10 (real policy evaluation) all ran for real. "
+                + "S11's own deterministic release-readiness engine then produced a real verdict and "
+                + "opened its own gate. Full state transition history and every real AI response are in "
+                + "`docs/evidence/ds-a/run-snapshot.md`.\n\n");
+        sb.append("## Nodes\n\n");
+        for (PersistedNode node : runStore.persistedNodes(runId)) {
+            sb.append("- ").append(node.nodeKey()).append(" -> ").append(node.state()).append('\n');
+        }
+        sb.append("\nThis agent has not reviewed S11's own release-readiness verdict for soundness and "
+                + "does not recommend an outcome -- `ActorAuthority` forbids this agent from deciding any "
+                + "gate. This is a substantive gate, the owner's own to decide.\n");
+        Files.writeString(evidenceDir.resolve("pending-gate-s11-context.md"), sb.toString(),
+                StandardCharsets.UTF_8);
     }
 
     /**
