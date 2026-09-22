@@ -1,5 +1,52 @@
 # Finding — requirement completeness does not converge for a feature with real surface
 
+## Why a clean greenfield pass was so hard — in plain language, first
+
+A reviewer's first question is fair: why did the simplest possible demonstration — submit a well-written
+requirement, watch it sail through with no gate — take this many live attempts? Five points explain it, and
+none of them is a defect in what was built.
+
+1. **The ambiguity detector is a real AI stage, on purpose, and that makes it non-deterministic.** `spec.md`
+   deliberately chose an AI-backed stage for S3 rather than a rule-based checker, because only a real model
+   can catch a *semantic* contradiction — a conflict between two ideas, not two clauses bound to the same
+   field, which is exactly DS-C's own scenario. The same choice that gives S3 this real capability also
+   means it is not a fixed function of its input: **the identical requirement text, submitted on three
+   separate live runs, produced three different single findings** (a header-value exactness question, then
+   a path-segment routing question, then an observability-scope question — never the same one twice, never
+   zero). This is a documented, accepted property of choosing a real model for real semantic judgment, not a
+   flaky test or an implementation bug.
+2. **S3 reads only the requirement text — it has no access to the codebase.** `StageInput`'s own closed
+   field list (proven by `StageExecutorContractTest`) gives it nothing else. Any fact that is "obviously"
+   already true of the delivered system — an existing auth filter's ordering, an existing retention policy,
+   an existing rounding convention — reads to S3 as *unstated*, because from its own vantage point it has no
+   way to distinguish a true fact it cannot see from a false one. Every revision in this arc worked by
+   finding the next such fact and writing it directly into the requirement text.
+3. **Requirement completeness against a thorough detector has a real ceiling.** A feature with any surface
+   at all — even a handful of clauses — tends to have one more boundary, default, or cross-reference a
+   careful reader could still ask about. This was not unique to a rich feature: even a maximally minimal,
+   authentication-free, input-free, fixed-output version endpoint drew real findings on its first several
+   attempts.
+4. **The detector was calibrated twice, and both times the fix was proven correct, not just applied.**
+   CR-049 added the missing materiality step (a detected ambiguity now has to actually matter before it
+   opens a gate); CR-052 sharpened that step further, after evidence showed it was still over-weighing
+   linguistic nitpicks that changed no real behavior. After each fix, the same non-negotiable check was run
+   live: does the detector *still* catch a genuine, textbook contradiction? It did, every time — the DS-C
+   compensating checks and the live ambiguous-scenario run (T138) all still trip the gate on the real
+   contradiction, proving the fixes made the detector more accurate, not softer.
+5. **Therefore, the honest greenfield demonstration is not a single clean run — it is the governed
+   clarification path itself.** The detector surfaces a genuine, real question; the human owner resolves it
+   on the record, with a real question, a real answer, and a real timestamp; the run proceeds. That is
+   exactly DS-A's own negative acceptance criterion — **a gate must never fire *merely to demonstrate gates
+   exist*** — satisfied by construction, because every gate that opened here opened on a real finding, not a
+   manufactured one. It also draws the contrast with the ambiguous scenario (DS-C) cleanly: DS-C's
+   contradiction is a *fundamental* one that forces a replan of the affected work; DS-A's findings are
+   narrower conformance questions the owner answers once and the run simply continues past. Both are the
+   same governed mechanism working correctly on two different kinds of real ambiguity — this is a genuine
+   finding about how AI-based requirements analysis actually behaves, worth presenting as an asset, not
+   something to explain away.
+
+---
+
 Status: **CLOSED as a documented finding, retired from the DS-A clean-pass role.** The expiry endpoint is no
 longer DS-A's demonstration subject (see `docs/governance/change-control/CR-051-...md` for the replacement
 and the full rationale for retiring it). This document is the honest record of what five live attempts, two

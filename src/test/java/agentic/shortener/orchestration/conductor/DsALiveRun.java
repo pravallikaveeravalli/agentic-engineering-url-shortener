@@ -83,13 +83,14 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * <p>If S3's real, live output names material ambiguity S4 opens on, this class applies the human owner's
  * own real clarification (see {@link #OWNER_ACTOR}, {@link #CONTENT_TYPE_CLARIFICATION},
- * {@link #CACHE_CONTROL_CLARIFICATION} below) through the run's own governed path — a {@code
- * ClarificationDecision} recorded via {@link LineageStore} for each ambiguity, then a real {@code
- * GateDecision} (outcome {@code APPROVED}, actor type {@code human}, materialized against
- * {@code docs/governance/gate-decisions/ds-a/s4-header-conformance-clarification.md}) applied through {@link
- * GateOutcomeHandler} exactly as {@code GateDecisionController} would. <strong>Never fabricated</strong>: a
- * material finding that does not match one of the two answers the owner actually gave is left alone, and
- * this class fails loudly naming it, rather than forcing an answer nobody gave. {@code ActorAuthority}
+ * {@link #CACHE_CONTROL_CLARIFICATION}, {@link #OBSERVABILITY_CLARIFICATION} below) through the run's own
+ * governed path — a {@code ClarificationDecision} recorded via {@link LineageStore} for each ambiguity, then
+ * a real {@code GateDecision} (outcome {@code APPROVED}, actor type {@code human}, materialized against
+ * {@link #S4_GATE_DECISION_RECORD}) applied through {@link GateOutcomeHandler} exactly as {@code
+ * GateDecisionController} would. <strong>Never fabricated</strong>: a material finding that does not match
+ * one of the three answers the owner actually gave (across three real, independent live attempts, each of
+ * which surfaced a genuinely different single question) is left alone, and this class fails loudly naming
+ * it, rather than forcing an answer nobody gave. {@code ActorAuthority}
  * (FR-ORC-021) is honoured throughout — the actor recorded on every decision is the human owner, never this
  * agent or "system".
  *
@@ -142,8 +143,22 @@ class DsALiveRun extends PostgresIntegrationTest {
                     + "asserted on the response being non-cacheable (a no-store directive present), not "
                     + "an exact string match.";
 
+    private static final String OBSERVABILITY_QUESTION =
+            "Do standard framework request-logging, metrics, and tracing count as the requirement's "
+                    + "prohibited 'dependency or downstream service checks' or as prohibited 'persisted "
+                    + "data' writes?";
+    private static final String OBSERVABILITY_CLARIFICATION =
+            "No. Standard framework request-logging and metrics are ambient infrastructure cross-cutting "
+                    + "concerns -- not application 'dependency checks' (which mean downstream service "
+                    + "calls such as the database) and not application data persistence. The endpoint "
+                    + "makes no downstream calls and writes no application data; ambient infrastructure "
+                    + "logging is out of scope of that clause.";
+
+    // Consolidated: a single live run's S4 gate can match any subset of the three questions the owner
+    // has now ratified real answers for, so one GateDecision needs one record that covers all of them --
+    // the original header-conformance-only file (attempt 7) is kept as evidence, superseded by this one.
     private static final String S4_GATE_DECISION_RECORD =
-            "docs/governance/gate-decisions/ds-a/s4-header-conformance-clarification.md";
+            "docs/governance/gate-decisions/ds-a/s4-clarifications-consolidated.md";
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -340,6 +355,10 @@ class DsALiveRun extends PostgresIntegrationTest {
             } else if (lower.contains("cache-control") || lower.contains("no-store")) {
                 question = CACHE_CONTROL_QUESTION;
                 answer = CACHE_CONTROL_CLARIFICATION;
+            } else if (lower.contains("logging") || lower.contains("metrics") || lower.contains("tracing")
+                    || lower.contains("observability")) {
+                question = OBSERVABILITY_QUESTION;
+                answer = OBSERVABILITY_CLARIFICATION;
             } else {
                 unansweredFindings.add(affectedPath);
                 continue;

@@ -2,6 +2,10 @@
 
 Task T131 (revised, CR-052). Req: DS-A, FR-ORC-010. Scn: DS-A. ADR: ADR-004.
 
+**Read this first if you're asking "why did this take so many attempts?"**:
+`docs/evidence/ds-a/requirement-completeness-ceiling-finding.md`'s own headline section states the answer
+plainly, in five points, before any of the detail below.
+
 ## Current subject (CR-052) — a genuinely minimal requirement, behavioural surface only
 
 **The expiry endpoint is retired from DS-A's clean-pass demonstration role.** Five live attempts against it
