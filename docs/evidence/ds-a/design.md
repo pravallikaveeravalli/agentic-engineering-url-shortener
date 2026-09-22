@@ -1,10 +1,58 @@
 # DS-A — Greenfield run design
 
-Task T131 (revised, CR-053). Req: DS-A, FR-ORC-010. Scn: DS-A. ADR: ADR-004.
+Task T131 (revised, CR-054). Req: DS-A, FR-ORC-010. Scn: DS-A. ADR: ADR-004.
 
 **Read this first if you're asking "why did this take so many attempts?"**:
 `docs/evidence/ds-a/requirement-completeness-ceiling-finding.md`'s own headline section states the answer
 plainly, in five points, before any of the detail below.
+
+## Current subject (CR-054) — `GET /v1/version`, a genuinely new feature
+
+**The `FixedWindowCounter` test-addition subject (CR-053) is retired from DS-A's role.** It was real,
+decisive evidence for `requirement-completeness-ceiling-finding.md` (kept below, unmodified), but the owner's
+own observation on reflection: DS-A is specifically the *greenfield* scenario — a genuinely **new**
+capability. A test-addition to an existing, unmodified class sits closer to DS-B's own territory (a change
+against existing code); using it for DS-A blurred the very distinction the three scenarios exist to keep
+separate.
+
+> Add a public endpoint `GET /v1/version` that requires no authentication, takes no path or query
+> parameters, and returns HTTP `200` with `Content-Type: application/json`, body
+> `{"version": "<the application build version string>"}`, and header `Cache-Control: no-store`.
+
+**Deliberately less exhaustively pre-specified than the retired `v1/version` wordings below** — real, routine
+ambiguities are expected and resolved through the governed clarification path, under the owner's own standing
+delegation for routine spec-detail answers (`docs/governance/delegations/routine-clarification-delegation.md`),
+rather than pre-answered into the text to manufacture a clean pass. Full rationale, the delegation's own
+scope, and the investigation into a suspected (and not found) "resume re-runs S3" defect:
+`docs/governance/change-control/CR-054-...md`.
+
+### Well-formedness against the four criteria
+
+1. **Complete**, in the sense DS-A's own criteria require: every *architectural* dimension (status code,
+   content type, cache header, auth posture) is stated; the routine spec-detail questions a real requirements
+   review would still ask (exact header-value tolerance, non-GET handling, the version value's exact source)
+   are the expected, real residue any natural-language requirement leaves — resolved at S4, not eliminated
+   from the text by construction.
+2. **Consistent.** No conflict with `HealthController`'s existing liveness/readiness pair (a version
+   identifier is a distinct concept); no conflict with the two-plane architecture (ADR-006).
+3. **Testable.** A single accept criterion once the routine questions are resolved: any `GET /v1/version`
+   request returns `200`, the stated content type, the stated cache directive, and a body naming the real
+   build version.
+4. **Inside approved policy and architecture boundaries.** No new technology; a pure application-plane
+   addition.
+
+Per `spec.md`'s DS-A section, this input MUST proceed through S1→S2→S3→S4 (routine clarifications resolved
+under standing delegation)→S5→S6→S7→S8→S9‖S10→S11→S12, suspending at S6 for the owner's own substantive
+architecture-approval decision.
+
+---
+
+## Retired subject (`FixedWindowCounter` test addition, CR-053) — kept as evidence, no longer DS-A's live subject
+
+The zero-runtime-behaviour test-addition subject and its own well-formedness analysis are preserved below,
+unmodified — the decisive evidence they produced for
+`docs/evidence/ds-a/requirement-completeness-ceiling-finding.md`'s own addendum stands regardless of DS-A's
+current subject.
 
 ## Current subject (CR-053) — a zero-runtime-behaviour test-addition
 
