@@ -72,8 +72,18 @@ class DsALiveRun extends PostgresIntegrationTest {
     private static final String CLI = "claude";
     private static final String MODEL = "claude-sonnet-5";
     private static final Path REPO_ROOT = Paths.get("").toAbsolutePath();
+    // CR-048: revised, fully-specified wording, after the original ("Expose the remaining time-to-expiry
+    // for a short link to its owning creator.") tested genuinely ambiguous against two independent models
+    // (see docs/evidence/ds-a/design.md's own "Revision history").
     private static final String REQUIREMENT =
-            "Expose the remaining time-to-expiry for a short link to its owning creator.";
+            "Add a read-only endpoint GET /v1/links/{code}/expiry that returns, to the authenticated "
+                    + "creator that owns {code} and to no one else, a JSON body {\"code\": <string>, "
+                    + "\"expiresAt\": <ISO-8601 UTC timestamp> | null, \"secondsRemaining\": <integer >= 0> "
+                    + "| null}. For a non-expiring link both expiresAt and secondsRemaining are null; for "
+                    + "an already-expired link secondsRemaining is 0. An unauthenticated caller receives "
+                    + "the same 401 refusal every authenticated endpoint already uses; an authenticated "
+                    + "caller who does not own {code} receives the same 404 response used for an unknown "
+                    + "code.";
 
     private final Map<String, AiResponse> lastResponseByStage = new ConcurrentHashMap<>();
 
