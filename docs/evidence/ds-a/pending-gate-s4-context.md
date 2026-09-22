@@ -1,8 +1,53 @@
 # DS-A live run — pending gate context for the owner
 
-**Run reached S4's `UNRESOLVED_AMBIGUITY` gate, not S6's `ARCHITECTURE_APPROVAL` gate T132 anticipated.**
-This agent cannot decide it — `ActorAuthority` structurally refuses an agent-identified approving actor
-(FR-ORC-021) — and has not attempted to. Full context below.
+**Two attempts, both reaching S4's `UNRESOLVED_AMBIGUITY` gate, not S6's `ARCHITECTURE_APPROVAL` gate T132
+anticipated** — the second attempt used the CR-048-revised, fully-specified wording and still found real
+ambiguity, of a different and more subtle kind. This agent cannot decide either gate — `ActorAuthority`
+structurally refuses an agent-identified approving actor (FR-ORC-021) — and has not attempted to, and has
+not attempted a third wording revision on its own initiative. Full context for both attempts below,
+attempt 3 (the revised wording) first, since it is the current state.
+
+---
+
+## Attempt 3 (CR-048-revised wording) — five NEW, different findings
+
+`runId`: `b9591908-a460-40d8-be15-335ddfb37391`. Requirement submitted (CR-048's revision, in full):
+`docs/evidence/ds-a/design.md`'s own "The input (revised)" section. S1/S2/S3 all genuinely succeeded (real
+`claude-sonnet-5` calls, ~98s); the run is `RUNNING`, not `SAFE_STOP`. S3's real answer, captured in full,
+not truncated: `docs/evidence/ds-a/run-snapshot-ATTEMPT-3-STOPPED-AT-S4-ambiguity-gate-revised-wording.md`.
+
+**Five distinct `MATERIAL_PENDING` findings, none of them a repeat of the six gaps CR-048 already closed**:
+
+1. **`expiresAt`'s value for an EXPIRED link is unstated.** The revised requirement's clause 1c says
+   `secondsRemaining: 0` for an already-expired link, but never says what `expiresAt` itself should contain
+   in that same response (1b and 1d both state it explicitly; 1c does not).
+2. **The exact instant `now == expiresAt` is unassigned.** 1c says "already passed" (strictly past), 1d says
+   "future" (strictly future) — neither claims the boundary instant itself, even though the real,
+   already-delivered `ExpiryPolicy` resolves this exact question ("at `expiresAt` the link is expired") —
+   the requirement text just never says so.
+3. **No stated rounding rule.** "the whole number of seconds between the current time and that timestamp"
+   does not say floor, round, or ceiling; two correct implementations of the same instant could disagree by
+   one second.
+4. **An unbounded forward-reference.** "the same 401 response used by every other authenticated endpoint in
+   the system" names a shape S3 has no way to verify from the text alone — it has no repository access, only
+   the normalized requirement text. Correctly flagged as unbounded from where S3 sits, even though a human
+   implementer would know exactly which response that is.
+5. **A subtle predicate asymmetry.** The accept path (1a) is gated on "the authenticated creator who owns
+   `{code}`" (creator-identity AND ownership, conjoined); the reject path (1f) is gated on ownership alone.
+   Nothing in the text states creator and owner are guaranteed to always be the same principal — a real, if
+   narrow, logical gap between the two conditions as literally written.
+
+**What this suggests, offered and not acted on**: tightening the wording once did not exhaust what a
+genuinely thorough ambiguity-detection pass can find — it found *different*, more granular gaps instead of
+the same ones. That may be a property of language-based specification generally (there is close to always
+one more boundary case, one more rounding rule, one more cross-reference to pin down) rather than a
+correctable defect in this specific wording. This agent has not attempted a third revision, to avoid the
+exact "keep trying until one avoids the gate" pattern T131/T132's own Guard clauses forbid, and because after
+two genuine findings the pattern itself is now the more interesting fact to report.
+
+---
+
+## Attempt 2 (original wording) — for reference
 
 ## What happened, mechanically
 
@@ -59,30 +104,35 @@ ambiguity-detection stage. Both are true at once: the feature is well-formed as 
 describing it, as actually worded, is not fully well-formed as a *specification* — and DS-A's own gate
 (`S4`) exists precisely to catch that distinction, which is what it just did, correctly.
 
-## The decision this agent cannot make
+## The decision this agent cannot make (current, after attempt 3)
 
-1. **Treat this as genuine material ambiguity and answer S4's gate with real clarifying decisions** (unit,
-   non-expiring-link behavior, delivery medium, bounds, non-owner behavior), letting the run continue
-   through S4's own governed clarification path. This is a completely valid outcome — but it means *this*
-   run would demonstrate the clarification/resume path (closer to what DS-C is for), not DS-A's own defining
-   "no artificial gate fires" property.
-2. **Conclude the current wording is not the right DS-A input**, revise it to fold the six identified points
-   directly into the requirement text (removing the real ambiguity rather than routing around it with a
-   trivially easy substitute — consistent with T131/T132's own Guard clause against "a trivially easy input
-   chosen to guarantee a clean run"), and re-run T131 (re-verify against the four criteria) then T132 with
-   the revised wording.
-3. Some other decision.
+1. **Answer S4's gate with real clarifying decisions for the five attempt-3 findings** (expired-link
+   `expiresAt` value, the equality-instant boundary, the rounding rule, inlining the real 401 shape instead
+   of referencing it, and stating explicitly whether creator and owner are always the same principal), and
+   let the run continue through S4's own governed clarification path. Valid, but means this run demonstrates
+   the clarification/resume path, not DS-A's own defining "no artificial gate fires" property.
+2. **Revise the wording a third time**, folding all five points in directly (e.g. stating `expiresAt` for an
+   expired link explicitly, defining the boundary instant explicitly per `ExpiryPolicy`'s own existing rule,
+   naming a rounding rule, inlining the real 401 body instead of a cross-reference, and stating creator and
+   owner are the same principal in this system today) — and re-run. Given the pattern across two attempts
+   (tightening finds new, different gaps rather than exhausting them), a third attempt may well find a sixth
+   round of granular findings; that is disclosed here as a real risk of this option, not hidden.
+3. **Accept that some genuine irreducible ambiguity may remain in ANY sufficiently precise natural-language
+   requirement**, and decide DS-A's own "no gate fires" demonstration needs either a different subject
+   entirely or an explicit, disclosed accommodation (e.g., the owner pre-clarifies once, on the record, and
+   that clarification is folded into the requirement text before the NEXT run rather than found live).
+4. Some other decision.
 
-This agent's own judgment, offered for the record and not acted on: **option 2 is the more faithful path to
-what DS-A is supposed to demonstrate** — the issue found is genuinely in the *wording*, corroborated by two
-independent models, and revising a requirement's wording in direct response to real ambiguity-detection
-feedback is what an actual SDLC does before implementation, not a rigged shortcut. But this is the owner's
-call, not this agent's, and no action has been taken toward either option.
+This agent's own judgment, offered for the record and not acted on: after two genuine, substantively
+different rounds of findings from a careful, honest wording, **the pattern itself (attempt 3 found new gaps,
+not repeats) is worth weighing alongside any single option above** — it suggests a third revision is not
+guaranteed to close this out either. No preference recorded beyond that; this is squarely the owner's call.
 
 ## What was NOT done
 
-- No gate decision was submitted for S4 or any other gate.
-- No re-run was attempted after this one to try a different wording — that would be exactly the
-  "keep trying inputs until one avoids the gate" pattern T131/T132's own Guard clauses forbid.
-- The driver was improved (captures full response content for future runs) but not re-run again this turn,
-  to conserve Claude subscription quota per the owner's own reminder.
+- No gate decision was submitted for S4, or any other gate, in either attempt.
+- No third wording revision was attempted on this agent's own initiative — that would be exactly the
+  "keep trying inputs until one avoids the gate" pattern T131/T132's own Guard clauses forbid, now doubly
+  true after a genuine, careful revision still found real (if more granular) gaps.
+- The driver's content-capture improvement (built after attempt 2) was exercised for real in attempt 3 — the
+  full S2/S3 response content above is genuine, not reconstructed.
