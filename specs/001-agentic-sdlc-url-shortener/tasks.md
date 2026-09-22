@@ -1116,6 +1116,29 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
     `COMPLETED`** — S11 not yet reached; CR-060/064/065 are all now proven reliable across multiple
     independent real dispatches, and the remaining blocker is a new, undiagnosed S7 JSON-parsing failure
     class, not yet a repeat of anything already fixed.
+  - **Progress (2026-09-22, CR-066)**: `ImplementationAiExecutor` (S7) hardened — robust JSON-candidate
+    extraction (a fenced block anywhere, bare JSON, or JSON surrounded by stray prose with no fence) plus one
+    bounded, internal self-correction retry on a genuine parse failure, safe because it happens strictly
+    before any git effect (`BranchApplier.apply`) occurs. `DocumentationAiExecutor` (S9) hardened —
+    `executedBehaviors` now printed as its own explicit, bulleted, verbatim-only allow-list, separate from
+    the raw results JSON's own noise; the drift guard itself untouched. **Attempt 26: the first fully clean
+    S1 → S10 live run in this task's entire history** — every stage succeeded, including S7, S8, and S9 on
+    the first try. **S11 itself then correctly, deterministically failed** (not live-AI variance):
+    `ReleaseReadinessEngine`'s own real evaluator found two genuine blocking conditions — stale demonstration-
+    harness residue in this repo's own git-ignored `target/surefire-reports/` (self-inflicted by this
+    engagement's own many direct `-Dtest=DsALiveRun`/`-Dtest=DsCClarificationRun` invocations across turns;
+    diagnosed and fixed, a safe `target/` clean) and `docs/LIMITATIONS.md` (**T147**) genuinely not existing
+    yet — a real, large, separately-scoped task (cross-referenced against every ADR's own Risks section and
+    every DF entry), deliberately not rushed here. **Attempt 27** (to verify the `target/` fix) reached S3
+    before failing on a THIRD, different, already-documented real defect (attempt 18's own finding:
+    `qualityChecksPerformed` omitted on a `NOT_MATERIAL` record) — investigated, not patched:
+    `AmbiguityRecord`'s own javadoc states the dual-field requirement is deliberate domain design (T082), not
+    a wiring gap, and touching it was out of this turn's own explicit scope (S7/S9 only). **Stopped at 2 of
+    the capped 3 attempts** — condition 8 (T147) is deterministic, not live-AI variance, so a third attempt
+    could not have reached S11 either. Full finding, four disclosed options, not decided here:
+    `docs/evidence/ds-a/attempts-26-27-finding.md`. **Still not `COMPLETED`** — S10 is now reliably reachable
+    with real, tested, live-AI-authored code; S11's own gate itself has never yet been opened, blocked on
+    T147's own real, separate completion.
 - [ ] T133 [P] [US3] DS-A late-ambiguity escalation — `docs/evidence/ds-a/late-ambiguity.json`
   - **Req**: **DS-A**, FR-ORC-011, EC-021 · **Scn**: **DS-A** · **ADR**: ADR-009 · **Pre**: T132, T096
   - **Deps**: T096, T132 · **Par**: yes · **Artifact**: material ambiguity emerging mid-run suspends **only the affected path**; governed clarification and impact analysis follow; resumption from the correct state after explicit approval
