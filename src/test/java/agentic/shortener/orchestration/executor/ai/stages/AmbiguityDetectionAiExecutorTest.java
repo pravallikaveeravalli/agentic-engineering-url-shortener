@@ -335,6 +335,38 @@ class AmbiguityDetectionAiExecutorTest {
     }
 
     @Test
+    @DisplayName("CR-067: the prompt states qualityChecksPerformed is required on EVERY element, and that "
+            + "it is never redundant with noClarificationReason")
+    void promptStatesQualityChecksPerformedIsUnconditional() {
+        java.util.concurrent.atomic.AtomicReference<String> capturedPrompt = new java.util.concurrent.atomic
+                .AtomicReference<>();
+        StageAiProvider provider = prompt -> {
+            capturedPrompt.set(prompt);
+            return new AiResponse("claude-test-fixture", "[{"
+                    + "\"ambiguityClass\":\"UNDEFINED_TERM\","
+                    + "\"affectedPath\":\"the term 'current version' in requirement 1e is undefined\","
+                    + "\"resolutionState\":\"NOT_MATERIAL\","
+                    + "\"qualityChecksPerformed\":\"checked all other requirements for this dimension\","
+                    + "\"noClarificationReason\":\"no obligation constrains it, uncontested default applies\""
+                    + "}]");
+        };
+
+        StageOutcome outcome = new AmbiguityDetectionAiExecutor(provider).execute(inputWith("[...]"));
+
+        assertTrue(outcome.succeeded());
+        String prompt = capturedPrompt.get();
+        assertTrue(prompt.contains("REQUIRED ON EVERY ELEMENT"),
+                "the prompt must state, explicitly and unconditionally, that qualityChecksPerformed is "
+                        + "required on every element regardless of resolutionState");
+        assertTrue(prompt.toLowerCase().contains("never redundant") || prompt.toLowerCase()
+                        .contains("two different fields") || prompt.toLowerCase().contains("do not merge"),
+                "the prompt must explicitly warn against treating qualityChecksPerformed and "
+                        + "noClarificationReason as interchangeable -- the real, live defect (attempts 18, "
+                        + "27) was the model treating a substantive noClarificationReason as sufficient on "
+                        + "its own");
+    }
+
+    @Test
     @DisplayName("NEGATIVE: resolutionState=RESOLVED from the detector is refused — only S4 may resolve")
     void detectorClaimingResolvedIsRefused() {
         StageAiProvider provider = fixedResponse("[{"

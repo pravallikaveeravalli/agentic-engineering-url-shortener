@@ -31,6 +31,20 @@ import java.util.UUID;
  * the real risk, and it is indistinguishable from "nothing to find" unless a substantive
  * {@code no_clarification_reason} is recorded and readable — which is why this class requires the model to
  * ALWAYS answer with at least one record, never an empty result standing in for "all clear".
+ *
+ * <h2>CR-067: {@code qualityChecksPerformed} is required unconditionally — this is prompt hardening, never a
+ * relaxed guard</h2>
+ *
+ * <p>Two real, live, independent occurrences (docs/evidence/ds-a's own attempts 18 and 27) showed the model
+ * omitting {@code qualityChecksPerformed} on a {@code NOT_MATERIAL} record, apparently treating its own
+ * substantive {@code noClarificationReason} as sufficient on its own. {@link AmbiguityRecord}'s own
+ * constructor requires the field unconditionally BY DESIGN (T082's own domain invariant — the field is what
+ * lets a reviewer tell "nothing was checked" from "checked and found nothing," a distinction that matters for
+ * a {@code MATERIAL_PENDING} finding as much as a {@code NOT_MATERIAL} one), and that requirement is NOT
+ * relaxed here. The fix is entirely on the prompt side: {@link #buildPrompt} now states explicitly that the
+ * two fields are never redundant with each other, gives a worked example showing both present and genuinely
+ * different for the same element, and repeats "required on every element, no exception" at the point the
+ * field is first named — never trusting a single mention buried among several other field descriptions.
  */
 public final class AmbiguityDetectionAiExecutor implements StageExecutor {
 
@@ -104,12 +118,30 @@ public final class AmbiguityDetectionAiExecutor implements StageExecutor {
                 + "CONTRADICTORY_BOUNDS|SEMANTIC_CONTRADICTION, \"affectedPath\": a SUBSTANTIVE description "
                 + "(at least one full sentence, not a bare field reference like \"R1.statement\") of "
                 + "exactly which requirement(s) or clause(s) are involved and why, \"resolutionState\": "
-                + "\"MATERIAL_PENDING\" "
-                + "or \"NOT_MATERIAL\" per the predicate above, \"qualityChecksPerformed\": substantive "
-                + "string, \"noClarificationReason\": substantive string stating SPECIFICALLY which "
-                + "existing approved artifact already fixes the answer, or why every conformant choice "
-                + "satisfies every stated obligation equally — REQUIRED when resolutionState is "
-                + "NOT_MATERIAL, omitted otherwise}.\n\nNormalized requirements:\n" + requirements;
+                + "\"MATERIAL_PENDING\" or \"NOT_MATERIAL\" per the predicate above, "
+                + "\"qualityChecksPerformed\": substantive string — REQUIRED ON EVERY ELEMENT, regardless "
+                + "of resolutionState, with NO exception, \"noClarificationReason\": substantive string "
+                + "stating SPECIFICALLY which existing approved artifact already fixes the answer, or why "
+                + "every conformant choice satisfies every stated obligation equally — REQUIRED when "
+                + "resolutionState is NOT_MATERIAL, omitted otherwise}.\n\n"
+                + "CR-067: qualityChecksPerformed and noClarificationReason are TWO DIFFERENT fields with "
+                + "two different jobs, and a NOT_MATERIAL element ALWAYS carries BOTH, never one standing "
+                + "in for the other. qualityChecksPerformed answers \"what did I actually look at or "
+                + "compare to reach this classification\" (e.g. which other requirements you cross-checked, "
+                + "which existing artifact you consulted) — it is the proof that a check happened at all, "
+                + "for EVERY element, MATERIAL_PENDING or NOT_MATERIAL alike. noClarificationReason answers "
+                + "a narrower, separate question that only applies to NOT_MATERIAL: \"specifically why does "
+                + "no behavioural fork exist.\" Do not merge them, and do not omit qualityChecksPerformed "
+                + "because noClarificationReason already reads as substantive — they are never redundant "
+                + "with each other, and an element missing qualityChecksPerformed is refused outright, no "
+                + "matter how substantive its own noClarificationReason is. Worked example for a "
+                + "NOT_MATERIAL element, both fields present and genuinely different: "
+                + "{\"qualityChecksPerformed\": \"Checked all six normalized requirements for any other "
+                + "clause governing this dimension; checked whether a framework-standard default already "
+                + "settles it.\", \"noClarificationReason\": \"No stated obligation constrains this "
+                + "dimension, and the framework's own standard behaviour for an unaddressed case is "
+                + "uncontested, so every conformant choice satisfies every stated requirement equally.\"}."
+                + "\n\nNormalized requirements:\n" + requirements;
     }
 
     private static List<ProducedArtifact> parse(AiResponse response) {
