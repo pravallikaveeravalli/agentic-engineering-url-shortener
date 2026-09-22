@@ -1049,6 +1049,19 @@ answer the `quickstart.md` §5 reconstruction questions from artifacts alone.
     here; the owner's own S6 and S11 decisions are still needed before `docs/evidence/ds-a/run.json` can be
     written as a true terminal record. Left unchecked honestly rather than marked done against a different
     outcome than its own Artifact field states.
+  - **Progress (2026-09-22, continued)**: the owner formally approved S6 (`docs/governance/gate-decisions/
+    ds-a/s6-architecture-approved.md`); the run resumed for real and reached **S7 — the first live dispatch
+    of S7 anywhere in this codebase**, with a real git-worktree branch, a real AI-authored diff, a real
+    `git apply` + build check. **Two independent attempts (14, 15) both hit the identical failure class**:
+    `git apply` refused the diff (`corrupt patch`), because `ImplementationAiExecutor`'s own "no tool use, no
+    file reads" design cannot give the model real line numbers/context for an EXISTING file it has never
+    seen — confirmed directly by reading both real diffs (fabricated hunk headers: `@@ -1,7 +1,12 @@` for a
+    `pom.xml` block nowhere near line 1; `@@ -1,5 +1,26 @@` reused for two different `openapi.yaml` hunks).
+    New-file creation (`VersionController.java`) was well-formed both times — the gap is specific to
+    modifying files that already exist. Full finding, decisively evidenced, options disclosed and NOT
+    decided here: `docs/evidence/ds-a/s7-existing-file-diff-finding.md`. No third attempt was made — two
+    identical-class failures is decisive, not a roll worth repeating. `RunState` is `SAFE_STOP`
+    (`GitWorktreeBranchApplier`'s own cleanup left no stray branch either time). S8 onward not reached.
 - [ ] T133 [P] [US3] DS-A late-ambiguity escalation — `docs/evidence/ds-a/late-ambiguity.json`
   - **Req**: **DS-A**, FR-ORC-011, EC-021 · **Scn**: **DS-A** · **ADR**: ADR-009 · **Pre**: T132, T096
   - **Deps**: T096, T132 · **Par**: yes · **Artifact**: material ambiguity emerging mid-run suspends **only the affected path**; governed clarification and impact analysis follow; resumption from the correct state after explicit approval
