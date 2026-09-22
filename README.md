@@ -5,12 +5,16 @@ A URL shortener (**application plane**) with an embedded, governed AI-SDLC orche
 The application plane is an ordinary URL shortener a client calls over HTTP. The control plane is the
 system that built it: a twelve-stage, gated, policy-enforced workflow engine that took a requirement from
 intake through implementation, testing, documentation, and a mechanically-evaluated release-readiness
-determination — six of its twelve stages backed by a real, live AI call (Gemini, via the `agy` CLI), the
-rest deterministic and repeatable by design.
+determination — six of its twelve stages backed by a real, live AI call (the Claude Code CLI, model
+`claude-sonnet-5`), the rest deterministic and repeatable by design.
 
 This README describes what is actually built and running today. For step-by-step setup and run
 instructions, see [`specs/001-agentic-sdlc-url-shortener/quickstart.md`](specs/001-agentic-sdlc-url-shortener/quickstart.md)
-— this file does not duplicate those commands.
+— this file does not duplicate those commands. For the plan/rationale, the three demonstration scenarios,
+risks, assumptions, and validation results as one connected narrative, see
+[`docs/FINAL-SUMMARY.md`](docs/FINAL-SUMMARY.md) (a human synthesis) or
+[`docs/ENGINEERING-SUMMARY.md`](docs/ENGINEERING-SUMMARY.md) (mechanically assembled from recorded evidence,
+one claim per file it traces to).
 
 ## Architecture
 
@@ -36,16 +40,26 @@ S8 testing → S9 documentation → S10 compliance evaluation → S11 release-re
 assembly. Five stages are deterministic engines (S1, S8, S10, S11, S12); six are AI-capable (S2, S3, S5,
 S6, S7, S9), each behind the same `StageExecutor` interface — an executor cannot tell whether it is talking
 to a real model or a scripted fake (`FR-ORC-030`), so the reliability, retry, and compensation machinery
-proven against injected fakes still holds for the real path. The live AI transport is the Gemini CLI
-(`agy`), per [ADR-004 Amendment 03](docs/governance/adr/ADR-004-amendment-03-gemini-cli-for-live-demonstration-runs.md);
-`docs/evidence/ai-demos/` carries the captured evidence for each of the six stages' live demonstration runs.
+proven against injected fakes still holds for the real path. **The live AI transport is the Claude Code
+CLI**, model `claude-sonnet-5` (`OrchestrationConfiguration`'s `stageAiProvider` bean;
+`application.yml`'s `shortener.claude-cli.pinned-model`), per
+[ADR-004 Amendment 04](docs/governance/adr/ADR-004-amendment-04-claude-cli-nesting-corrected.md), which
+supersedes Amendment 03's own transport choice (a misdiagnosed nesting-guard finding, corrected in that
+record) — every scenario run (`docs/evidence/ds-a/`, `docs/evidence/ds-b/`, `docs/evidence/ds-c/`) is on
+Claude. The Gemini CLI adapter (`GeminiCliStageAiProvider`) is retained, not removed: it remains a real,
+tested, second `StageAiProvider` implementation, proven by its own six unit-stage demonstrations
+(`docs/evidence/ai-demos/`, `T073a`-`T073f`, one real live call per AI-capable stage) — evidence that the
+seam survives a transport swap to a different vendor's CLI with zero change to any executor, not evidence
+of a scenario run (none of the three demonstration scenarios ran on Gemini).
 
 ## What is built
 
 - **Application plane**: create a short link with validation, abuse guarding, and idempotency; redirect
-  with expiry enforcement; per-creator and per-code rate limiting; analytics recording durable against a
-  redirect that must never fail because analytics did; creator provisioning via a local operator script
-  (never an HTTP endpoint — see Threat model below).
+  with expiry enforcement; three independent rate-limit tiers — per-creator creation (PVT-012), per-code
+  redirect (PVT-013), and per-creator aggregate redirect across every link a creator owns (PVT-014,
+  `AggregateRedirectLimiter`, T136a) — all enforced; analytics recording durable against a redirect that
+  must never fail because analytics did; creator provisioning via a local operator script (never an HTTP
+  endpoint — see Threat model below).
 - **Control plane**: the full twelve-stage pipeline; bounded retry with exponential backoff and a
   two-signature retry ruling; rollback/compensation for reversible and irreversible effects; safe-stop and
   resumption across an orchestrator-process restart, proven end to end; store-restart resumption is built
@@ -60,8 +74,9 @@ proven against injected fakes still holds for the real path. The live AI transpo
 
 Every omission below is a **recorded decision**, not a silent gap:
 
-- **`docs/delivery/baseline-omissions.md`** — scheduled omissions with a named closing run. Currently one:
-  the per-creator-aggregate redirect rate-limit tier (PVT-014), deferred to the brownfield scenario.
+- **`docs/delivery/baseline-omissions.md`** — scheduled omissions with a named closing run. The one entry
+  it ever carried — the per-creator-aggregate redirect rate-limit tier (PVT-014) — is **closed**: built and
+  enforced, see "What is built" above and the Threat model section below.
 - **`docs/delivery/backlog.md`** — indefinite deferrals: a run-level retry circuit breaker, expiry
   notification (email/webhook), an SDK-based AI transport (a CLI subprocess is what is built), analytics
   partitioning, artifact-level consumption tracking, a full-stack Compose profile, and analytics beyond a
@@ -90,14 +105,17 @@ in the demonstration and in a real deployment alike. Concretely:
 
 ### The noisy-neighbour throttling trade-off
 
-The redirect path is rate-limited in tiers: per-code (`PVT-013`, 600/min) and — once the deferred
-per-creator-aggregate tier lands — a per-creator aggregate (`PVT-014`, 3,000/min) meant to catch
-many links each individually under the per-code limit from collectively soaking capacity. **Accepted
-trade-off**: followers of a popular creator's links may be throttled through no fault of their own, because
-no single one of those links exceeded its own limit. This is deliberate — service protection is chosen over
-guaranteeing availability to any one tenant. As shipped today, only the per-code tier is enforced; the
-aggregate tier's absence is itself asserted by a dedicated test
-(`RateLimiterTest.theAggregateTierIsNotPartiallyPresent`) rather than left an unstated gap.
+The redirect path is rate-limited in two independent tiers, both enforced: per-code (`PVT-013`, 600/min)
+and per-creator aggregate (`PVT-014`, 3,000/min, `AggregateRedirectLimiter`, T136a) — the aggregate tier
+catches many links, each individually under the per-code limit, from collectively soaking capacity.
+**Accepted trade-off**: followers of a popular creator's links may be throttled through no fault of their
+own, because no single one of those links exceeded its own limit. This is deliberate — service protection
+is chosen over guaranteeing availability to any one tenant. The aggregate tier's own key (the owning
+creator) is necessarily known to `AggregateRedirectLimiter.check()`, but never reaches a throttled
+response: `RateLimitDecision` (what the controller actually returns) carries no field of that type, proven
+by reflection (`RateLimiterTest.aggregateTierDecisionCannotIdentifyTheCreator`) and at the HTTP level
+(`RateLimitIT.aggregateTrafficIsThrottledAfterT136a`) — built directly rather than by a live AI dispatch
+through the orchestrator, disclosed honestly in `docs/evidence/ds-b/t136a-built-directly.md`.
 
 ## Governance
 
