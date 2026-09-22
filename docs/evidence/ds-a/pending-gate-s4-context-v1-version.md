@@ -1,5 +1,34 @@
 # DS-A live run, minimal `/v1/version` subject (CR-051/CR-052) — pending gate context for the owner
 
+## Attempt 10 (owner's three ratified answers now wired in) — three MORE new, unanswered findings
+
+The owner ratified a real answer to attempt 9's observability question (standard framework request
+logging/metrics/tracing are ambient infrastructure, not the requirement's "dependency checks" or "persisted
+data") alongside the two already-ratified header-conformance answers, and `DsALiveRun` was extended to
+recognize all three. `runId` `cdadfede-4da1-4847-baeb-5feda323bcf2`
+(`run-snapshot-ATTEMPT-10-STOPPED-AT-S4-new-auth-and-code-boundary-findings.md`). S1–S3 succeeded; one
+finding (a combined Content-Type/Cache-Control exactness question) matched and was resolved through the
+governed path. **Three more findings, all genuinely new, none matching any of the three ratified answers,**
+stopped the run before any `GateDecision` was recorded:
+
+1. **"Publicly accessible" is undefined** — no-auth-check within an already-public service, or reachable
+   from outside the deployment's own network perimeter (a gateway/ingress routing question)?
+2. **Auth-exemption scope** — is the endpoint fully exempted from any system-wide auth middleware (so even a
+   malformed/expired credential still short-circuits to `200`), or merely optional on this route while a
+   shared middleware layer still validates any credential that IS present (so a malformed one could still
+   produce `401` before the handler runs)?
+3. **"The endpoint's own implementation code" boundary** — must the version literal live in the same source
+   file as the route handler, or does a named constant in a separate, imported module also satisfy "encoded
+   directly in the endpoint's own implementation"?
+
+**This is the fourth distinct live attempt (of five since CR-052's sharpening) to surface a question the
+owner has not answered** — a further, real, live data point for exactly the pattern
+`requirement-completeness-ceiling-finding.md`'s own headline narrative names: the identical requirement
+text does not converge to the same residual question twice. Per the same standing discipline as every prior
+stop, this agent did **not** attempt an eleventh live call hoping for a run that matches only the
+already-ratified answers — that is the retry-loop this project's own Guard clauses forbid. No `GateDecision`
+was recorded on this run.
+
 ## Attempts 8 and 9 (applying the owner's real S4 clarification) — real non-determinism, one new unanswered finding, no gate decision recorded
 
 The owner answered attempt 7's two findings (Content-Type, Cache-Control header-value exactness) directly,
