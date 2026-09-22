@@ -59,7 +59,7 @@ class RunSubmissionControllerTest {
                 (java.util.function.Function<Integer, StageExecutor>) stageNumber -> {
                     throw new IllegalStateException("no executor should ever be reached in this test");
                 },
-                FanOutPlanner.singleChild(), clock, pool);
+                FanOutPlanner.singleChild(), clock, pool, paths -> java.util.Map.of());
 
         RunSubmissionController controller = new RunSubmissionController(conductor, inspectionQuery, pool);
 

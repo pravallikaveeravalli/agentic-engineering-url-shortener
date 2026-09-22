@@ -245,7 +245,8 @@ class DsALiveRun extends PostgresIntegrationTest {
 
         Conductor conductor = new Conductor(runStore, gateStore, gateRequestPresenter, artifactWriteGuard,
                 auditWriter, StageTelemetry.disabled(), safeStopHandler, retryPolicy, executors,
-                FanOutPlanner.singleChild(), clock, Executors.newFixedThreadPool(4));
+                FanOutPlanner.singleChild(), clock, Executors.newFixedThreadPool(4),
+                new RepoExistingFileReader(REPO_ROOT));
 
         System.out.println("DS-A LIVE RUN: submitting requirement: " + REQUIREMENT);
         UUID runId = conductor.submit(StageTemplate.standard(), "policy-set-1.1.0", REQUIREMENT);

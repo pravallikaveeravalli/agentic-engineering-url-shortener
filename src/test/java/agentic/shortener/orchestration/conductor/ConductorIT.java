@@ -103,7 +103,7 @@ class ConductorIT extends PostgresIntegrationTest {
         Conductor conductor = new Conductor(runStore, gateStore, gateRequestPresenter(), artifactWriteGuard,
                 auditWriter, StageTelemetry.disabled(), safeStopHandler(), retryPolicy(),
                 stubExecutors(notMaterialAmbiguity(), unusedBarrier1, unusedBarrier2),
-                FanOutPlanner.singleChild(), clock, dispatchPool);
+                FanOutPlanner.singleChild(), clock, dispatchPool, paths -> Map.of());
 
         UUID runId = conductor.submit(StageTemplate.standard(), "policy-set-1.1.0",
                 "a requirement whose submission alone must not drive anything");
@@ -128,7 +128,7 @@ class ConductorIT extends PostgresIntegrationTest {
                 auditWriter, StageTelemetry.disabled(), safeStopHandler(), retryPolicy(),
                 stubExecutors(notMaterialAmbiguity(), s9s10Barrier, s7ChildrenBarrier),
                 (runId, parentKey, artifacts) -> List.of(parentKey + ".1", parentKey + ".2"),
-                clock, dispatchPool);
+                clock, dispatchPool, paths -> Map.of());
 
         UUID runId = conductor.submit(StageTemplate.standard(), "policy-set-1.1.0",
                 "a genuinely well-formed test requirement");
@@ -169,7 +169,7 @@ class ConductorIT extends PostgresIntegrationTest {
         Conductor conductor = new Conductor(runStore, gateStore, gateRequestPresenter(), artifactWriteGuard,
                 auditWriter, StageTelemetry.disabled(), safeStopHandler(), retryPolicy(),
                 stubExecutors(materialAmbiguity(), unusedBarrier1, unusedBarrier2),
-                FanOutPlanner.singleChild(), clock, dispatchPool);
+                FanOutPlanner.singleChild(), clock, dispatchPool, paths -> Map.of());
 
         UUID runId = conductor.submit(StageTemplate.standard(), "policy-set-1.1.0",
                 "a requirement whose ambiguity check reports MATERIAL_PENDING");

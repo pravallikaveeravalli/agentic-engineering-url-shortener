@@ -107,7 +107,8 @@ class ArtifactAliasingIT extends PostgresIntegrationTest {
 
         Conductor conductor = new Conductor(runStore, gateStore, gateRequestPresenter, artifactWriteGuard,
                 auditWriter, StageTelemetry.disabled(), safeStopHandler, retryPolicy, executors,
-                FanOutPlanner.singleChild(), clock, Executors.newFixedThreadPool(2));
+                FanOutPlanner.singleChild(), clock, Executors.newFixedThreadPool(2),
+                paths -> java.util.Map.of());
 
         UUID runId = conductor.submit(StageTemplate.standard(), "policy-set-1.1.0", "a test requirement");
         conductor.advance(runId);

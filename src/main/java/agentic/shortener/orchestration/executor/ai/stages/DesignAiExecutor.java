@@ -69,7 +69,15 @@ public final class DesignAiExecutor implements StageExecutor {
                 + "impacted tests, documentation, regression risks, and rollout/rollback considerations. "
                 + "Every one of the seven MUST be substantive if you include the analysis at all — never "
                 + "omit one silently.\n\n"
+                + "Separately, list every EXISTING repository file this design requires the implementation "
+                + "stage to MODIFY (not create) under \"existingFilesToModify\": an array of "
+                + "repository-relative paths (e.g. \"pom.xml\", "
+                + "\"specs/001-agentic-sdlc-url-shortener/contracts/openapi.yaml\"). The implementation "
+                + "stage cannot see any file's real content on its own; this list is how the orchestration "
+                + "knows which files to show it. Omit or leave empty for a purely new-file change — never "
+                + "list a file this design only creates, only one it requires editing in place.\n\n"
                 + "Respond with ONLY JSON, no prose: {\"design\": string, \"contractImpact\": string, "
+                + "\"existingFilesToModify\": [string, ...], "
                 + "\"impactAnalysis\": {\"impactedComponents\": string, \"impactedInterfaces\": string, "
                 + "\"impactedDataFlows\": string, \"impactedTests\": string, \"documentation\": string, "
                 + "\"regressionRisks\": string, \"rolloutRollback\": string} OR omit \"impactAnalysis\" "
@@ -88,6 +96,19 @@ public final class DesignAiExecutor implements StageExecutor {
         ObjectNode out = JSON.createObjectNode();
         out.put("design", design);
         out.put("contractImpact", contractImpact);
+
+        // Passed through verbatim so S7 (via Conductor's own pre-fetch) knows which real files to read --
+        // an absent or empty list means a purely new-file change, the same as omitting the field entirely.
+        com.fasterxml.jackson.databind.node.ArrayNode existingFiles = JSON.createArrayNode();
+        JsonNode namedPaths = root.get("existingFilesToModify");
+        if (namedPaths != null && namedPaths.isArray()) {
+            for (JsonNode path : namedPaths) {
+                if (path.isTextual() && !path.asText().isBlank()) {
+                    existingFiles.add(path.asText());
+                }
+            }
+        }
+        out.set("existingFilesToModify", existingFiles);
 
         if (root.has("impactAnalysis") && !root.get("impactAnalysis").isNull()) {
             JsonNode ia = root.get("impactAnalysis");

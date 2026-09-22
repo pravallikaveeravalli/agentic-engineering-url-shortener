@@ -4,8 +4,10 @@ import agentic.shortener.audit.AuditWriter;
 import agentic.shortener.audit.telemetry.StageTelemetry;
 import agentic.shortener.orchestration.api.RunInspectionQuery;
 import agentic.shortener.orchestration.conductor.Conductor;
+import agentic.shortener.orchestration.conductor.ExistingFileReader;
 import agentic.shortener.orchestration.conductor.FanOutPlanner;
 import agentic.shortener.orchestration.conductor.GitWorktreeBranchApplier;
+import agentic.shortener.orchestration.conductor.RepoExistingFileReader;
 import agentic.shortener.orchestration.conductor.ScriptTestSuiteRunner;
 import agentic.shortener.orchestration.executor.StageExecutor;
 import agentic.shortener.orchestration.executor.ai.ClaudeCodeCliStageAiProvider;
@@ -137,6 +139,13 @@ public class OrchestrationConfiguration {
         return new GitWorktreeBranchApplier(repoRoot, "main");
     }
 
+    /** S7's existing-file fix: reads real content for whatever files S6's design names, so the
+     * orchestration -- never the executor -- can inject it into S7's own {@code StageInput}. */
+    @Bean
+    public ExistingFileReader existingFileReader(Path repoRoot) {
+        return new RepoExistingFileReader(repoRoot);
+    }
+
     @Bean
     public ImplementationAiExecutor implementationAiExecutor(StageAiProvider provider,
             BranchApplier branchApplier) {
@@ -233,10 +242,10 @@ public class OrchestrationConfiguration {
             GateRequestPresenter gateRequestPresenter, ArtifactWriteGuard artifactWriteGuard,
             AuditWriter auditWriter, StageTelemetry telemetry, SafeStopHandler safeStopHandler,
             RetryPolicy retryPolicy, Function<Integer, StageExecutor> executorsByStageNumber, Clock clock,
-            ExecutorService conductorDispatchPool) {
+            ExecutorService conductorDispatchPool, ExistingFileReader existingFileReader) {
         return new Conductor(runStore, gateStore, gateRequestPresenter, artifactWriteGuard, auditWriter,
                 telemetry, safeStopHandler, retryPolicy, executorsByStageNumber, FanOutPlanner.singleChild(),
-                clock, conductorDispatchPool);
+                clock, conductorDispatchPool, existingFileReader);
     }
 
     /** T082a: {@code RunSubmissionController} fires {@link Conductor#advance} here rather than on the

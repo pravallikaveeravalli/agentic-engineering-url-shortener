@@ -133,4 +133,54 @@ class ImplementationAiExecutorTest {
         assertFalse(outcome.succeeded());
         assertEquals(FailureCategory.UNAVAILABLE, outcome.failure().category());
     }
+
+    @Test
+    @DisplayName("S7 existing-file fix: pre-fetched existing-file content, when present, reaches the prompt "
+            + "byte-accurately")
+    void existingFileContentIsIncludedInPromptWhenPresent() {
+        java.util.concurrent.atomic.AtomicReference<String> capturedPrompt = new java.util.concurrent.atomic
+                .AtomicReference<>();
+        StageAiProvider provider = prompt -> {
+            capturedPrompt.set(prompt);
+            return new AiResponse("claude-test-fixture", VALID_DIFF);
+        };
+        BranchApplier applier = (taskId, patch) ->
+                new BranchApplier.ApplyResult(true, "feature/T1-impl", "applied and builds");
+
+        StageInput input = new StageInput(UUID.randomUUID(), "S7", 7, 1,
+                Map.of(ImplementationAiExecutor.INPUT_TASK_KEY, "{\"taskId\":\"T1\"}",
+                        ImplementationAiExecutor.INPUT_DESIGN_KEY, "{\"design\":\"add build-info to pom.xml\"}",
+                        ImplementationAiExecutor.INPUT_EXISTING_FILES_KEY,
+                        "{\"pom.xml\":\"<project>REAL-CURRENT-CONTENT</project>\"}"));
+
+        StageOutcome outcome = new ImplementationAiExecutor(provider, applier).execute(input);
+
+        assertTrue(outcome.succeeded());
+        assertTrue(capturedPrompt.get().contains("REAL-CURRENT-CONTENT"),
+                "the model must be shown the real, current content Conductor pre-fetched, so its diff "
+                        + "hunks can target real line numbers instead of guessing");
+        assertTrue(capturedPrompt.get().toLowerCase().contains("byte-accurate"),
+                "the prompt must tell the model the shown content is exact, not paraphrased or guessed");
+    }
+
+    @Test
+    @DisplayName("REGRESSION: no 'existingFiles' input key at all -- prompt carries no existing-file block, "
+            + "new-file creation is byte-for-byte unaffected by this fix")
+    void absentExistingFilesKeyLeavesPromptUnchanged() {
+        java.util.concurrent.atomic.AtomicReference<String> capturedPrompt = new java.util.concurrent.atomic
+                .AtomicReference<>();
+        StageAiProvider provider = prompt -> {
+            capturedPrompt.set(prompt);
+            return new AiResponse("claude-test-fixture", VALID_DIFF);
+        };
+        BranchApplier applier = (taskId, patch) ->
+                new BranchApplier.ApplyResult(true, "feature/T1-impl", "applied and builds");
+
+        StageOutcome outcome = new ImplementationAiExecutor(provider, applier).execute(input());
+
+        assertTrue(outcome.succeeded());
+        assertFalse(capturedPrompt.get().contains("already read the following existing files"),
+                "input() carries no 'existingFiles' key -- exactly the shape every S7 dispatch had before "
+                        + "this fix -- so the prompt must contain no existing-file block at all");
+    }
 }

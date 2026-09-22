@@ -31,6 +31,7 @@ import agentic.shortener.orchestration.store.PersistedNode;
 import agentic.shortener.orchestration.store.PersistedRun;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -153,6 +154,7 @@ public final class Conductor {
     private final FanOutPlanner fanOutPlanner;
     private final Clock clock;
     private final ExecutorService dispatchPool;
+    private final ExistingFileReader existingFileReader;
 
     /**
      * Every artifact this Conductor instance has seen produced for a run, by run id. {@link
@@ -174,7 +176,7 @@ public final class Conductor {
             ArtifactWriteGuard artifactWriteGuard, AuditWriter auditWriter, StageTelemetry telemetry,
             SafeStopHandler safeStopHandler, RetryPolicy retryPolicy,
             Function<Integer, StageExecutor> executorsByStageNumber, FanOutPlanner fanOutPlanner, Clock clock,
-            ExecutorService dispatchPool) {
+            ExecutorService dispatchPool, ExistingFileReader existingFileReader) {
         this.runStore = Objects.requireNonNull(runStore, "runStore");
         this.gateStore = Objects.requireNonNull(gateStore, "gateStore");
         this.gateRequestPresenter = Objects.requireNonNull(gateRequestPresenter, "gateRequestPresenter");
@@ -187,6 +189,7 @@ public final class Conductor {
         this.fanOutPlanner = Objects.requireNonNull(fanOutPlanner, "fanOutPlanner");
         this.clock = Objects.requireNonNull(clock, "clock");
         this.dispatchPool = Objects.requireNonNull(dispatchPool, "dispatchPool");
+        this.existingFileReader = Objects.requireNonNull(existingFileReader, "existingFileReader");
     }
 
     // ==============================================================================================
@@ -394,7 +397,9 @@ public final class Conductor {
             throw new IllegalStateException("no executor registered for stage " + stageNumber
                     + " (node " + nodeKey + ")");
         }
-        StageInput input = new StageInput(runId, nodeKey, stageNumber, 1, Map.copyOf(artifacts));
+        Map<String, String> inputArtifacts = stageNumber == 7
+                ? withExistingFileContent(artifacts) : artifacts;
+        StageInput input = new StageInput(runId, nodeKey, stageNumber, 1, Map.copyOf(inputArtifacts));
 
         RetryOutcome outcome = telemetry.stageExecution(runId, stageNumber,
                 id -> retryPolicy.execute(stageNumber, executor, input),
@@ -405,6 +410,64 @@ public final class Conductor {
         } else {
             onStageFailed(runId, nodeKey, stageNumber, outcome);
         }
+    }
+
+    /**
+     * S7's own existing-file fix: reads the real, current content of whatever files S6's own design named
+     * under {@code "existingFilesToModify"}, and adds it to a NEW input key, {@code "existingFiles"} (a JSON
+     * object of path to content), so {@code ImplementationAiExecutor} can produce a diff with accurate line
+     * numbers for a file it has never otherwise been shown — without the executor itself ever touching the
+     * filesystem. Computed fresh per dispatch, from the design artifact already in {@code artifacts}; never
+     * written back to the accumulated/persisted artifact map (it is dispatch-scoped context, not a
+     * stage-produced artifact).
+     *
+     * <p>Absent or unparsable {@code "design"} content, or an absent/empty {@code "existingFilesToModify"},
+     * all mean the same thing here: nothing to pre-fetch, a purely new-file change — {@code artifacts} is
+     * returned unchanged rather than failing the dispatch, since S7's own executor already handles an absent
+     * {@code "existingFiles"} key as "nothing existing to show".
+     */
+    private Map<String, String> withExistingFileContent(Map<String, String> artifacts) {
+        String design = artifacts.get("design");
+        if (design == null || design.isBlank()) {
+            return artifacts;
+        }
+        List<String> existingPaths;
+        try {
+            JsonNode root = JSON.readTree(design);
+            JsonNode namedPaths = root.get("existingFilesToModify");
+            if (namedPaths == null || !namedPaths.isArray() || namedPaths.isEmpty()) {
+                return artifacts;
+            }
+            existingPaths = new java.util.ArrayList<>();
+            for (JsonNode path : namedPaths) {
+                if (path.isTextual() && !path.asText().isBlank()) {
+                    existingPaths.add(path.asText());
+                }
+            }
+            if (existingPaths.isEmpty()) {
+                return artifacts;
+            }
+        } catch (Exception e) {
+            // Design content that does not even parse as JSON is a DIFFERENT stage's own concern to
+            // refuse (DesignAiExecutor already did, or this dispatch would never have been reached) --
+            // here, it just means there is nothing this method can safely extract, so it changes nothing.
+            return artifacts;
+        }
+
+        Map<String, String> existingFileContent;
+        try {
+            existingFileContent = existingFileReader.read(existingPaths);
+        } catch (Exception e) {
+            throw new IllegalStateException("failed to read existing file content named by the design "
+                    + "output for S7 (" + existingPaths + ")", e);
+        }
+
+        ObjectNode existingFilesJson = JSON.createObjectNode();
+        existingFileContent.forEach(existingFilesJson::put);
+
+        Map<String, String> augmented = new java.util.LinkedHashMap<>(artifacts);
+        augmented.put("existingFiles", existingFilesJson.toString());
+        return augmented;
     }
 
     private void onStageSucceeded(UUID runId, String nodeKey, int stageNumber, RetryOutcome outcome,

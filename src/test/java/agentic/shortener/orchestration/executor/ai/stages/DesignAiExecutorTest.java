@@ -129,4 +129,38 @@ class DesignAiExecutorTest {
         assertFalse(outcome.succeeded());
         assertEquals(FailureCategory.INTERNAL, outcome.failure().category());
     }
+
+    @Test
+    @DisplayName("S7 existing-file fix: 'existingFilesToModify' round-trips into the design output verbatim")
+    void existingFilesToModifyRoundTripsThroughOutput() throws Exception {
+        StageAiProvider provider = fixedResponse("{\"design\":\"add a version endpoint\","
+                + "\"contractImpact\":\"adds a new path to the existing OpenAPI contract\","
+                + "\"existingFilesToModify\":[\"pom.xml\","
+                + "\"specs/001-agentic-sdlc-url-shortener/contracts/openapi.yaml\"]}");
+
+        StageOutcome outcome = new DesignAiExecutor(provider, CLOCK).execute(input());
+
+        assertTrue(outcome.succeeded());
+        JsonNode out = JSON.readTree(outcome.producedArtifacts().get(0).content());
+        assertTrue(out.has("existingFilesToModify"));
+        assertEquals(2, out.get("existingFilesToModify").size());
+        assertEquals("pom.xml", out.get("existingFilesToModify").get(0).asText());
+        assertEquals("specs/001-agentic-sdlc-url-shortener/contracts/openapi.yaml",
+                out.get("existingFilesToModify").get(1).asText());
+    }
+
+    @Test
+    @DisplayName("greenfield: an omitted 'existingFilesToModify' still produces the field, empty -- Conductor "
+            + "always has a list to read, never a missing key")
+    void existingFilesToModifyDefaultsToEmptyArrayWhenOmitted() throws Exception {
+        StageAiProvider provider =
+                fixedResponse("{\"design\":\"a wholly new controller\",\"contractImpact\":\"none\"}");
+
+        StageOutcome outcome = new DesignAiExecutor(provider, CLOCK).execute(input());
+
+        assertTrue(outcome.succeeded());
+        JsonNode out = JSON.readTree(outcome.producedArtifacts().get(0).content());
+        assertTrue(out.has("existingFilesToModify"));
+        assertEquals(0, out.get("existingFilesToModify").size());
+    }
 }

@@ -44,6 +44,10 @@ public final class ImplementationAiExecutor implements StageExecutor {
 
     static final String INPUT_TASK_KEY = "task";
     static final String INPUT_DESIGN_KEY = "design";
+    /** Optional: a JSON object (path -&gt; real current content) Conductor pre-fetches for whatever files
+     * S6's own design named under {@code "existingFilesToModify"}. Absent or blank means a purely new-file
+     * change — never required, unlike {@link #INPUT_TASK_KEY}/{@link #INPUT_DESIGN_KEY}. */
+    static final String INPUT_EXISTING_FILES_KEY = "existingFiles";
     static final String OUTPUT_KEY = "branchCommit";
 
     private static final ProviderFailureTranslator TRANSLATOR =
@@ -66,10 +70,14 @@ public final class ImplementationAiExecutor implements StageExecutor {
                     "both '" + INPUT_TASK_KEY + "' and '" + INPUT_DESIGN_KEY
                             + "' are required — S5 and S6 must run first", false));
         }
+        // Optional, pre-fetched by Conductor (never read directly by this class): the real, current
+        // content of whatever existing files the design named. Absent/blank means a purely new-file
+        // change -- exactly as before this key existed.
+        String existingFiles = input.inputArtifacts().get(INPUT_EXISTING_FILES_KEY);
 
         AiResponse response;
         try {
-            response = provider.invoke(buildPrompt(task, design));
+            response = provider.invoke(buildPrompt(task, design, existingFiles));
         } catch (Exception e) {
             // TIMEOUT is EXCLUDED from S7's own declared retryable set (EC-033: the git effect is
             // non-idempotent), unlike every other AI-capable stage. The translator still classifies it
@@ -114,13 +122,27 @@ public final class ImplementationAiExecutor implements StageExecutor {
      * when nothing else was said. Adding this sentence — verified against a real live call, not assumed —
      * fixed it twice in a row, at the same pinned model, with no other change.
      */
-    private static String buildPrompt(String task, String design) {
-        return "You are the implementation stage of a software requirement pipeline. Author a change that "
-                + "implements the task below, following the design. Respond with ONLY a unified diff (git "
-                + "apply-compatible), no prose, no markdown fence, no explanation before or after it. Do "
-                + "not use any tools. Do not read or write any files. Produce the diff as plain text in "
-                + "your final reply only.\n\n"
-                + "Task:\n" + task + "\n\nDesign:\n" + design;
+    private static String buildPrompt(String task, String design, String existingFiles) {
+        StringBuilder prompt = new StringBuilder()
+                .append("You are the implementation stage of a software requirement pipeline. Author a "
+                        + "change that implements the task below, following the design. Respond with ONLY "
+                        + "a unified diff (git apply-compatible), no prose, no markdown fence, no "
+                        + "explanation before or after it. Do not use any tools. Do not read or write any "
+                        + "files yourself. Produce the diff as plain text in your final reply only.\n\n");
+
+        if (existingFiles != null && !existingFiles.isBlank() && !"{}".equals(existingFiles.strip())) {
+            prompt.append("The orchestration has already read the following existing files for you, so "
+                            + "your diff's hunks for them MUST be byte-accurate against the EXACT content "
+                            + "shown — correct line numbers, correct context lines, nothing paraphrased or "
+                            + "guessed. A hunk that does not match this content exactly will be refused. "
+                            + "For any file NOT listed here, treat it as one you are creating new (a "
+                            + "`--- /dev/null` / `+++ b/<path>` hunk).\n\n")
+                    .append("Existing file content (JSON object, path -> exact current content):\n")
+                    .append(existingFiles).append("\n\n");
+        }
+
+        prompt.append("Task:\n").append(task).append("\n\nDesign:\n").append(design);
+        return prompt.toString();
     }
 
     /** Tolerates a markdown fence around the diff, the same accommodation every other adapter makes. */
