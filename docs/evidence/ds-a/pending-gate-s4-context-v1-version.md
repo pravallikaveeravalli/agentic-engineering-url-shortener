@@ -1,7 +1,52 @@
-# DS-A live run, minimal `/v1/version` subject (CR-051) — pending gate context for the owner
+# DS-A live run, minimal `/v1/version` subject (CR-051/CR-052) — pending gate context for the owner
 
-**Attempt 6 overall (T132's sixth live attempt; first against CR-051's minimal subject) again reached S4's
-`UNRESOLVED_AMBIGUITY` gate, not S6.** `runId`: `202b9744-a28e-46c5-9785-8a6e8bf2b7a9`. S1/S2/S3 all
+**This is the capped, final DS-A iteration** (owner's own explicit instruction: "one iteration, then done
+either way" after CR-052's sharpening). Attempt 7 overall — T132's seventh live attempt, second against the
+minimal `/v1/version` subject, first against CR-052's sharpened materiality predicate and simplified
+requirement — again reached S4's `UNRESOLVED_AMBIGUITY` gate, not S6. Per the owner's own instruction, no
+further wording revision or predicate change is attempted; this is the report of the residual findings.
+`runId`: `90434bcc-f8ec-4b6d-a7b7-874d30704dc5`. S1/S2/S3 all genuinely succeeded (real `claude-sonnet-5`
+calls, ~250s). Full response captured, not truncated:
+`docs/evidence/ds-a/run-snapshot-ATTEMPT-7-STOPPED-AT-S4-post-CR052-sharpening.md`.
+
+## Attempt 7 (CR-052's sharpened predicate, CR-052's simplified requirement) — the sharpening worked; 2 real, different findings remain
+
+**CR-052's sharpening is confirmed working on the exact class of over-fire attempt 6 exposed.** Of seven
+findings this pass, **five resolved `NOT_MATERIAL` with substantive, correct reasoning** — critically,
+including a self-referential/restating-clause pattern (requirement 1b's second clause restating its first)
+that is structurally identical to the class of finding that produced 3 of attempt 6's 4 false positives. This
+time it was correctly recognized as non-material: *"deleting the second clause changes no required
+behaviour."* The other four `NOT_MATERIAL` resolutions (an undefined-term reading of "publicly accessible,"
+a non-GET-method/fault-mode reading of "always 200," a caching-vs-static-response "tension" that turned out
+to have no actual fork, and transport/rate-limiting concerns outside the endpoint's own code) are each
+reasoned with a real, checkable argument for why no two conformant implementations diverge — not asserted.
+
+**Two findings remain `MATERIAL_PENDING`, and they are a different kind of thing from attempt 6's three
+inert findings** — genuine header-value-exactness questions, not linguistic critiques of the requirement's
+own prose:
+
+1. **`Content-Type: application/json` — exact string match, or tolerant of parameters?** Many HTTP
+   frameworks and JSON serializers append `; charset=utf-8` by default, producing
+   `application/json; charset=utf-8` rather than the literal `application/json` the requirement states. The
+   requirement does not say whether this is an exact match or a media-type match tolerant of parameters.
+2. **`Cache-Control: no-store` — exact string match, or a minimum/tolerant of additional directives?** A
+   common pattern combines multiple directives (`no-store, no-cache, must-revalidate`) for stronger
+   cross-intermediary guarantees; the requirement's literal wording ("value `no-store`") does not state
+   whether this is exhaustive or a floor.
+
+**This agent's own read**: both are genuine, real behavioural forks under CR-052's own sharpened test — two
+conformant implementations really could emit different literal header values, and nothing in the requirement
+or (so far as verified) any existing artifact fixes which is required. Unlike attempt 6's findings, these do
+not trace to a removable non-behavioural clause; they are about the literal specification's own precision on
+a dimension a real HTTP client or a real test assertion would observe differently. Per the owner's own
+explicit instruction for this turn — one iteration, then stop either way — no further wording revision or
+predicate change was attempted.
+
+---
+
+## Attempt 6 (CR-051's original minimal subject, pre-sharpening) — superseded by CR-052, kept as evidence
+
+**Reached S4's `UNRESOLVED_AMBIGUITY` gate, not S6.** `runId`: `202b9744-a28e-46c5-9785-8a6e8bf2b7a9`. S1/S2/S3 all
 genuinely succeeded (real `claude-sonnet-5` calls, ~118s). Full response captured, not truncated:
 `docs/evidence/ds-a/run-snapshot-ATTEMPT-6-STOPPED-AT-S4-minimal-v1-version-subject.md`.
 
@@ -72,33 +117,37 @@ not to fix this on this agent's own initiative.
    `NOT_MATERIAL` — the system genuinely has never answered this question for any endpoint, ever. This one
    looks like a legitimate, if narrow, gap.
 
-## What was NOT done
+## What was NOT done (attempt 6's own record — superseded by attempt 7's outcome)
 
-- No fix, reword, or reinterpretation of CR-007's predicate was attempted this turn, per the owner's own
-  explicit instruction to report plainly rather than paper over a possible misapplication.
-- No gate decision was submitted for S4.
-- The tentative "possible residual misapplication" read above is offered, not concluded — this agent is not
-  positioned to adjudicate its own prompt-authoring choices as correct or incorrect without the owner's
-  judgment, particularly given CR-007's predicate is itself an approved artifact.
+- No fix, reword, or reinterpretation of CR-007's predicate was attempted at the time this section was
+  written, per the owner's own explicit instruction at that point to report plainly rather than paper over a
+  possible misapplication. **This was subsequently acted on** — see CR-052, which sharpened the predicate
+  based on exactly the hypothesis offered below, and attempt 7's result (top of this document) confirms it:
+  the same class of finding (a self-referential/restating clause) that produced 3 false positives in attempt
+  6 was correctly resolved `NOT_MATERIAL` in attempt 7, and finding 4 below (non-GET-method/path-variant
+  handling) was also resolved `NOT_MATERIAL` in attempt 7, citing exactly the "reasonable default" category
+  CR-052 added.
 
-## The decision this agent cannot make
+## The decision this agent cannot make (final — post-CR-052, post-attempt 7, capped)
 
-1. **Treat this as confirmation the calibration has a real edge** — CR-007's predicate, as currently
-   instantiated in S3's prompt, may weigh a closing clause's own internal logical rigor too heavily relative
-   to whether it changes buildable behavior. If so, this is a distinct, narrower finding than the
-   completeness-ceiling finding (`requirement-completeness-ceiling-finding.md`) — that one was about surface
-   area; this one is about whether a specific class of summarizing/restating clause gets flagged regardless
-   of surface area.
-2. **Decide finding 4 (non-GET/path-variant handling) on its own merits** — genuinely unaddressed by
-   anything existing; a real, if narrow, decision (e.g., "Spring's own default 405/404 behavior is
-   sufficient and needs no restatement" vs. "state it explicitly").
-3. **Simplify requirement 1.9 or remove it**, since 1.1–1.8 already state the endpoint's entire behavior
-   unconditionally and 1.9 may be redundant restatement that only added surface for S3 to find fault with,
-   without adding any actual obligation — and re-run.
-4. **Accept this run's stop as sufficient demonstration of DS-A's own governed-stop behavior** — the run
-   never reached a state it should not have; `Conductor` paused at S4 exactly as designed, on real findings,
-   whatever their ultimate materiality verdict — and treat the calibration-edge question as a separate,
-   lower-urgency finding to investigate later rather than block on.
-5. Some other decision.
+Per the owner's own explicit instruction for the CR-052 turn — sharpen the detector, re-run once, and stop
+either way — this agent has made no further attempt after attempt 7's result, and offers no further wording
+revision. What remains, from attempt 7's own two genuine `MATERIAL_PENDING` findings (`Content-Type` and
+`Cache-Control` header-value exactness — see the top of this document):
+
+1. **Answer S4's gate directly**: state whether `Content-Type: application/json` and
+   `Cache-Control: no-store` are exact-match obligations or tolerant of standard additions (a charset
+   parameter; additional cache directives), and let the run continue through S4's own governed clarification
+   path — this demonstrates the clarify-and-resume path rather than DS-A's own "no gate fires" property, but
+   is a real, answerable question at a real, narrow gate.
+2. **Accept this run's stop as sufficient demonstration of DS-A's own governed-stop behavior on a
+   thoroughly-specified, minimal subject** — `Conductor` paused at S4 exactly as designed, on two real,
+   substantively different findings (not the inert kind CR-052 fixed), and treat this as adequate evidence
+   that the pipeline mechanism itself works correctly end-to-end through S1–S4, even though this specific
+   run did not reach S6.
+3. **State the two exactness answers directly in a future revision** (e.g., "Content-Type MUST be exactly
+   `application/json`, with no parameters" and "Cache-Control MUST be exactly `no-store`, with no additional
+   directives") and re-run — not attempted this turn, per the owner's own cap.
+4. Some other decision.
 
 No preference recorded on which option to take; this is squarely the owner's call.
